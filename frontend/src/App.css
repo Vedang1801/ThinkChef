@@ -1,0 +1,374 @@
+/*@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');*/
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+
+
+
+:root {
+  --primary-color: #3f51b5;
+  --secondary-color: #2196f3;
+  --accent-color: #ffc107;
+  --background-color: #f5f5f5;
+  --text-color: #333;
+  --border-color: #ddd;
+}
+
+body {
+  font-family: 'playfair-display', sans-serif;
+  background-color: var(--background-color);
+}
+
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.centered-container {
+    text-align: center;
+    position: relative;
+  }
+  
+  /*.centered-container h2 {
+    font-size: 2.5rem;
+    font-weight: 900; 
+    position: relative;
+    display: inline-block;
+    padding: 0 20px;
+    background: linear-gradient(to right, #ff0000, #ff8000, #ffff00, #80ff00, #00ff00, #00ff80, #00ffff, #0080ff, #0000ff, #8000ff, #ff00ff, #ff0080);
+    background-size: 200% auto;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: text-fill 8s linear infinite;
+  }*/
+
+  .centered-container h2 {
+    font-size: 2.5rem; /* Decrease font size */
+    font-weight: bold; /* Maintain bold font weight */
+    position: relative;
+    display: inline-block;
+    padding: 0 20px;
+    margin-bottom: 20px;
+    background: linear-gradient(to right, #ff0000,#fff);
+    background-size: 200% auto;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: text-fill 8s linear infinite;
+  }
+  
+  /*.recipes-box {
+    background-color: #000; 
+    border-radius: 8px;
+    padding: 20px; 
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 90vw;
+    max-width: 200px; 
+    margin: 0 auto; 
+  }*/
+
+  .recipes-box {
+    background-color: #000; /* Light gray background */
+    border-radius: 8px;
+    padding: 10px; /* Increased padding for better spacing */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 100vw; /* Set width to 100% of the viewport width */
+    max-width: 100%; /* Ensure the box doesn't exceed the viewport width */
+    margin: 0 auto; /* Center the box horizontally */
+    margin-bottom: 30px;
+    display: flex; /* Use flexbox for layout */
+    flex-direction: column; /* Stack items vertically */
+    align-items: center; /* Center items horizontally */
+  }
+  
+  @keyframes text-fill {
+    0% {
+      background-position: 0 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+  
+
+.home-container {
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
+}
+
+.home-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('./food_main.jpg');
+  background-size:cover;
+  background-position: center center;
+  z-index: -1;
+}
+.input-comment {
+  width: 50%;
+  padding: 12px 20px;
+  margin: 8px 0;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.btn-comment{
+
+  background-color: #4CAF50;
+  color: white;
+  padding: 14px 18px;
+  margin-left: 14px ;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.recipeCard {
+  display: grid;
+  grid-template-columns: 30% 70%;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.3s ease-in-out;
+  border: 1px solid var(--border-color);
+  margin-bottom: 20px;
+  /* height: 200px; */
+}
+
+.recipeCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.recipeImage {
+  width: 100%;
+  height: 100%;
+  /* background-color: #000;
+  object-fit: contain; */
+}
+
+.recipeContent {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  /* flex: 1; */
+  text-align: left; /* Align the text content to the left */
+}
+
+.titles{
+  display: grid;
+  grid-template-columns: 50% 50%;
+
+}
+.recipeTitle {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: var(--text-color);
+}
+
+.recipeDescription {
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+  color: #666;
+}
+
+.recipeIngredients {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.recipeIngredients li {
+  font-size: 0.875rem;
+  margin-bottom: 4px;
+}
+
+/*profile*/
+
+.profile_centered-container {
+  text-align: center;
+  position: relative;
+}
+
+.profile_centered-container h2 {
+  font-size: 2.5rem; /* Decrease font size */
+  font-weight: bold; /* Maintain bold font weight */
+  position: relative;
+  display: inline-block;
+  padding: 0 20px;
+  background: linear-gradient(to right, #f3f0ee,#fff);
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: text-fill 8s linear infinite;
+}
+
+.profile-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('./profile_bg.jpeg');
+  background-size:cover;
+  background-position: center center;
+  z-index: -1;
+  opacity: 0.5; 
+}
+
+.profile-box {
+  background-color: #000000; /* Light gray background */
+  border-radius: 8px;
+  padding: 16px; /* Increased padding for better spacing */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 80%; /* Set width to 80% of the viewport width */
+  max-width: 600px; /* Limit maximum width to 600px */
+  margin: 2rem auto; /* Center the box vertically and horizontally */
+  display: flex; /* Use flexbox for layout */
+  flex-direction: column; /* Stack items vertically */
+  align-items: center; /* Center items horizontally */
+}
+
+.profile-container {
+  position: relative; /* Add this to allow positioning of the image */
+  background-color: #fff; /* White background */
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  margin: 2rem auto; /* Center the container horizontally */
+  padding: 2rem;
+}
+
+.profile-label {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: #333; /* Darker text color */
+}
+
+.profile-text {
+  color: #666; /* Slightly darker text color */
+}
+
+.profile-icon {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 50px; /* Adjust size as needed */
+  height: 50px; /* Adjust size as needed */
+  border-radius: 50%; /* Makes it a circle */
+  border: 2px solid #ffffff; /* White border around the image */
+  background-color: #ffffff; /* Black background for contrast */
+  z-index: 1; /* Ensure it's above other elements */
+}
+
+.post-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  overflow: hidden;
+  transition: transform 0.3s ease-in-out;
+}
+
+.post-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.post-image {
+  width: 100%;
+  height: 200px; /* Adjust height as needed */
+  object-fit: cover;
+}
+
+.post-content {
+  padding: 20px;
+}
+
+.post-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.post-description {
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+
+.delete-button {
+  background-color: #ff4d4f;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.delete-button:hover {
+  background-color: #f5222d;
+}
+
+.post-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.post-card {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.post-image-container {
+  height: 200px;
+  overflow: hidden;
+}
+
+.post-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.post-content {
+  padding: 1rem;
+}
+
+.post-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.post-description {
+  margin-bottom: 1rem;
+}
+
+.delete-button {
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
