@@ -73,8 +73,8 @@ function verifyToken(req, res, next) {
 
 // Configure AWS SDK with your credentials and region
 AWS.config.update({
-  accessKeyId: 'AKIA3FLD4TQH5EY6AUHV',
-  secretAccessKey: 'zYJYpAdhpx1jh6v0tVnLSZLm3LBHyTNADB/Ing1O',
+  accessKeyId: '',
+  secretAccessKey: '',
   region: 'Ohio'
 });
 
