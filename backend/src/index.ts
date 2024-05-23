@@ -71,7 +71,7 @@ function verifyToken(req, res, next) {
 AWS.config.update({
   accessKeyId: "",
   secretAccessKey: "",
-  region: "",
+  region: "ap-south-1",
 });
 
 const s3 = new AWS.S3();

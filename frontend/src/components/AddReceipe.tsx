@@ -1,11 +1,4 @@
 import "./init";
-import React, { useState, useEffect } from "react";
-import AWS from "aws-sdk";
-import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import Cookies from "js-cookie";
-import { useAuth } from "./authContext";
-
 /*import "../App.css";*/
 import "../styles/home.css";
 import "../styles/tips.css";
@@ -13,6 +6,15 @@ import "../styles/recipeCard.css";
 import "../styles/profile.css";
 import "../styles/main.css";
 import "../styles/login.css";
+
+
+
+import React, { useState, useEffect } from "react";
+import AWS from "aws-sdk";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import Cookies from "js-cookie";
+import { useAuth } from "./authContext";
 
 const AddRecipe = () => {
   const [recipeData, setRecipeData] = useState({
@@ -22,33 +24,22 @@ const AddRecipe = () => {
     ingredients: [{ item: "", quantity: "" }],
     image: "",
   });
-  const [uploadedImageKey, setUploadedImageKey] = useState(null); // Track uploaded image key
 
   const { loggedIn } = useAuth();
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
+  const handleChange = (e: any) => {
     const { name, value } = e.target;
     setRecipeData((prevState) => ({
       ...prevState,
       [name]: value,
     }));
   };
-
   useEffect(() => {
     if (!loggedIn) {
       navigate("/login"); // Redirect to login if user is not logged in
     }
-  }, [loggedIn, navigate]);
-
-  // Clean up the uploaded image from S3 if the form is not submitted
-  useEffect(() => {
-    return () => {
-      if (uploadedImageKey) {
-        deleteUploadedImageFromS3(uploadedImageKey);
-      }
-    };
-  }, [uploadedImageKey]);
+  });
 
   const handleIngredientChange = (index, field, value) => {
     const newIngredients = [...recipeData.ingredients];
@@ -75,7 +66,7 @@ const AddRecipe = () => {
     }));
   };
 
-  const handleImageChange = (e) => {
+  const handleImageChange = (e: any) => {
     setRecipeData((prevState) => ({
       ...prevState,
       image: e.target.files[0],
@@ -127,7 +118,6 @@ const AddRecipe = () => {
       if (response.ok) {
         console.log("Recipe created successfully");
         toast.success("Recipe created successfully");
-        setUploadedImageKey(null); // Clear the uploaded image key
         navigate("/");
         // Optionally reset form state here
       } else {
@@ -152,14 +142,14 @@ const AddRecipe = () => {
       AWS.config.update({
         accessKeyId: "",
         secretAccessKey: "",
-        region: "",
+        region: "ap-south-1",
       });
 
       const s3 = new AWS.S3();
       const file = recipeData.image;
 
       const params = {
-        Bucket: "",
+        Bucket: "imagebucketforproject",
         Key: `images/${file.name}`,
         Body: file,
         ACL: "public-read",
@@ -175,36 +165,10 @@ const AddRecipe = () => {
         ...prevState,
         image: data.Location,
       }));
-      setUploadedImageKey(params.Key); // Store the uploaded image key
     } catch (error) {
       console.error("Error uploading file:", error);
     }
   };
-
-  const deleteUploadedImageFromS3 = async (key) => {
-    try {
-      // AWS S3 config
-      AWS.config.update({
-        accessKeyId: "",
-        secretAccessKey: "",
-        region: "",
-      });
-
-      const s3 = new AWS.S3();
-
-      const params = {
-        Bucket: "",
-        Key: key,
-      };
-
-      await s3.deleteObject(params).promise();
-      console.log("Uploaded image deleted from S3");
-    } catch (error) {
-      console.error("Error deleting uploaded image from S3:", error);
-    }
-  };
-
-
 
   return (
     <div className="home-container">

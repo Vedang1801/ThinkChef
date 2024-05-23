@@ -105,7 +105,7 @@ const Profile = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="centered-container">
           <div className="profile-box">
-            <h2 className="text-3xl font-semibold mb-4">Profile</h2>
+            <h2 className="profileboxtitle">Profile</h2>
           </div>
         </div>
         <div className="profile-container">
