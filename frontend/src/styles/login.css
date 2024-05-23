@@ -1,0 +1,125 @@
+.formbody {
+  padding: 2rem;
+  /* 8*0.25rem = 2rem */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background-color: #240046;
+  max-height: 420px;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 7px 7px 10px 3px #24004628;
+}
+
+.formbodytitle {
+  transition: .5s ease-in-out;
+  text-align: center;
+  font-size: 1.5rem;
+  /* 2xl */
+  font-weight: 700;
+  /* bold */
+  margin-bottom: 1rem;
+  /* 4 * 0.25rem = 1rem */
+  color: #fff;
+}
+
+.formlogin-button {
+  width: 70%;
+  height: 40px;
+  margin: 12px auto 10%;
+  color: #fff;
+  background: #573b8a;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: .2s ease-in;
+}
+
+.formlogin-button:hover {
+  background-color: #6d44b8;
+}
+
+.formlogin-button:focus {
+  outline: none;
+  /* focus:outline-none */
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+  /* focus:ring-2 focus:ring-blue-500 */
+}
+
+
+
+
+
+.inputemail,
+.inputpassword {
+  width: 100%;
+  border: 1px solid #ccc; /* border border-gray-300 */
+  border-radius: 0.375rem; /* rounded-md */
+  padding: 0.75rem 1rem; /* px-3 py-2 */
+  outline: none; /* focus:outline-none */
+  transition: border-color 0.3s; /* to animate border color change */
+}
+
+.inputemail:focus,
+.inputpassword:focus {
+  border-color: #3b82f6; /* focus:ring-2 focus:ring-blue-500 */
+}
+
+.inputemail.error,
+.inputpassword.error {
+  border-color: #ef4444; /* border-red-500 */
+}
+
+.inputemail.error + .error-message,
+.inputpassword.error + .error-message {
+  color: #ef4444; /* text-red-500 */
+  font-size: 0.875rem; /* text-sm */
+  margin-top: 0.25rem; /* mt-1 */
+}
+
+
+/*checkbox to switch from sign up to login*/
+#chk {
+  display: none;
+}
+
+#chk:checked ~ .formbodytitle {
+  transform: scale(.6);
+  margin: 5% 0 5%;
+}   
+
+
+.toggle-button {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.5rem 1rem;
+  background-color: #573b8a;
+  color: #fff;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease-in-out;
+}
+
+.toggle-button:hover {
+  background-color: #6d44b8;
+}
+
+.loginbackground {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh; /* 100% of the viewport height */
+  background-color: black;
+  background-size: contain;
+  background-position: center;
+  background-color: rgba(255, 255, 255, 0.5); /* Adjust the last value (0.5) to set the opacity */
+}
+
+.loginlastline {
+  color: #ffffff; 
+}

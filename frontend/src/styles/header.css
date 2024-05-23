@@ -1,0 +1,107 @@
+/* Header Container */
+.header-container {
+    width: 100%;
+    height: 80px;
+    background-color: black; /* or #121212 for bg-cod-gray-900 */
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-left: 1rem; /* equivalent to px-4 */
+    padding-right: 1rem; /* equivalent to px-4 */
+}
+
+/* Left Section */
+.header-left {
+  color: white;
+  font-size: 24px; /* Adjust font size as needed */
+  padding: 24px; /* Adjust padding as needed */
+}
+
+/* Right Section */
+.header-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* Links */
+.header-links {
+  display: flex;
+  align-items: center;
+  gap: 16px; /* Adjust the gap between links as needed */
+}
+
+
+.header-link1 {
+    font-size: 1.5rem; /* text-2xl */
+    font-weight: bold;
+    background: linear-gradient(to right, #fed7aa, #c3dafe); /* bg-gradient-to-r from-orange-200 to-indigo-100 */
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-decoration: none;
+    transition: all 0.3s ease-in-out;
+}
+
+.header-link1:hover {
+    font-size: 1.875rem; /* hover:text-3xl */
+    color: #f1f5f9; /* hover:text-slate-100 */
+    text-decoration: none; /* hover:no-underline */
+}
+
+.header-link2 {
+    font-size: 1.5rem; /* text-2xl */
+    font-weight: bold;
+    background: linear-gradient(to right, #fed7aa, #c3dafe); /* bg-gradient-to-r from-orange-200 to-indigo-100 */
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-decoration: none;
+    transition: all 0.3s ease-in-out;
+}
+
+.header-link2:hover {
+    font-size: 1.875rem; /* hover:text-3xl */
+    color: #f1f5f9; /* hover:text-slate-100 */
+    text-decoration: none; /* hover:no-underline */
+}
+
+
+.header-link3 {
+    font-size: 1.5rem; /* text-2xl */
+    font-weight: bold;
+    background: linear-gradient(to right, #fed7aa, #c3dafe); /* bg-gradient-to-r from-orange-200 to-indigo-100 */
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-decoration: none;
+    transition: all 0.3s ease-in-out;
+}
+
+.header-link3:hover {
+    font-size: 1.875rem; /* hover:text-3xl */
+    color: #f1f5f9; /* hover:text-slate-100 */
+    text-decoration: none; /* hover:no-underline */
+}
+
+
+
+/* Logout Button */
+.header-link4 {
+    color: #dc2626; /* text-red-600 */
+    font-size: 1.5rem; /* text-2xl */
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    text-decoration: none; /* ensure no underline on hover */
+}
+
+.header-link4:hover {
+    color: #ff1010; /* hover:text-red-700 */
+    font-size: 1.875rem; /* hover:text-3xl */
+    text-decoration: none; /* hover:no-underline */
+}
+
+
+

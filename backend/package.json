@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@lyket/react": "^2.1.0",
     "aws-sdk": "^2.1613.0",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
