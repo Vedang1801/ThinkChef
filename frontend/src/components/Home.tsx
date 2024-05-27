@@ -85,7 +85,7 @@ const Home: React.FC = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="centered-container">
           <div className="recipes-box">
-            <h2 className="recipeboxtitle">Recipes</h2>
+            <h2 className="recipeboxtitle">RECIPES</h2>
           </div>
           <div className="grid grid-cols-1 gap-4">
             {/* Render RecipeCard components */}
@@ -104,3 +104,6 @@ const Home: React.FC = () => {
 };
 
 export default Home;
+
+
+

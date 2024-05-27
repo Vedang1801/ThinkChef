@@ -7,8 +7,6 @@ import "../styles/profile.css";
 import "../styles/main.css";
 import "../styles/login.css";
 
-
-
 import React, { useState, useEffect } from "react";
 import AWS from "aws-sdk";
 import { useNavigate } from "react-router-dom";
@@ -138,11 +136,11 @@ const AddRecipe = () => {
         return;
       }
 
-      // AWS S3 config
+      // Configure AWS SDK with your credentials and region
       AWS.config.update({
-        accessKeyId: "",
-        secretAccessKey: "",
-        region: "ap-south-1",
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        region: process.env.AWS_SECRET_LOCATION,
       });
 
       const s3 = new AWS.S3();
@@ -176,7 +174,7 @@ const AddRecipe = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="centered-container">
           <div className="recipes-box">
-            <h2 className="text-3xl font-semibold mb-4">Add Recipe</h2>
+            <h2 className="addrecipeboxtitle">ADD RECIPE</h2>
           </div>
         </div>
         <form

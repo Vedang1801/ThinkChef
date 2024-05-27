@@ -1,35 +1,54 @@
 .centered-container {
-    text-align: center;
-    position: relative;
-  }
-  
-
-  .recipeboxtitle {
-    font-size: 2.5rem; /* Set the desired font size */
-    font-weight: bold; /* Maintain bold font weight */
-    position: relative;
-    display: inline-block;
-    padding: 0 20px;
-    margin-bottom: 20px;
-    background: linear-gradient(to right, #ff0000, #fff); /* Gradient background */
-    background-size: 200% auto;
-    color: transparent;
-    -webkit-background-clip: text;
-    background-clip: text;
-    animation: text-fill 8s linear infinite;
-    text-align: center; /* Center align the text within the div */
-  }
-  
-
-  @keyframes text-fill {
-    0% {
-        background-position: 0% center;
-    }
-    100% {
-        background-position: -200% center;
-    }
+  text-align: center;
+  position: relative;
 }
 
+.recipes-box {
+  background-color: #000;
+  border-radius: 8px;
+  padding: 5px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100vw;
+  max-width: 100%;
+  margin: 0 auto;
+  margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 90px;
+}
+
+.recipeboxtitle {
+  font-family: "Neue Haas Grotesk Regular", Arial, sans-serif;
+  font-style: normal;
+  font-weight: bolder;
+  font-size: 40px;
+  line-height: 1.5;
+  color: rgb(234, 233, 229);
+  position: relative;
+  display: inline-block;
+  padding: 10px 20px;
+  margin-bottom: 30px;
+  background: linear-gradient(to right, #c23616, #f76c6c); /* Updated gradient colors to shades of red */
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: text-fill 10s ease infinite;
+  text-align: center;
+}
+
+@keyframes text-fill {
+  0% {
+    background-position: 0% center;
+  }
+  50% {
+    background-position: 100% center; /* Adjusted position for smoother transition */
+  }
+  100% {
+    background-position: 0% center;
+  }
+}
 
   .home-container {
     position: relative;
@@ -51,3 +70,6 @@
     z-index: -1;
     opacity: 0.8; 
   }
+
+
+  

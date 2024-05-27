@@ -10,6 +10,7 @@ import "../styles/recipeCard.css";
 import "../styles/profile.css";
 import "../styles/main.css";
 import "../styles/login.css";
+import RecipeCard from "./RecipeCard";
 
 interface Post {
   recipe_id: number;
@@ -19,6 +20,7 @@ interface Post {
   user_id: number;
   image: string;
   created_at: Date;
+  
 }
 
 const Profile = () => {
@@ -28,10 +30,12 @@ const Profile = () => {
   const [pendingDelete, setPendingDelete] = useState<number | null>(null);
   const [countdown, setCountdown] = useState<number>(5);
   const [undoTimeout, setUndoTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [selectedRecipe, setSelectedRecipe] = useState<Post | null>(null);
+  const [isRecipeWidgetOpen, setIsRecipeWidgetOpen] = useState(false);
 
   useEffect(() => {
     if (!loggedIn) {
-      navigate("/login"); // Redirect to login if user is not logged in
+      navigate("/login");
     }
   }, [loggedIn, navigate]);
 
@@ -47,16 +51,15 @@ const Profile = () => {
       setPosts(response.data);
     } catch (error) {
       console.error("Error fetching data:", error);
-      // Handle error
     }
   };
 
-  const handleDelete = (postId: number) => {
+  const handleDelete = (event, postId: number) => {
+    event.stopPropagation(); // Add this line to prevent event bubbling
     setPendingDelete(postId);
-    setCountdown(5); // Reset countdown to 5 seconds
-    toast.info("Post will be permanently deleted in 5 seconds"); // Display a toast notification
+    setCountdown(5);
+    toast.info("Post will be permanently deleted in 5 seconds");
 
-    // Start the countdown timer
     const countdownInterval = setInterval(() => {
       setCountdown((prev) => {
         if (prev === 1) {
@@ -66,7 +69,6 @@ const Profile = () => {
       });
     }, 1000);
 
-    // Set a timeout to permanently delete the post after 5 seconds
     const timeout = setTimeout(() => {
       handlePermanentDelete(postId);
       clearInterval(countdownInterval);
@@ -87,9 +89,9 @@ const Profile = () => {
     setPendingDelete(null);
   };
 
-  const handleUndo = () => {
+  const handleUndo = (event) => {
+    event.stopPropagation(); // Add this line to prevent event bubbling
     if (pendingDelete !== null) {
-      // Clear the countdown timer
       if (undoTimeout) {
         clearTimeout(undoTimeout);
         setUndoTimeout(null);
@@ -99,51 +101,88 @@ const Profile = () => {
     }
   };
 
+  const handleRecipeClick = (recipe: Post) => {
+    setSelectedRecipe(recipe);
+    setIsRecipeWidgetOpen(true);
+  };
+
+  const handleCloseWidget = () => {
+    setSelectedRecipe(null);
+    setIsRecipeWidgetOpen(false);
+  };
+
   return (
     <div className="home-container">
-      <div className="profile-background"></div>
-      <div className="container mx-auto px-4 py-8">
-        <div className="centered-container">
-          <div className="profile-box">
-            <h2 className="profileboxtitle">Profile</h2>
+      {isRecipeWidgetOpen && <div className="backdrop" onClick={handleCloseWidget}></div>}
+      <div className={`blur-background ${isRecipeWidgetOpen ? "blur" : ""}`}>
+        <div className="profile-background"></div>
+        <div className="container mx-auto px-4 py-8">
+          <div className="centered-container">
+            <div className="profile-box">
+              <h2 className="profileboxtitle">PROFILE</h2>
+            </div>
           </div>
-        </div>
-        <div className="profile-container">
-          <div className="profile-field">
-            <label className="profile-label">Username:</label>
-            <span className="profile-text">{Cookies.get("username")}</span>
+          <div className="profile-container">
+            <div className="profile-field">
+              <label className="profile-label">Username:</label>
+              <span className="profile-text">{Cookies.get("username")}</span>
+            </div>
+            <div className="profile-field">
+              <label className="profile-label">Email:</label>
+              <span className="profile-text">{Cookies.get("email")}</span>
+            </div>
           </div>
-          <div className="profile-field">
-            <label className="profile-label">Email:</label>
-            <span className="profile-text">{Cookies.get("email")}</span>
-          </div>
-        </div>
-        <div className="post-grid">
-          {posts.map((post) => (
-            <div key={post.recipe_id} className="post-card">
-              <div className="post-image-container">
-                <img src={post.image} alt={post.title} className="post-image" />
-              </div>
-              <div className="post-content">
-                <h3 className="post-title">{post.title}</h3>
-                <p className="post-description">{post.description}</p>
-                {pendingDelete === post.recipe_id ? (
-                  <button onClick={handleUndo} className="undo-button">
-                    Undo ({countdown})
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => handleDelete(post.recipe_id)}
+          
+          <div className="post-grid">
+            {posts.map((post) => (
+              <div
+                key={post.recipe_id}
+                className="post-card"
+                onClick={() => handleRecipeClick(post)}
+              >
+                <div className="post-image-container">
+                  <img src={post.image} alt={post.title} className="post-image" />
+                </div>
+                <div className="post-content">
+                  <h3 className="post-title">{post.title}</h3>
+                  <p className="post-description">{post.description}</p>
+                  {pendingDelete === post.recipe_id ? (
+                   <button onClick={(event) => handleUndo(event)} className="undo-button">
+                   Undo ({countdown})
+                 </button>
+                  ) : (
+                    <button
+                    onClick={(event) => handleDelete(event, post.recipe_id)}
                     className="delete-button"
                   >
                     Delete
                   </button>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
+      {selectedRecipe && (
+        <div className="recipe-widget-container">
+          <button className="close-button" onClick={handleCloseWidget}>&times;</button>
+          <RecipeCard
+            recipe={{
+              recipe_id: selectedRecipe.recipe_id,
+              title: selectedRecipe.title,
+              Instruction: selectedRecipe.Instruction,
+              description: selectedRecipe.description,
+              ingredients: [],
+              image: selectedRecipe.image,
+              created_at:
+                typeof selectedRecipe.created_at === "string"
+                  ? selectedRecipe.created_at
+                  : selectedRecipe.created_at.toISOString(),
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 };
