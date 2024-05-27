@@ -1,7 +1,9 @@
 /* recipe-card.css */
 @import url('https://fonts.googleapis.com/css2?family=Hahmlet:wght@100..900&display=swap');
 
-.addrecipeboxtitle {
+
+
+.addrecipeboxtitle{
   font-family: "Neue Haas Grotesk Regular", Arial, sans-serif;
   font-style: normal;
   font-weight: bolder;
@@ -12,7 +14,7 @@
   display: inline-block;
   padding: 10px 20px;
   margin-bottom: 30px;
-  background: linear-gradient(to right, #c23616, #f76c6c);
+  background: linear-gradient(to right, #c23616, #f76c6c); /* Updated gradient colors to shades of red */
   background-size: 200% auto;
   color: transparent;
   -webkit-background-clip: text;
@@ -23,19 +25,18 @@
 
 .recipe-card {
   display: flex;
-  background-color: rgba(255, 255, 255, 0.1); /* Semi-transparent background */
+  background-color: #fff;
   border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), inset 0 -2px 4px rgba(255, 255, 255, 0.1); /* Subtle shadow for depth */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   transition: transform 0.3s ease-in-out;
-  border: 1px solid rgba(0, 0, 0, 0.1); /* Soft border */
+  border: 1px solid var(--border-color);
   margin-bottom: 20px;
-  backdrop-filter: blur(40px); 
 }
 
 .recipe-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .recipe-image {
@@ -57,19 +58,16 @@
   justify-content: space-between;
 }
 
-/* The rest of your CSS remains unchanged */
-
-
 .recipe-title {
   font-size: 24px;
   font-weight: bold;
-  color: #ffffff;
+  color: var(--text-color);
   margin-bottom: 8px;
 }
 
 .recipe-description {
   font-size: 16px;
-  color: #ffffff;
+  color: #666;
   margin-bottom: 16px;
   text-align: justify;
 }
@@ -83,7 +81,6 @@
 .recipe-instructions,
 .recipe-ingredients {
   flex: 0 0 48%;
-  color: #ffffff;
 }
 
 .recipe-instructions h3{
@@ -146,7 +143,6 @@
 
 .recipe-comments {
   margin-top: 16px;
-  color: #ffffff;
 }
 
 .recipe-comments h3 {
@@ -207,7 +203,6 @@
 
 .recipe-rating {
   margin-top: 16px;
-  color: #ffffff;
 }
 
 .recipe-rating h3 {
