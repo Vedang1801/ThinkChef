@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require("express");
 const cors = require("cors");
 const mysql = require("mysql2");
@@ -67,11 +68,12 @@ function verifyToken(req, res, next) {
   });
 }
 
+
 // Configure AWS SDK with your credentials and region
 AWS.config.update({
-  accessKeyId: "",
-  secretAccessKey: "",
-  region: "ap-south-1",
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_SECRET_LOCATION,
 });
 
 const s3 = new AWS.S3();
@@ -141,6 +143,62 @@ app.post("/api/login", (req, res) => {
   });
 });
 
+
+app.get("/api/recipes/:id/ratings/user", verifyToken, (req, res) => {
+  const recipeId = req.params.id;
+  const userId = req.userId; // Extracted from JWT token using verifyToken middleware
+
+  // Check if a rating record exists for the recipe and user
+  const query =
+    "SELECT * FROM ratings WHERE recipe_id = ? AND user_id = ?";
+  connection.query(query, [recipeId, userId], (err, results) => {
+    if (err) {
+      console.error("Error checking user rating: ", err);
+      return res.status(500).send("Error checking rating");
+    }
+    res.status(200).json({ hasRated: results.length > 0 });
+  });
+});
+
+
+// Add the following API endpoints to your existing backend code
+
+// Endpoint to create a rating for a recipe
+app.post("/api/recipes/:id/ratings/create", verifyToken, (req, res) => {
+  const recipeId = req.params.id;
+  const { rating, user_id } = req.body;
+
+  // Insert the rating into the database
+  const query =
+    "INSERT INTO ratings (recipe_id, user_id, stars) VALUES (?, ?, ?)";
+  connection.query(query, [recipeId, user_id, rating], (err, results) => {
+    if (err) {
+      console.error("Error adding rating: ", err);
+      return res.status(500).send("Error adding rating");
+    }
+    res.status(201).send("Rating added successfully");
+  });
+});
+
+// Endpoint to retrieve the average rating for a recipe
+app.get("/api/recipes/:id/ratings", (req, res) => {
+  const recipeId = req.params.id;
+
+  // Retrieve the average rating from the database
+  const query =
+    "SELECT AVG(stars) AS average_rating FROM ratings WHERE recipe_id = ?";
+  connection.query(query, [recipeId], (err, results) => {
+    if (err) {
+      console.error("Error retrieving rating: ", err);
+      return res.status(500).send("Error retrieving rating");
+    }
+    const averageRating = results[0].average_rating || 0; // Handle cases where there are no ratings (averageRating might be NULL)
+    res.status(200).json({ averageRating });
+  });
+});
+
+
+
 // Recipe Management
 app.get("/api/recipes", (req, res) => {
   // Implementation to retrieve all recipes
@@ -167,9 +225,8 @@ app.get("/api/ingredients", (req, res) => {
 });
 
 app.get("/api/recipes/:id", (req, res) => {
-  // Implementation to retrieve a specific recipe by ID
   const userId = req.params.id;
-  const query = "SELECT * FROM Recipes WHERE user_id = ?";
+  const query = "SELECT recipe_id, title, description, user_id, image, Instruction, created_at FROM Recipes WHERE user_id = ?";
   connection.query(query, [userId], (err, results) => {
     if (err) {
       console.error("Error retrieving recipe: ", err);
@@ -261,7 +318,12 @@ app.post("/api/recipes/:id/comments/create", (req, res) => {
   );
 });
 
+
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server is listening at http://localhost:${port}`);
 });
+
+
+

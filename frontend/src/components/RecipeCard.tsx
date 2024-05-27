@@ -3,6 +3,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { useAuth } from "./authContext";
 import { Link } from "react-router-dom";
+import { Snackbar } from "@mui/material";
 import "../styles/home.css";
 import "../styles/tips.css";
 import "../styles/recipeCard.css";
@@ -16,7 +17,7 @@ interface RecipeCardProps {
     title: string;
     Instruction: string;
     description: string;
-    ingredients: string[];
+    ingredients: string[] | undefined;
     image: string;
     created_at: string;
   };
@@ -31,10 +32,16 @@ interface Comment {
 const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentText, setCommentText] = useState("");
+  const [rating, setRating] = useState(0);
+  const [userHasRated, setUserHasRated] = useState(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [showRatingInput, setShowRatingInput] = useState(false);
   const { user, loggedIn } = useAuth();
 
   useEffect(() => {
     fetchComments();
+    fetchRating();
   }, []);
 
   const fetchComments = async () => {
@@ -45,6 +52,41 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
       setComments(response.data);
     } catch (error) {
       console.error("Error fetching comments:", error);
+    }
+  };
+
+  const fetchRating = async () => {
+    try {
+      const response = await axios.get(
+        `/api/recipes/${recipe.recipe_id}/ratings`
+      );
+      setRating(response.data.averageRating);
+      checkIfUserHasRated();
+    } catch (error) {
+      console.error("Error fetching rating:", error);
+    }
+  };
+
+  const checkIfUserHasRated = async () => {
+    const userId = Cookies.get("user_id");
+    if (!userId) {
+      setUserHasRated(false);
+      return;
+    }
+
+    try {
+      const response = await axios.get(
+        `/api/recipes/${recipe.recipe_id}/ratings/user`,
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("token")}`,
+          },
+        }
+      );
+      setUserHasRated(response.data.hasRated);
+    } catch (error) {
+      console.error("Error checking if user has rated:", error);
+      setUserHasRated(false);
     }
   };
 
@@ -62,58 +104,150 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
     }
   };
 
-  return (
-    <div className="recipe-card">
-      <div className="recipe-image">
-        <img src={recipe.image} alt={recipe.title} />
+  const handleRatingClick = async (starIndex: number) => {
+    const userId = Cookies.get("user_id");
+    if (!userId) {
+      setSnackbarMessage("Please log in to rate a recipe.");
+      setSnackbarOpen(true);
+      return;
+    }
+
+    if (userHasRated) {
+      setSnackbarMessage(
+        "You have already rated this recipe and cannot change your rating."
+      );
+      setSnackbarOpen(true);
+      return;
+    }
+
+    setRating(starIndex + 1);
+    try {
+      await axios.post(
+        `/api/recipes/${recipe.recipe_id}/ratings/create`,
+        {
+          rating: starIndex + 1,
+          user_id: userId,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${Cookies.get("token")}`,
+          },
+        }
+      );
+      // Update userHasRated after successful submission
+      setUserHasRated(true);
+      setSnackbarMessage("Rating submitted successfully.");
+      setSnackbarOpen(true);
+      setShowRatingInput(false); // Set showRatingInput to false after submitting the rating
+    } catch (error) {
+      console.error("Error submitting rating:", error);
+      setSnackbarMessage("An error occurred while rating the recipe.");
+      setSnackbarOpen(true);
+    }
+  };
+
+  const renderRatingStars = (rating: number) => {
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating - fullStars >= 0.5;
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+    return (
+      <div className="rating-stars">
+        {[...Array(fullStars)].map((_, index) => (
+          <span key={`full-${index}`} className="star golden">
+            &#9733;
+          </span>
+        ))}
+        {hasHalfStar && <span className="star half-golden">&#9733;</span>}
+        {[...Array(emptyStars)].map((_, index) => (
+          <span key={`empty-${index}`} className="star">
+            &#9733;
+          </span>
+        ))}
       </div>
-      <div className="recipe-content">
-        <h2 className="recipe-title">{recipe.title}</h2>
-        <p className="recipe-description">{recipe.description}</p>
-        <div className="recipe-details">
-          <div className="recipe-instructions">
-            <h3>Instructions</h3>
-            <p>{recipe.Instruction}</p>
-          </div>
-          <div className="recipe-ingredients">
-            <h3>Ingredients</h3>
-            <ul>
-              {recipe.ingredients.map((ingredient, index) => (
-                <li key={index}>{ingredient}</li>
-              ))}
-            </ul>
-          </div>
+    );
+  };
+
+  return (
+    <>
+      <div className="recipe-card">
+        <div className="recipe-image">
+          <img src={recipe.image} alt={recipe.title} />
         </div>
-        <div className="recipe-comments">
-          <h3>Comments</h3>
-          {loggedIn ? (
-            <>
+        <div className="recipe-content">
+          <h2 className="recipe-title">{recipe.title}</h2>
+          <p className="recipe-description">{recipe.description}</p>
+          <div className="recipe-details">
+            <div className="recipe-instructions">
+              <h3>Instructions</h3>
+              <p>{recipe.Instruction}</p>
+            </div>
+            <div className="recipe-ingredients">
+              <h3>Ingredients</h3>
               <ul>
-                {comments.map((comment) => (
-                  <li key={comment.comment_id}>
-                    <b>{comment.username}</b>: {comment.comment_text}
-                  </li>
+                {recipe?.ingredients?.map((ingredient, index) => (
+                  <li key={index}>{ingredient}</li>
                 ))}
               </ul>
-              <div className="comment-input">
-                <input
-                  type="text"
-                  placeholder="Add a comment..."
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                />
-                <button onClick={handleCommentSubmit}>ADD</button>
+            </div>
+          </div>
+          <div className="recipe-comments">
+            <h3>Comments</h3>
+            {loggedIn ? (
+              <>
+                <ul>
+                  {comments.map((comment) => (
+                    <li key={comment.comment_id}>
+                      <b>{comment.username}</b>: {comment.comment_text}
+                    </li>
+                  ))}
+                </ul>
+                <div className="comment-input">
+                  <input
+                    type="text"
+                    placeholder="Add a comment..."
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                  />
+                  <button onClick={handleCommentSubmit}>ADD</button>
+                </div>
+              </>
+            ) : (
+              <Link to="/login">
+                <p>Please Login to Add Comments</p>
+              </Link>
+            )}
+          </div>
+          <div className="recipe-rating">
+            <h3>Rate this recipe:</h3>
+            {showRatingInput ? (
+              <div className="rating-stars">
+                {[...Array(5)].map((_, index) => (
+                  <span
+                    key={index}
+                    className={`star ${index < rating ? "golden" : ""}`}
+                    onClick={() => handleRatingClick(index)}
+                  >
+                    &#9733;
+                  </span>
+                ))}
               </div>
-            </>
-          ) : (
-            <Link to="/login">
-              <p>Please Login to Add Comments</p>
-            </Link>
-          )}
+            ) : (
+              <p onClick={() => setShowRatingInput(true)}>Click Here To Rate</p>
+            )}
+            <p>Average Rating: {renderRatingStars(rating)}</p>
+          </div>
+          <p className="recipe-date">{recipe.created_at.slice(0, 10)}</p>
         </div>
-        <p className="recipe-date">{recipe.created_at.slice(0, 10)}</p>
       </div>
-    </div>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={() => setSnackbarOpen(false)}
+        message={snackbarMessage}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      />
+    </>
   );
 };
 

@@ -1,107 +1,213 @@
+/* Import Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Cabin:wght@400&display=swap');
+
 /* Header Container */
 .header-container {
-    width: 100%;
-    height: 80px;
-    background-color: black; /* or #121212 for bg-cod-gray-900 */
-    z-index: 10;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-left: 1rem; /* equivalent to px-4 */
-    padding-right: 1rem; /* equivalent to px-4 */
+  width: 100%;
+  height: 80px;
+  background-color: black;
+  z-index: 10;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  position: relative;
+  backdrop-filter: blur(40px); 
 }
 
 /* Left Section */
 .header-left {
-  color: white;
-  font-size: 24px; /* Adjust font size as needed */
-  padding: 24px; /* Adjust padding as needed */
+  color: rgb(255, 255, 255);
+  font-family: 'Cabin', sans-serif;
+  font-style: normal;
+  font-weight: 800;
+  font-size: 25px;
+  line-height: 28px;
 }
 
 /* Right Section */
 .header-right {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
 }
 
 /* Links */
 .header-links {
   display: flex;
   align-items: center;
-  gap: 16px; /* Adjust the gap between links as needed */
+  gap: 16px;
 }
 
-
-.header-link1 {
-    font-size: 1.5rem; /* text-2xl */
-    font-weight: bold;
-    background: linear-gradient(to right, #fed7aa, #c3dafe); /* bg-gradient-to-r from-orange-200 to-indigo-100 */
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    text-decoration: none;
-    transition: all 0.3s ease-in-out;
-}
-
-.header-link1:hover {
-    font-size: 1.875rem; /* hover:text-3xl */
-    color: #f1f5f9; /* hover:text-slate-100 */
-    text-decoration: none; /* hover:no-underline */
-}
-
-.header-link2 {
-    font-size: 1.5rem; /* text-2xl */
-    font-weight: bold;
-    background: linear-gradient(to right, #fed7aa, #c3dafe); /* bg-gradient-to-r from-orange-200 to-indigo-100 */
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    text-decoration: none;
-    transition: all 0.3s ease-in-out;
-}
-
-.header-link2:hover {
-    font-size: 1.875rem; /* hover:text-3xl */
-    color: #f1f5f9; /* hover:text-slate-100 */
-    text-decoration: none; /* hover:no-underline */
-}
-
-
-.header-link3 {
-    font-size: 1.5rem; /* text-2xl */
-    font-weight: bold;
-    background: linear-gradient(to right, #fed7aa, #c3dafe); /* bg-gradient-to-r from-orange-200 to-indigo-100 */
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    text-decoration: none;
-    transition: all 0.3s ease-in-out;
-}
-
-.header-link3:hover {
-    font-size: 1.875rem; /* hover:text-3xl */
-    color: #f1f5f9; /* hover:text-slate-100 */
-    text-decoration: none; /* hover:no-underline */
-}
-
-
-
-/* Logout Button */
+.header-link1,
+.header-link2,
+.header-link3,
 .header-link4 {
-    color: #dc2626; /* text-red-600 */
-    font-size: 1.5rem; /* text-2xl */
-    font-weight: bold;
-    cursor: pointer;
+  font-family: 'Cabin', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 28px;
+  color: rgb(255, 255, 255);
+  text-decoration: none;
+  transition: all 0.3s ease-in-out;
+  position: relative;
+}
+
+.header-link4 {
+    font-family: 'Cabin', sans-serif;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 28px;
+    color: rgb(255, 20, 20);
+    text-decoration: none;
     transition: all 0.3s ease-in-out;
-    text-decoration: none; /* ensure no underline on hover */
+    position: relative;
+}
+
+.header-link1::before,
+.header-link2::before,
+.header-link3::before,
+.header-link4::before {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0%;
+  height: 2px;
+  background-color: #ff0000;
+  transition: width 0.3s ease-in-out;
+}
+
+.header-link1:hover::before,
+.header-link2:hover::before,
+.header-link3:hover::before,
+.header-link4:hover::before {
+  width: 100%;
+}
+
+.header-link1:hover,
+.header-link2:hover,
+.header-link3:hover {
+  font-size: 1.875rem;
+  color: #f1f5f9;
+  text-decoration: none;
 }
 
 .header-link4:hover {
-    color: #ff1010; /* hover:text-red-700 */
-    font-size: 1.875rem; /* hover:text-3xl */
-    text-decoration: none; /* hover:no-underline */
+  color: #ff1010;
+  font-size: 1.875rem;
+  text-decoration: none;
 }
 
+/* Hamburger Menu */
+.hamburger-menu {
+  display: none;
+  cursor: pointer;
+  z-index: 101;
+}
+
+.hamburger-line {
+  width: 25px;
+  height: 3px;
+  background-color: white;
+  margin: 5px;
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Hamburger Menu Animation */
+.hamburger-menu.open .hamburger-line:nth-child(1) {
+  transform: rotate(45deg) translate(5px, 5px);
+}
+
+.hamburger-menu.open .hamburger-line:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger-menu.open .hamburger-line:nth-child(3) {
+  transform: rotate(-45deg) translate(5px, -5px);
+}
+
+/* Media Query for Mobile */
+@media (max-width: 768px) {
+  .header-container {
+    height: auto;
+    flex-direction: column;
+    padding: 1rem 0;
+  }
+
+  .header-left {
+    font-size: 20px;
+  }
+
+  .header-links {
+    flex-direction: column;
+    gap: 10px;
+    background-color: black;
+    padding: 1rem;
+    position: absolute;
+    top: 0; /* Adjusted */
+    left: 0;
+    width: 100%;
+    z-index: 100;
+    transform: translateY(-100%); /* Start off-screen */
+    transition: transform 0.3s ease-in-out; /* Add transition for smooth animation */
+  }
+
+  .header-link {
+    font-size: 1.25rem;
+    color: white; /* Set text color to match header */
+  }
 
 
+  @keyframes borderHighlight {
+    0% {
+      border-color: transparent;
+    }
+    25% {
+      border-top-color: #ff0000;
+    }
+    50% {
+      border-right-color: #ff0000;
+    }
+    75% {
+      border-bottom-color: #ff0000;
+    }
+    100% {
+      border-left-color: #ff0000;
+    }
+  }
+  
+  .header-links.show {
+    animation: borderHighlight 1s linear forwards;
+    border: 2px solid transparent;
+  }
+
+  .main-content {
+    transition: filter 0.3s ease-in-out;
+  }
+  
+  .header-container.open ~ .main-content {
+    filter: blur(5px); /* Adjust the blur amount as needed */
+  }
+  .header-right .header-links {
+    display: none;
+  }
+
+  .header-right .header-links.show {
+    display: flex;
+    transform: translateY(0); /* Slide in from the top */
+  }
+
+  .hamburger-menu {
+    display: block;
+    margin-left: 10cm; /* Centered horizontally */
+    margin-top: -27px; /* Adjusted */
+  }
+
+  .header-container.open .header-links {
+    transform: translateY(80px); /* Adjust to match header height */
+  }
+}

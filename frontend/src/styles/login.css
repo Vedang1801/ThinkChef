@@ -4,12 +4,15 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  background-color: #240046;
   max-height: 420px;
   overflow: hidden;
   border-radius: 12px;
-  box-shadow: 7px 7px 10px 3px #24004628;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(25px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(249, 242, 242, 0.18);
 }
+
 
 .formbodytitle {
   transition: .5s ease-in-out;
@@ -28,7 +31,7 @@
   height: 40px;
   margin: 12px auto 10%;
   color: #fff;
-  background: #573b8a;
+  background: #bb47fd;
   font-size: 1rem;
   font-weight: bold;
   border: none;
@@ -44,7 +47,7 @@
 .formlogin-button:focus {
   outline: none;
   /* focus:outline-none */
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 2px #bb47fd;;
   /* focus:ring-2 focus:ring-blue-500 */
 }
 
@@ -117,7 +120,8 @@
   background-color: black;
   background-size: contain;
   background-position: center;
-  background-color: rgba(255, 255, 255, 0.5); /* Adjust the last value (0.5) to set the opacity */
+  /*background-color: rgba(255, 255, 255, 0.5);  Adjust the last value (0.5) to set the opacity */
+  background-image: url('./loginbg.svg');
 }
 
 .loginlastline {

@@ -1,42 +1,41 @@
- /* recipe-card.css */
+/* recipe-card.css */
 @import url('https://fonts.googleapis.com/css2?family=Hahmlet:wght@100..900&display=swap');
 
-.recipes-box {
-  background-color: #000;
-  /* Light gray background */
-  border-radius: 8px;
-  padding: 10px;
-  /* Increased padding for better spacing */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  width: 100vw;
-  /* Set width to 100% of the viewport width */
-  max-width: 100%;
-  /* Ensure the box doesn't exceed the viewport width */
-  margin: 0 auto;
-  /* Center the box horizontally */
+.addrecipeboxtitle {
+  font-family: "Neue Haas Grotesk Regular", Arial, sans-serif;
+  font-style: normal;
+  font-weight: bolder;
+  font-size: 40px;
+  line-height: 1.5;
+  color: rgb(234, 233, 229);
+  position: relative;
+  display: inline-block;
+  padding: 10px 20px;
   margin-bottom: 30px;
-  display: flex;
-  /* Use flexbox for layout */
-  flex-direction: column;
-  /* Stack items vertically */
-  align-items: center;
-  /* Center items horizontally */
+  background: linear-gradient(to right, #c23616, #f76c6c);
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: text-fill 10s ease infinite;
+  text-align: center;
 }
 
 .recipe-card {
   display: flex;
-  background-color: #fff;
+  background-color: rgba(255, 255, 255, 0.1); /* Semi-transparent background */
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), inset 0 -2px 4px rgba(255, 255, 255, 0.1); /* Subtle shadow for depth */
   overflow: hidden;
   transition: transform 0.3s ease-in-out;
-  border: 1px solid var(--border-color);
+  border: 1px solid rgba(0, 0, 0, 0.1); /* Soft border */
   margin-bottom: 20px;
+  backdrop-filter: blur(40px); 
 }
 
 .recipe-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
 }
 
 .recipe-image {
@@ -58,16 +57,19 @@
   justify-content: space-between;
 }
 
+/* The rest of your CSS remains unchanged */
+
+
 .recipe-title {
   font-size: 24px;
   font-weight: bold;
-  color: var(--text-color);
+  color: #ffffff;
   margin-bottom: 8px;
 }
 
 .recipe-description {
   font-size: 16px;
-  color: #666;
+  color: #ffffff;
   margin-bottom: 16px;
   text-align: justify;
 }
@@ -81,11 +83,12 @@
 .recipe-instructions,
 .recipe-ingredients {
   flex: 0 0 48%;
+  color: #ffffff;
 }
 
-.recipe-instructions h3,
-.recipe-ingredients h3 {
-  font-size: 18px;
+.recipe-instructions h3{
+  font-family:Verdana, Geneva, Tahoma, sans-serif;
+  font-size: 15px;
   font-weight: bold;
   margin-bottom: 8px;
 }
@@ -143,6 +146,7 @@
 
 .recipe-comments {
   margin-top: 16px;
+  color: #ffffff;
 }
 
 .recipe-comments h3 {
@@ -150,6 +154,7 @@
   font-weight: bold;
   margin-bottom: 8px;
 }
+
 
 .recipe-comments ul {
   list-style: none;
@@ -181,7 +186,7 @@
   border: 1px solid #ccc;
   border-radius: 4px;
  }
- 
+
  .comment-input button {
   background-color: #4caf50;
   color: white;
@@ -191,13 +196,56 @@
   cursor: pointer;
   margin-left: 8px;
  }
- 
+
  .recipe-date {
   font-size: 14px;
   color: #999;
   text-align: right;
- }
+}
 
- 
+/* Rating Styles */
 
- 
+.recipe-rating {
+  margin-top: 16px;
+  color: #ffffff;
+}
+
+.recipe-rating h3 {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.rating-stars {
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+}
+
+.rating-stars .star {
+  color: #cccccc; /* Light gray color (initial state) */
+  transition: color 0.3s; /* Smooth transition for color change */
+}
+
+.rating-stars .star.golden {
+  color: gold; /* Gold color for stars up to the current rating */
+}
+
+
+
+/* Media Query for Mobile */
+@media (max-width: 768px) {
+  .recipe-card {
+    flex-direction: column;
+  }
+  
+  .recipe-image {
+    flex: 1;
+    max-width: 100%;
+  }
+  
+  .recipe-content {
+    flex: 1;
+    padding: 12px; /* Adjusted padding for mobile */
+  }
+}

@@ -10,7 +10,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
     "@lyket/react": "^2.1.0",
+    "@mui/material": "^5.15.18",
     "aws-sdk": "^2.1613.0",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
