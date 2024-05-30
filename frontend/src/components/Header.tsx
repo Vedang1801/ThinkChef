@@ -37,38 +37,38 @@ const Header = () => {
     <header className="header-container">
       <div className="header-left">RECIPE MANAGEMENT SYSTEM</div>
       <div className="header-right">
-        {loggedIn ? (
-          <div className="header-links">
-            <Link to="/" className="header-link1">
-              Home
-            </Link>
-            <Link to="/addrecipes" className="header-link2">
-              Add Recipe
-            </Link>
-            <Link to="/profile" className="header-link3">
-              Profile
-            </Link>
-            <span className="header-link4" onClick={handleLogout}>
-              Logout
-            </span>
-          </div>
-        ) : (
-          <>
-            <div className={`header-links ${showMenu ? 'show' : ''}`}>
+        <div className={`header-links ${showMenu ? 'show' : ''}`}>
+          {loggedIn ? (
+            <>
+              <Link to="/" className="header-link1" onClick={handleLinkClick}>
+                Home
+              </Link>
+              <Link to="/addrecipes" className="header-link2" onClick={handleLinkClick}>
+                Add Recipe
+              </Link>
+              <Link to="/profile" className="header-link3" onClick={handleLinkClick}>
+                Profile
+              </Link>
+              <span className="header-link4" onClick={handleLogout}>
+                Logout
+              </span>
+            </>
+          ) : (
+            <>
               <Link to="/" className="header-link1" onClick={handleLinkClick}>
                 Home
               </Link>
               <Link to="/login" className="header-link2" onClick={handleLinkClick}>
                 Login
               </Link>
-            </div>
-            <div className="hamburger-menu" onClick={toggleMenu}>
-              <div className="hamburger-line"></div>
-              <div className="hamburger-line"></div>
-              <div className="hamburger-line"></div>
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
+        <div className="hamburger-menu" onClick={toggleMenu}>
+          <div className="hamburger-line"></div>
+          <div className="hamburger-line"></div>
+          <div className="hamburger-line"></div>
+        </div>
       </div>
     </header>
   );

@@ -20,7 +20,7 @@ interface Post {
   user_id: number;
   image: string;
   created_at: Date;
-  
+  ingredients: string[]; // Modified to include ingredients
 }
 
 const Profile = () => {
@@ -45,15 +45,22 @@ const Profile = () => {
 
   const fetchPosts = async () => {
     try {
-      const response = await axios.get(
-        `/api/recipes/${Cookies.get("user_id")}`
-      );
-      setPosts(response.data);
+      const response = await axios.get(`/api/recipes/${Cookies.get("user_id")}`);
+      const postsData = await Promise.all(response.data.map(async (post) => {
+        const ingredientsResponse = await axios.get(`/api/recipes/${post.recipe_id}/ingredients`);
+        console.log("Ingredients response:", ingredientsResponse.data); // Log ingredients data
+        const ingredientsData = ingredientsResponse.data.map(ingredient => ingredient.item); // Extract 'item' property
+        console.log("Ingredients data:", ingredientsData); // Log processed ingredients data
+        return { ...post, ingredients: ingredientsData };
+      }));
+      console.log("Posts data:", postsData); // Log updated posts data
+      setPosts(postsData);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
   };
-
+  
+  
   const handleDelete = (event, postId: number) => {
     event.stopPropagation(); // Add this line to prevent event bubbling
     setPendingDelete(postId);
@@ -173,7 +180,7 @@ const Profile = () => {
               title: selectedRecipe.title,
               Instruction: selectedRecipe.Instruction,
               description: selectedRecipe.description,
-              ingredients: [],
+              ingredients: selectedRecipe.ingredients,
               image: selectedRecipe.image,
               created_at:
                 typeof selectedRecipe.created_at === "string"

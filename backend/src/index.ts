@@ -1,4 +1,11 @@
-require('dotenv').config();
+require('dotenv').config({ path: '../.env' }); 
+
+/*
+console.log(process.env.AWS_ACCESS_KEY_ID);
+console.log(process.env.AWS_SECRET_ACCESS_KEY);
+console.log(process.env.AWS_REGION);
+*/
+
 const express = require("express");
 const cors = require("cors");
 const mysql = require("mysql2");
@@ -6,11 +13,15 @@ const AWS = require("aws-sdk");
 const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
-const upload = multer({ dest: "uploads/" }); // Specify the destination directory for file uploads
+// Specify the destination directory for file uploads
 const secretKey = "FinalProject@1234";
 const bcrypt = require("bcrypt");
 const app = express();
 const port = 3000;
+
+
+app.use(bodyParser.json()); 
+const upload = multer({ dest: "uploads/" }); 
 
 // Create connection to MySQL database
 const connection = mysql.createConnection({
@@ -68,13 +79,13 @@ function verifyToken(req, res, next) {
   });
 }
 
-
 // Configure AWS SDK with your credentials and region
-AWS.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_SECRET_LOCATION,
-});
+    AWS.config.update({
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      region: process.env.AWS_REGION
+    });
+    
 
 const s3 = new AWS.S3();
 
@@ -144,21 +155,82 @@ app.post("/api/login", (req, res) => {
 });
 
 
-app.get("/api/recipes/:id/ratings/user", verifyToken, (req, res) => {
+// Endpoint to retrieve ingredients for a recipe
+app.get("/api/recipes/:id/ingredients", (req, res) => {
   const recipeId = req.params.id;
-  const userId = req.userId; // Extracted from JWT token using verifyToken middleware
-
-  // Check if a rating record exists for the recipe and user
-  const query =
-    "SELECT * FROM ratings WHERE recipe_id = ? AND user_id = ?";
-  connection.query(query, [recipeId, userId], (err, results) => {
+  const query = "SELECT * FROM ingredients WHERE recipe_id = ?";
+  connection.query(query, [recipeId], (err, results) => {
     if (err) {
-      console.error("Error checking user rating: ", err);
-      return res.status(500).send("Error checking rating");
+      console.error("Error retrieving ingredients: ", err);
+      return res.status(500).send("Error retrieving ingredients");
     }
-    res.status(200).json({ hasRated: results.length > 0 });
+    res.status(200).json(results);
   });
 });
+
+
+
+app.get("/api/recipes/:id/ratings/user", verifyToken, (req, res) => {
+  const recipeId = req.params.id;
+  const userId = req.userId;
+  const query = "SELECT stars FROM ratings WHERE recipe_id = ? AND user_id = ?";
+  connection.query(query, [recipeId, userId], (err, results) => {
+    if (err) {
+      console.error("Error fetching user rating: ", err);
+      return res.status(500).send("Error checking rating");
+    }
+    if (results.length === 0) {
+      return res.status(200).json({ hasRated: false });
+    }
+    res.status(200).json({ hasRated: true, userRating: results[0].stars });
+  });
+});
+
+
+
+const fs = require("fs");
+
+app.post("/api/upload-image", upload.single("image"), (req, res) => {
+  const file = req.file;
+
+  if (!file) {
+    return res.status(400).send("No file uploaded");
+  }
+
+  // Read the file from disk
+  fs.readFile(file.path, (err, data) => {
+    if (err) {
+      console.error("Error reading file:", err);
+      return res.status(500).send("Error reading file");
+    }
+
+    const params = {
+      Bucket: "imagebucketforproject",
+      Key: `images/${file.originalname}`,
+      Body: data,
+      ACL: "public-read",
+    };
+
+    // Upload file to S3
+    s3.upload(params, (err, s3Data) => {
+      if (err) {
+        console.error("Error uploading file:", err);
+        return res.status(500).send("Error uploading file to S3");
+      }
+      console.log("File uploaded successfully:", s3Data.Location);
+      // Delete the file from disk after uploading to S3
+      fs.unlink(file.path, (unlinkErr) => {
+        if (unlinkErr) {
+          console.error("Error deleting file from disk:", unlinkErr);
+        }
+      });
+      res.status(200).json({ imageUrl: s3Data.Location });
+    });
+  });
+});
+
+
+
 
 
 // Add the following API endpoints to your existing backend code
