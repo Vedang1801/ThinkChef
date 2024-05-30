@@ -34,15 +34,46 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
   const [commentText, setCommentText] = useState("");
   const [rating, setRating] = useState(0);
   const [userHasRated, setUserHasRated] = useState(false);
+  const [userRating, setUserRating] = useState(0);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [showRatingInput, setShowRatingInput] = useState(false);
+  const [showThankYouSnackbar, setShowThankYouSnackbar] = useState(false);
   const { user, loggedIn } = useAuth();
 
   useEffect(() => {
     fetchComments();
     fetchRating();
-  }, []);
+  }, [recipe.recipe_id]);
+
+  // Check user rating on login
+  useEffect(() => {
+    if (loggedIn) {
+      checkIfUserHasRated();
+      fetchUserRating(); // New API call to fetch user rating
+    } else {
+      resetUserRatingState();
+    }
+  }, [user, loggedIn, recipe.recipe_id]);
+
+  const fetchUserRating = async () => {
+    try {
+      const response = await axios.get(
+        `/api/recipes/${recipe.recipe_id}/ratings/user`,
+        { headers: { Authorization: `Bearer ${Cookies.get("token")}` } }
+      );
+      if (response.data.hasRated) {
+        setUserRating(response.data.userRating);
+      }
+    } catch (error) {
+      console.error("Error fetching user rating:", error);
+    }
+  };
+
+  const resetUserRatingState = () => {
+    setUserHasRated(false);
+    setUserRating(0);
+  };
 
   const fetchComments = async () => {
     try {
@@ -61,7 +92,6 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
         `/api/recipes/${recipe.recipe_id}/ratings`
       );
       setRating(response.data.averageRating);
-      checkIfUserHasRated();
     } catch (error) {
       console.error("Error fetching rating:", error);
     }
@@ -83,10 +113,17 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
           },
         }
       );
-      setUserHasRated(response.data.hasRated);
+      if (response.data.hasRated) {
+        setUserHasRated(true);
+        setUserRating(response.data.userRating);
+      } else {
+        setUserHasRated(false);
+        setUserRating(0);
+      }
     } catch (error) {
       console.error("Error checking if user has rated:", error);
       setUserHasRated(false);
+      setUserRating(0);
     }
   };
 
@@ -111,7 +148,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
       setSnackbarOpen(true);
       return;
     }
-
+  
     if (userHasRated) {
       setSnackbarMessage(
         "You have already rated this recipe and cannot change your rating."
@@ -119,8 +156,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
       setSnackbarOpen(true);
       return;
     }
-
-    setRating(starIndex + 1);
+  
     try {
       await axios.post(
         `/api/recipes/${recipe.recipe_id}/ratings/create`,
@@ -134,34 +170,38 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
           },
         }
       );
-      // Update userHasRated after successful submission
       setUserHasRated(true);
+      setUserRating(starIndex + 1);
       setSnackbarMessage("Rating submitted successfully.");
       setSnackbarOpen(true);
-      setShowRatingInput(false); // Set showRatingInput to false after submitting the rating
+      setShowRatingInput(false);
+      setShowThankYouSnackbar(true); // Show the thank you snackbar
+      fetchRating(); // Fetch updated average rating
     } catch (error) {
       console.error("Error submitting rating:", error);
       setSnackbarMessage("An error occurred while rating the recipe.");
       setSnackbarOpen(true);
     }
   };
+  
 
   const renderRatingStars = (rating: number) => {
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating - fullStars >= 0.5;
+    const fullStars = Math.floor(userRating || rating); // Use userRating if available, otherwise fallback to average rating
+    const hasHalfStar = (userRating || rating) - fullStars >= 0.5; // Use userRating if available, otherwise fallback to average rating
     const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-
     return (
       <div className="rating-stars">
         {[...Array(fullStars)].map((_, index) => (
           <span key={`full-${index}`} className="star golden">
-            &#9733;
+            {" "}
+            &#9733;{" "}
           </span>
         ))}
         {hasHalfStar && <span className="star half-golden">&#9733;</span>}
         {[...Array(emptyStars)].map((_, index) => (
           <span key={`empty-${index}`} className="star">
-            &#9733;
+            {" "}
+            &#9733;{" "}
           </span>
         ))}
       </div>
@@ -225,7 +265,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
                 {[...Array(5)].map((_, index) => (
                   <span
                     key={index}
-                    className={`star ${index < rating ? "golden" : ""}`}
+                    className={`star ${index < userRating ? "golden" : ""}`}
                     onClick={() => handleRatingClick(index)}
                   >
                     &#9733;
@@ -235,8 +275,9 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
             ) : (
               <p onClick={() => setShowRatingInput(true)}>Click Here To Rate</p>
             )}
-            <p>Average Rating: {renderRatingStars(rating)}</p>
+            <span>Average Rating: {Number(rating).toFixed(1)}</span>
           </div>
+
           <p className="recipe-date">{recipe.created_at.slice(0, 10)}</p>
         </div>
       </div>
@@ -247,8 +288,16 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
         message={snackbarMessage}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
       />
+      <Snackbar
+        open={showThankYouSnackbar}
+        autoHideDuration={6000}
+        onClose={() => setShowThankYouSnackbar(false)}
+        message="Thank you for rating!"
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      />
     </>
   );
 };
 
 export default RecipeCard;
+

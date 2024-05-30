@@ -1,7 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "../styles/register.css";
 
@@ -74,69 +73,73 @@ const Register = () => {
         console.log(response.data); // Assuming server sends back a success message
       } catch (error) {
         console.error("Error registering user: ", error);
+        toast.error("Registration failed");
       }
     }
   };
 
   return (
-    <div className="flex items-center justify-center h-screen">
-      <div className="registerbody">
-        <h2 className="registerbodytitle">Register</h2>
+    <div className="loginbackground">
+      <div className="formbody">
+        <h2 className="formbodytitle">Register</h2>
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
+          <div className="mb-4" style={{ position: "relative" }}>
             <input
               type="text"
               id="username"
               name="username"
-              placeholder="Username"
+              placeholder=" "
               value={formData.username}
               onChange={handleChange}
-              className={`registerusername ${errors.username ? "error" : ""}`}
+              className={`inputusername ${errors.username ? "error" : ""}`}
+              required
             />
+            <label htmlFor="username" className="floating-label">Username</label>
             {errors.username && (
               <p className="error-message">{errors.username}</p>
             )}
           </div>
 
-          <div className="mb-4">
+          <div className="mb-4" style={{ position: "relative" }}>
             <input
               type="email"
               id="email"
               name="email"
-              placeholder="Email"
+              placeholder=" "
               value={formData.email}
               onChange={handleChange}
-              className={`registeremail ${errors.email ? "error" : ""}`}
+              className={`inputemail ${errors.email ? "error" : ""}`}
+              required
             />
+            <label htmlFor="email" className="floating-label">Email</label>
             {errors.email && <p className="error-message">{errors.email}</p>}
           </div>
 
-          <div className="mb-4">
+          <div className="mb-4" style={{ position: "relative" }}>
             <input
               type="password"
               id="password"
               name="password"
-              placeholder="Password"
+              placeholder=" "
               value={formData.password}
               onChange={handleChange}
-              className={`registerpassword ${errors.password ? "error" : ""}`}
+              className={`inputpassword ${errors.password ? "error" : ""}`}
+              required
             />
+            <label htmlFor="password" className="floating-label">Password</label>
             {errors.password && (
               <p className="error-message">{errors.password}</p>
             )}
           </div>
-          <div className="mb-4 flex justify-center">
 
-          <button
-            type="submit"
-            className="registerbutton"
-          >
-            Register
-          </button>
+          <div className="mb-4 flex justify-center">
+            <button type="submit" className="formlogin-button">
+              Register
+            </button>
           </div>
         </form>
         <div className="mt-4">
-          <p className="text-gray-600">
+          <p className="loginlastline">
             Already have an account?{" "}
             <Link to="/login" className="text-blue-500 hover:underline">
               Login

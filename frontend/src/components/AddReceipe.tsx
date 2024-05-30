@@ -129,44 +129,41 @@ const AddRecipe = () => {
     }
   };
 
-  const handleAddImageClick = async () => {
-    try {
-      if (!recipeData.image) {
-        toast.error("Image Not Uploaded");
-        return;
-      }
+// Update your frontend code to call the new API endpoint
+const handleAddImageClick = async () => {
+  try {
+    if (!recipeData.image) {
+      toast.error("Image Not Uploaded");
+      return;
+    }
 
-      // Configure AWS SDK with your credentials and region
-      AWS.config.update({
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-        region: process.env.AWS_SECRET_LOCATION,
-      });
+    const formData = new FormData();
+    formData.append("image", recipeData.image);
 
-      const s3 = new AWS.S3();
-      const file = recipeData.image;
+    const response = await fetch("/api/upload-image", {
+      method: "POST",
+      body: formData,
+    });
 
-      const params = {
-        Bucket: "imagebucketforproject",
-        Key: `images/${file.name}`,
-        Body: file,
-        ACL: "public-read",
-      };
-
-      // s3 file upload
-      const data = await s3.upload(params).promise();
-
-      console.log("File uploaded successfully:", data.Location);
+    if (response.ok) {
+      const responseData = await response.json();
+      console.log("File uploaded successfully:", responseData.imageUrl);
       toast.success("File uploaded successfully");
 
       setRecipeData((prevState) => ({
         ...prevState,
-        image: data.Location,
+        image: responseData.imageUrl,
       }));
-    } catch (error) {
-      console.error("Error uploading file:", error);
+    } else {
+      console.error("Error uploading file");
+      toast.error("Error uploading file");
     }
-  };
+  } catch (error) {
+    console.error("Error:", error);
+    toast.error("Error uploading file");
+  }
+};
+
 
   return (
     <div className="home-container">
