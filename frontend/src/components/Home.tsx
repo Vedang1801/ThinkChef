@@ -1,6 +1,7 @@
+// Home.tsx
 import React, { useState, useEffect } from "react";
-import axios from "axios"; // Import Axios for making HTTP requests
-import RecipeCard from "./RecipeCard"; // Import the RecipeCard component
+import axios from "axios";
+import RecipeCard from "./RecipeCard";
 import Tips from "./Tips";
 import "../App.css";
 import "../styles/home.css";
@@ -10,8 +11,6 @@ import "../styles/profile.css";
 import "../styles/main.css";
 import "../styles/login.css";
 
-
-
 interface Recipe {
   recipe_id: number;
   title: string;
@@ -20,24 +19,30 @@ interface Recipe {
   user_id: number;
   image: string;
   created_at: Date;
-  ingredients: { item: string; quantity: string }[]; // Modify Recipe interface to include ingredients
+  ingredients: { item: string; quantity: string }[];
 }
 
-const Home: React.FC = () => {
-  // Specify the type of the recipes state
+interface HomeProps {
+  searchTerm: string;
+}
+
+const Home: React.FC<HomeProps> = ({ searchTerm }) => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
 
   useEffect(() => {
     fetchRecipes();
   }, []);
 
+  useEffect(() => {
+    handleSearch(searchTerm);
+  }, [searchTerm]);
+
   const fetchRecipes = async () => {
     try {
-      // Fetch data from both API endpoints
       const recipesResponse = await axios.get("/api/recipes");
       const ingredientsResponse = await axios.get("/api/ingredients");
 
-      // Extract data from responses
       const recipesData: Recipe[] = recipesResponse.data;
       const ingredientsData: {
         recipe_id: number;
@@ -45,7 +50,6 @@ const Home: React.FC = () => {
         quantity: string;
       }[] = ingredientsResponse.data;
 
-      // Combine recipes and ingredients data
       const combinedRecipes: Recipe[] = recipesData.map((recipe) => {
         const ingredients = ingredientsData
           .filter((ingredient) => ingredient.recipe_id === recipe.recipe_id)
@@ -56,30 +60,25 @@ const Home: React.FC = () => {
         };
       });
 
-      // Set the combined recipes data in the state
       setRecipes(combinedRecipes);
+      setFilteredRecipes(combinedRecipes); // Initialize filteredRecipes
     } catch (error) {
       console.error("Error fetching data:", error);
-      // Handle error
+    }
+  };
+
+  const handleSearch = (searchTerm: string) => {
+    if (searchTerm === "") {
+      setFilteredRecipes(recipes);
+    } else {
+      const filtered = recipes.filter((recipe) =>
+        recipe.title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredRecipes(filtered);
     }
   };
 
   return (
-    // <div className="home-container">
-    //   <div className="home-background"></div>
-    //   <div className="container mx-auto px-4 py-8">
-    //     <div className="centered-container">
-    //       <div className="recipes-box">
-    //         <h2 className="text-3xl font-semibold mb-4">Recipes</h2>
-    //       </div>
-    //       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-    //         {recipes.map(recipe => (
-    //           <RecipeCard key={recipe.recipe_id} recipe={recipe} />
-    //         ))}
-    //       </div>
-    //     </div>
-    //   </div>
-    // </div>
     <div className="home-container">
       <div className="home-background"></div>
       <div className="container mx-auto px-4 py-8">
@@ -88,15 +87,13 @@ const Home: React.FC = () => {
             <h2 className="recipeboxtitle">RECIPES</h2>
           </div>
           <div className="grid grid-cols-1 gap-4">
-            {/* Render RecipeCard components */}
-            {recipes.map((recipe) => (
+            {filteredRecipes.map((recipe) => (
               <RecipeCard key={recipe.recipe_id} recipe={recipe} />
             ))}
           </div>
         </div>
       </div>
       <footer>
-        {/* Render the Tips component at the footer */}
         <Tips />
       </footer>
     </div>
@@ -104,6 +101,3 @@ const Home: React.FC = () => {
 };
 
 export default Home;
-
-
-

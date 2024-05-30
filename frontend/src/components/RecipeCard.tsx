@@ -46,7 +46,6 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
     fetchRating();
   }, [recipe.recipe_id]);
 
-  // Check user rating on login
   useEffect(() => {
     if (loggedIn) {
       checkIfUserHasRated();
@@ -148,7 +147,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
       setSnackbarOpen(true);
       return;
     }
-  
+
     if (userHasRated) {
       setSnackbarMessage(
         "You have already rated this recipe and cannot change your rating."
@@ -156,7 +155,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
       setSnackbarOpen(true);
       return;
     }
-  
+
     try {
       await axios.post(
         `/api/recipes/${recipe.recipe_id}/ratings/create`,
@@ -183,7 +182,6 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
       setSnackbarOpen(true);
     }
   };
-  
 
   const renderRatingStars = (rating: number) => {
     const fullStars = Math.floor(userRating || rating); // Use userRating if available, otherwise fallback to average rating
@@ -206,6 +204,11 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
         ))}
       </div>
     );
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).format(date);
   };
 
   return (
@@ -273,12 +276,17 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
                 ))}
               </div>
             ) : (
-              <p onClick={() => setShowRatingInput(true)}>Click Here To Rate</p>
+              <p
+                className="rate-prompt"
+                onClick={() => setShowRatingInput(true)}
+              >
+                Click Here To Rate
+              </p>
             )}
-            <span>Average Rating: {Number(rating).toFixed(1)}</span>
+            <div className="rating-circle">{Number(rating).toFixed(1)}</div>
           </div>
 
-          <p className="recipe-date">{recipe.created_at.slice(0, 10)}</p>
+          <p className="recipe-date">{formatDate(recipe.created_at)}</p>
         </div>
       </div>
       <Snackbar
@@ -300,4 +308,3 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
 };
 
 export default RecipeCard;
-

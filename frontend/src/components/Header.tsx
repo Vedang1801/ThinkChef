@@ -9,8 +9,13 @@ import '../styles/recipeCard.css';
 import '../styles/profile.css';
 import '../styles/main.css';
 import '../styles/login.css';
+import SearchBox from './SearchBox';
 
-const Header = () => {
+interface HeaderProps {
+  onSearch: (searchTerm: string) => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ onSearch }) => {
   const { loggedIn, logout } = useAuth();
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
@@ -35,8 +40,10 @@ const Header = () => {
 
   return (
     <header className="header-container">
-      <div className="header-left">RECIPE MANAGEMENT SYSTEM</div>
+      <div className="header-left">RECIPE REALM</div>
       <div className="header-right">
+        {/* Integrate the SearchBox component */}
+        <SearchBox onSearch={onSearch} />
         <div className={`header-links ${showMenu ? 'show' : ''}`}>
           {loggedIn ? (
             <>
