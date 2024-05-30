@@ -53,7 +53,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       Cookies.set("email", user.email, { expires: 7 });
       setLoggedIn(true);
       setUser(user);
-      toast.success("Welcome!! ");
+      toast.success(`Welcome, ${user.username}!`);
       navigate("/");
     } catch (error) {
       console.error("Error logging in: ", error);

@@ -1,6 +1,8 @@
 /* recipe-card.css */
 @import url('https://fonts.googleapis.com/css2?family=Hahmlet:wght@100..900&display=swap');
 
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+
 
 
 .addrecipeboxtitle{
@@ -208,13 +210,23 @@
 .recipe-rating h3 {
   font-size: 18px;
   font-weight: bold;
+  text-align: left;
   margin-bottom: 8px;
+}
+
+.recipe-rating p {
+  font-size: 14px;
+  text-align: left;
+  margin-bottom: 12px;
+
 }
 
 .rating-stars {
   font-size: 24px;
   cursor: pointer;
   display: flex;
+  width: 150px;
+  margin-bottom: 10px;
 }
 
 .rating-stars .star {
@@ -225,6 +237,36 @@
 .rating-stars .star.golden {
   color: gold; /* Gold color for stars up to the current rating */
 }
+
+/* Add this CSS style for the average rating */
+.rating-circle {
+  display: flex; /* Use flexbox for centering */
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  width: 70px; /* Adjust size of the circle as needed */
+  height: 70px; /* Adjust size of the circle as needed */
+  background-color: rgb(238, 219, 10); /* Yellow background color */
+  border-radius: 50%; /* Make it a circle */
+  font-size: 40px; /* Adjust font size as needed */
+  font-weight: bolder;
+  color: rgba(0, 0, 0, 0.5); /* Transparent black text color */
+  margin-left: 10px; /* Adjust margin as needed */
+  font-family: "Bebas Neue", sans-serif;
+}
+
+.rate-prompt {
+  font-size: 14px;
+  text-align: left;
+  margin-bottom: 12px;
+  cursor: pointer; /* Change cursor to pointer on hover */
+  color: rgb(0, 0, 0); /* Optional: Add a different color to indicate it's clickable */
+  text-decoration: underline; /* Optional: Add underline to indicate it's clickable */
+    height: 20px;
+    width: 150px;
+
+  
+}
+
 
 
 
