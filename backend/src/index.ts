@@ -41,9 +41,10 @@ connection.connect((err) => {
   console.log("Connected to MySQL database");
 });
 
+// Development-only CORS configuration
 const corsOptions = {
-  origin: "http://localhost:5173", // Allow requests only from this origin
-  credentials: true, //access-control-allow-credentials:true
+  origin: true, // Allow all origins
+  credentials: true,
   optionSuccessStatus: 200,
 };
 
@@ -66,15 +67,21 @@ function generateToken(user) {
 
 // Middleware to verify JWT token
 function verifyToken(req, res, next) {
-  const token = req.headers.authorization?.split(" ")[1];
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(' ')[1];
+  
   if (!token) {
     return res.status(401).send("Unauthorized: No token provided");
   }
+
   jwt.verify(token, secretKey, (err, decoded) => {
     if (err) {
+      if (err.name === 'TokenExpiredError') {
+        return res.status(401).send("Unauthorized: Token expired");
+      }
       return res.status(401).send("Unauthorized: Invalid token");
     }
-    req.userId = decoded.userId; // Attach user ID to request object for further processing
+    req.userId = decoded.userId;
     next();
   });
 }
@@ -205,10 +212,11 @@ app.post("/api/upload-image", upload.single("image"), (req, res) => {
     }
 
     const params = {
-      Bucket: "imagebucketforproject",
+      Bucket: "imagebucketforproject1",
       Key: `images/${file.originalname}`,
       Body: data,
-      ACL: "public-read",
+      // Remove the ACL: "public-read" line as your bucket doesn't support ACLs
+      ContentType: file.mimetype // Add content type for proper MIME handling
     };
 
     // Upload file to S3
@@ -273,14 +281,57 @@ app.get("/api/recipes/:id/ratings", (req, res) => {
 
 // Recipe Management
 app.get("/api/recipes", (req, res) => {
-  // Implementation to retrieve all recipes
-  const query = "SELECT * FROM recipes";
-  connection.query(query, (err, results) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = 10; // recipes per page
+  const offset = (page - 1) * limit;
+  const searchTerm = req.query.search || '';
+
+  // Modified count query to use proper grouping
+  const countQuery = `
+    SELECT COUNT(*) as total FROM (
+      SELECT r.recipe_id
+      FROM recipes r 
+      LEFT JOIN ratings rt ON r.recipe_id = rt.recipe_id 
+      WHERE r.title LIKE ? OR r.description LIKE ?
+      GROUP BY r.recipe_id
+    ) as counted_recipes
+  `;
+  
+  // The main query remains the same
+  const query = `
+    SELECT r.*, COALESCE(AVG(rt.stars), 0) as average_rating, u.username as author 
+    FROM recipes r 
+    LEFT JOIN ratings rt ON r.recipe_id = rt.recipe_id 
+    LEFT JOIN users u ON r.user_id = u.user_id
+    WHERE r.title LIKE ? OR r.description LIKE ?
+    GROUP BY r.recipe_id 
+    ORDER BY r.created_at DESC
+    LIMIT ? OFFSET ?
+  `;
+
+  const searchPattern = `%${searchTerm}%`;
+
+  connection.query(countQuery, [searchPattern, searchPattern], (err, countResult) => {
     if (err) {
-      console.error("Error retrieving recipes: ", err);
+      console.error("Error counting recipes: ", err);
       return res.status(500).send("Error retrieving recipes");
     }
-    res.status(200).json(results);
+
+    const totalRecipes = countResult[0].total;
+    const totalPages = Math.ceil(totalRecipes / limit);
+
+    connection.query(query, [searchPattern, searchPattern, limit, offset], (err, results) => {
+      if (err) {
+        console.error("Error retrieving recipes: ", err);
+        return res.status(500).send("Error retrieving recipes");
+      }
+      res.status(200).json({
+        recipes: results,
+        currentPage: page,
+        totalPages: totalPages,
+        totalRecipes: totalRecipes
+      });
+    });
   });
 });
 
@@ -390,7 +441,172 @@ app.post("/api/recipes/:id/comments/create", (req, res) => {
   );
 });
 
+// Add this endpoint for sorting recipes
+app.get("/api/recipes/sort/:type", (req, res) => {
+  const sortType = req.params.type;
+  let query = "SELECT * FROM recipes";
 
+  switch (sortType) {
+    case 'top-rated':
+      query = `
+        SELECT r.*, COALESCE(AVG(rt.stars), 0) as average_rating 
+        FROM recipes r 
+        LEFT JOIN ratings rt ON r.recipe_id = rt.recipe_id 
+        GROUP BY r.recipe_id, r.title, r.description, r.user_id, r.image, r.Instruction, r.created_at 
+        ORDER BY average_rating DESC`;
+      break;
+    case 'newest':
+      query = "SELECT *, 0 as average_rating FROM recipes ORDER BY created_at DESC";
+      break;
+    case 'oldest':
+      query = "SELECT *, 0 as average_rating FROM recipes ORDER BY created_at ASC";
+      break;
+    case 'rating-asc':
+      query = `
+        SELECT r.*, COALESCE(AVG(rt.stars), 0) as average_rating 
+        FROM recipes r 
+        LEFT JOIN ratings rt ON r.recipe_id = rt.recipe_id 
+        GROUP BY r.recipe_id, r.title, r.description, r.user_id, r.image, r.Instruction, r.created_at 
+        ORDER BY average_rating ASC`;
+      break;
+    case 'rating-desc':
+      query = `
+        SELECT r.*, COALESCE(AVG(rt.stars), 0) as average_rating 
+        FROM recipes r 
+        LEFT JOIN ratings rt ON r.recipe_id = rt.recipe_id 
+        GROUP BY r.recipe_id, r.title, r.description, r.user_id, r.image, r.Instruction, r.created_at 
+        ORDER BY average_rating DESC`;
+      break;
+    default:
+      query = "SELECT *, 0 as average_rating FROM recipes";
+  }
+
+  connection.query(query, (err, results) => {
+    if (err) {
+      console.error("Error retrieving sorted recipes: ", err);
+      return res.status(500).send("Error retrieving recipes");
+    }
+    res.status(200).json(results);
+  });
+});
+
+// Update the search suggestions endpoint
+app.get("/api/search/suggestions", (req, res) => {
+  const searchTerm = String(req.query.term || '').trim();
+  
+  if (!searchTerm) {
+    return res.status(200).json([]);
+  }
+
+  console.log('Backend searching for:', searchTerm); // Debug log
+
+  const query = `
+    SELECT recipe_id, title, description 
+    FROM recipes 
+    WHERE LOWER(title) LIKE LOWER(?) 
+    OR LOWER(description) LIKE LOWER(?)
+    LIMIT 5
+  `;
+
+  const searchPattern = `%${searchTerm}%`;
+  
+  connection.query(
+    query, 
+    [searchPattern, searchPattern],
+    (err, results) => {
+      if (err) {
+        console.error("Error searching recipes:", err);
+        return res.status(500).send("Error searching recipes");
+      }
+      
+      console.log('Search results:', results); // Debug log
+      res.status(200).json(results);
+    }
+  );
+});
+
+// Add this endpoint for updating recipes
+app.put("/api/recipes/update/:id", (req, res) => {
+  const recipeId = req.params.id;
+  const { title, description, instruction, ingredients, image } = req.body;
+
+  // Start a transaction
+  connection.beginTransaction(async (err) => {
+    if (err) {
+      console.error("Error starting transaction:", err);
+      return res.status(500).send("Error updating recipe");
+    }
+
+    try {
+      // First update the recipe
+      const recipeQuery = `
+        UPDATE recipes 
+        SET title = ?, description = ?, Instruction = ?, image = ?
+        WHERE recipe_id = ?
+      `;
+      
+      await new Promise<void>((resolve, reject) => {
+        connection.query(
+          recipeQuery,
+          [title, description, instruction, image, recipeId],
+          (error) => {
+            if (error) reject(error);
+            else resolve();
+          }
+        );
+      });
+
+      // Delete existing ingredients
+      await new Promise<void>((resolve, reject) => {
+        connection.query(
+          "DELETE FROM ingredients WHERE recipe_id = ?",
+          [recipeId],
+          (error) => {
+            if (error) reject(error);
+            else resolve();
+          }
+        );
+      });
+
+      // Insert new ingredients (if needed)
+      if (ingredients && ingredients.length > 0) {
+        const ingredientValues = ingredients.map(ing => [
+          recipeId,
+          ing.item,
+          ing.quantity
+        ]);
+        
+        await new Promise<void>((resolve, reject) => {
+          connection.query(
+            "INSERT INTO ingredients (recipe_id, item, quantity) VALUES ?",
+            [ingredientValues],
+            (error) => {
+              if (error) reject(error);
+              else resolve();
+            }
+          );
+        });
+      }
+
+      // Commit the transaction
+      connection.commit((err) => {
+        if (err) {
+          console.error("Error committing transaction:", err);
+          return connection.rollback(() => {
+            res.status(500).send("Error updating recipe");
+          });
+        }
+        res.status(200).json({ message: "Recipe updated successfully" });
+      });
+
+    } catch (error) {
+      console.error("Error in update transaction:", error);
+      return connection.rollback(() => {
+        res.status(500).send("Error updating recipe");
+      });
+    }
+  });
+});
 
 // Start the server
 app.listen(port, () => {

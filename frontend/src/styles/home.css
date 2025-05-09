@@ -1,75 +1,210 @@
-.centered-container {
-  text-align: center;
-  position: relative;
+/* Root Variables for Colors and Reusability */
+:root {
+  --primary-color: #2c3e50;
+  --secondary-color: #000000; /* Black */
+  --accent-color: #e74c3c; /* Accent color */
+  --background-light: #f4f6f7;
+  --text-color: #2c3e50;
+  --border-color: #ecf0f1;
+  --subtle-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  --hover-shadow: 0 6px 12px rgba(0,0,0,0.08);
 }
 
-.recipes-box {
-  background-color: #000;
-  border-radius: 8px;
-  padding: 5px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  width: 100vw;
-  max-width: 100%;
+/* Main Container */
+.home-container {
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Background */
+.home-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2c3e50 100%);
+  z-index: -1;
+}
+
+/* Main Content */
+.main-content {
+  max-width: 1400px;
   margin: 0 auto;
-  margin-bottom: 30px;
+  padding: 2rem;
+}
+
+/* Hero Section */
+.hero-section {
+  height: 40vh;
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4rem;
+  background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+              url('./food_main.jpg') center/cover no-repeat;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.hero-content {
+  text-align: center;
+  color: white;
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  transform: translateY(20px);
+  animation: fadeInUp 0.8s ease forwards;
+}
+
+.hero-title {
+  font-size: 4rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  letter-spacing: 4px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.hero-subtitle {
+  font-size: 1.5rem;
+  font-weight: 300;
+  letter-spacing: 2px;
+}
+
+/* Recipes Section */
+.recipes-section {
+  margin-bottom: 4rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: var(--hover-shadow);
+}
+
+.recipes-grid {
   display: flex;
   flex-direction: column;
+  gap: 2rem;
+}
+
+/* Pagination Section */
+.pagination-section {
+  margin: 3rem 0;
+}
+
+.pagination-container {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  padding: 1.5rem;
+  border-radius: 15px;
+  display: flex;
+  justify-content: center;
   align-items: center;
-  height: 90px;
+  gap: 1.5rem;
+  box-shadow: var(--subtle-shadow);
 }
 
-.recipeboxtitle {
-  font-family: "Neue Haas Grotesk Regular", Arial, sans-serif;
-  font-style: normal;
-  font-weight: bolder;
-  font-size: 40px;
-  line-height: 1.5;
-  color: rgb(234, 233, 229);
-  position: relative;
-  display: inline-block;
-  padding: 10px 20px;
-  margin-bottom: 30px;
-  background: linear-gradient(to right, #c23616, #f76c6c); /* Updated gradient colors to shades of red */
-  background-size: 200% auto;
-  color: transparent;
-  -webkit-background-clip: text;
-  background-clip: text;
-  animation: text-fill 10s ease infinite;
+.pagination-btn {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 25px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: var(--accent-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.2);
+}
+
+.pagination-btn:disabled {
+  background: #95a5a6;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-weight: 600;
+  color: #ffffff;
+  font-size: 1.1rem;
+}
+
+/* Tips Section */
+.tips-section {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px 20px 0 0;
+  padding: 3rem 2rem;
+  margin-top: 4rem;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* No Recipes Message */
+.no-recipes-message {
   text-align: center;
+  padding: 3rem;
+  font-size: 1.5rem;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border-radius: 10px;
+  box-shadow: var(--subtle-shadow);
 }
 
-@keyframes text-fill {
-  0% {
-    background-position: 0% center;
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
   }
-  50% {
-    background-position: 100% center; /* Adjusted position for smoother transition */
-  }
-  100% {
-    background-position: 0% center;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-  .home-container {
-    position: relative;
-    overflow: hidden;
-    min-height: 100vh;
-  }
-  
-  .home-background {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: url("./food_main.jpg");
-    background-size: cover;
-    background-position: center center;
-    background-attachment: fixed;
-    /* Add this line */
-    z-index: -1;
-    opacity: 0.8; 
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .main-content {
+    padding: 1rem;
   }
 
+  .hero-title {
+    font-size: 3rem;
+  }
 
-  
+  .hero-subtitle {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    height: 30vh;
+    min-height: 250px;
+  }
+
+  .hero-title {
+    font-size: 2.5rem;
+  }
+
+  .recipes-section {
+    padding: 1rem;
+  }
+
+  .pagination-container {
+    flex-direction: row;
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .pagination-btn {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+  }
+}

@@ -68,7 +68,7 @@
   font-weight: bold;
   background-color: rgba(255, 255, 255, 0);
   padding: 0 5px;
-  color: #999;
+  color: #ffffff;
   transition: all 0.3s ease;
 }
 
@@ -86,7 +86,7 @@
 .inputusername:focus + .floating-label,
 .inputemail:focus + .floating-label,
 .inputpassword:focus + .floating-label {
-  color: #999;
+  color: #ffffff;
 }
 
 .inputusername:focus,
@@ -143,9 +143,9 @@
   justify-content: center;
   height: 100vh;
   background-color: black;
-  background-size: contain;
+  background-size:cover;
   background-position: center;
-  background-image: url('./loginbg.svg');/* Adjust the path as needed */
+  background-image: url('./login_img.jpg');/* Adjust the path as needed */
 }
 
 .loginlastline {

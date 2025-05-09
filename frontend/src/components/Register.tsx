@@ -19,7 +19,7 @@ const Register = () => {
 
   const navigate = useNavigate();
 
-  const handleChange = (e: { target: { name: any; value: any } }) => {
+  const handleChange = (e: { target: { name: string; value: string } }) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({
       ...prevState,
@@ -141,7 +141,7 @@ const Register = () => {
         <div className="mt-4">
           <p className="loginlastline">
             Already have an account?{" "}
-            <Link to="/login" className="text-blue-500 hover:underline">
+            <Link to="/login" className="text-black hover:underline">
               Login
             </Link>
           </p>
