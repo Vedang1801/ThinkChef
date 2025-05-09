@@ -1,21 +1,20 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from './authContext';
-import { Home, PlusSquare, User, LogOut, Menu, X, SortDesc } from 'lucide-react';
+import { Home, PlusSquare, User, LogOut, Menu, X, Search } from 'lucide-react';
 import '../styles/header.css';
-import SearchBox from './SearchBox';
 
 interface HeaderProps {
-  onSearch: (searchTerm: string) => void;
-  onSort: (sortType: string) => void;
+  onSearchChange?: (term: string) => void;
+  onSortChange?: (sortType: string) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onSearch, onSort }) => {
+const Header: React.FC<HeaderProps> = ({ onSearchChange, onSortChange }) => {
   const { loggedIn, logout } = useAuth();
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
-  const [showSortMenu, setShowSortMenu] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -31,14 +30,18 @@ const Header: React.FC<HeaderProps> = ({ onSearch, onSort }) => {
     setShowMenu(false);
   };
 
-  const handleSort = (sortType: string) => {
-    onSort(sortType);
-    setShowSortMenu(false);
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (onSearchChange) {
+      onSearchChange(searchQuery);
+    }
+    setShowSearch(false);
   };
 
-  const handleSearch = (searchTerm: string) => {
-    console.log('Search term in Header:', searchTerm);
-    onSearch(searchTerm);
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (onSortChange) {
+      onSortChange(e.target.value);
+    }
   };
 
   return (
@@ -49,28 +52,47 @@ const Header: React.FC<HeaderProps> = ({ onSearch, onSort }) => {
         </Link>
       </div>
 
+      {/* Add search and sort functionality */}
       <div className="nav-search">
-        <SearchBox onSearch={handleSearch} />
-      </div>
-
-      <div className="sort-container">
-        <button 
-          className="sort-button"
-          onClick={() => setShowSortMenu(!showSortMenu)}
-        >
-          <SortDesc size={20} />
-          <span>Sort</span>
-        </button>
-        
-        {showSortMenu && (
-          <div className="sort-menu">
-            <button onClick={() => handleSort('top-rated')}>Top Rated</button>
-            <button onClick={() => handleSort('newest')}>Newest First</button>
-            <button onClick={() => handleSort('oldest')}>Oldest First</button>
-            <button onClick={() => handleSort('rating-asc')}>Rating (Low to High)</button>
-            <button onClick={() => handleSort('rating-desc')}>Rating (High to Low)</button>
-          </div>
+        {showSearch ? (
+          <form onSubmit={handleSearchSubmit} className="search-form">
+            <input
+              type="text"
+              placeholder="Search recipes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="search-input"
+              autoFocus
+            />
+            <button type="submit" className="search-btn">Search</button>
+            <button 
+              type="button" 
+              onClick={() => setShowSearch(false)}
+              className="search-close-btn"
+            >
+              <X size={16} />
+            </button>
+          </form>
+        ) : (
+          <button 
+            className="search-icon-btn" 
+            onClick={() => setShowSearch(true)}
+          >
+            <Search size={20} />
+          </button>
         )}
+
+        {/* Sort dropdown (optional) */}
+        <select 
+          onChange={handleSortChange}
+          className="sort-dropdown"
+          aria-label="Sort recipes"
+        >
+          <option value="">Sort by</option>
+          <option value="newest">Newest</option>
+          <option value="oldest">Oldest</option>
+          <option value="top-rated">Top Rated</option>
+        </select>
       </div>
 
       <div className={`nav-links ${showMenu ? 'active' : ''}`}>
@@ -106,7 +128,6 @@ const Header: React.FC<HeaderProps> = ({ onSearch, onSort }) => {
           </>
         )}
       </div>
-
       <button className="menu-toggle" onClick={toggleMenu}>
         {showMenu ? <X size={24} /> : <Menu size={24} />}
       </button>

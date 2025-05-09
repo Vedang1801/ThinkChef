@@ -3,6 +3,7 @@
   position: relative;
   width: 100%;
   z-index: 1000; /* Ensure suggestions appear above other content */
+  font-family: 'Inter', sans-serif;
 }
 
 .search-wrapper {
@@ -10,16 +11,17 @@
   width: 40px;
   height: 40px;
   transition: all 0.3s ease;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  padding: 0.25rem;
-  display: flex;
-  align-items: center;
+  border-radius: 2rem;
+  background: #fff8f0;
+  box-shadow: 0 2px 8px rgba(255,112,67,0.07);
+  border: 1px solid #ffd54f;
+  min-height: 40px;
 }
 
 .search-wrapper.active {
   width: 300px;
-  background: rgba(255, 255, 255, 0.15);
+  background: #fffbe7;
+  border: 1.5px solid #ff7043;
   height: 40px;
 }
 
@@ -38,8 +40,9 @@
   background: transparent;
   border: none;
   outline: none;
-  color: #fff;
-  font-size: 0.9rem;
+  color: #ff7043;
+  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
   transition: all 0.3s ease;
   opacity: 0;
   height: 100%;
@@ -53,7 +56,7 @@
 }
 
 .search-icon {
-  color: var(--text-secondary);
+  color: #ff7043;
   cursor: pointer;
   transition: var(--transition);
   min-width: 20px;
@@ -66,7 +69,7 @@
 .search-clear-icon,
 .filter-icon {
   display: none;
-  color: var(--text-secondary);
+  color: #ff7043;
   cursor: pointer;
   transition: var(--transition);
   display: flex;
@@ -81,9 +84,8 @@
 }
 
 .search-icon:hover,
-.search-clear-icon:hover,
-.filter-icon:hover {
-  color: #ffd700;
+.search-clear-icon:hover {
+  color: #ffd54f;
 }
 
 .search-suggestions {
@@ -91,9 +93,11 @@
   top: calc(100% + 8px);
   left: 0;
   right: 0;
-  background: #2c3e50;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  background: #fffbe7;
+  color: #ff7043;
+  border-radius: 1rem;
+  box-shadow: 0 4px 16px rgba(255,112,67,0.10);
+  border: none;
   max-height: 300px;
   overflow-y: auto;
   z-index: 1000;
@@ -112,25 +116,29 @@
   padding: 0.75rem 1rem;
   cursor: pointer;
   transition: background-color 0.2s ease;
-  color: white;
+  color: #ff7043;
+  font-family: 'Inter', sans-serif;
+  border-radius: 1rem;
 }
 
 .suggestion-item:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background: #ffd54f;
+  color: #333;
 }
 
 .suggestion-title {
+  color: #ff7043;
   font-weight: 500;
-  color: white;
   margin-bottom: 0.25rem;
 }
 
 .suggestion-description {
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.7);
-  opacity: 0.8;
+  color: #ff7043;
+  opacity: 0.7;
   display: -webkit-box;
   -webkit-line-clamp: 1;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -153,10 +161,16 @@
   }
 }
 
+@media (max-width: 900px) {
+  .search-wrapper.active {
+    width: 100%;
+  }
+}
+
 /* Add these styles */
 .no-results {
   text-align: center;
-  color: #666;
+  color: #ff7043;
   padding: 1rem;
   font-style: italic;
 }

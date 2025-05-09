@@ -34,12 +34,67 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
 
+  // Setup axios interceptor for authentication
+  useEffect(() => {
+    // Add a request interceptor to include token in all requests
+    const interceptor = axios.interceptors.request.use(
+      (config) => {
+        const token = Cookies.get("token");
+        if (token) {
+          config.headers["Authorization"] = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
+      }
+    );
+
+    // Add a response interceptor to handle token expiration
+    const responseInterceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          // If we get a 401 unauthorized, clear the auth state
+          // This could be due to token expiration
+          if (Cookies.get("token")) {
+            toast.error("Your session has expired. Please log in again.");
+            logout();
+            navigate("/login");
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    // Clean up the interceptors when the component unmounts
+    return () => {
+      axios.interceptors.request.eject(interceptor);
+      axios.interceptors.response.eject(responseInterceptor);
+    };
+  }, [navigate]);
+
   useEffect(() => {
     const token = Cookies.get("token");
     if (token) {
-      setLoggedIn(true); // Set loggedIn to true since token exists
-      // You may also want to fetch user data using this token and setUser
-      setUser(user);
+      setLoggedIn(true);
+      // Try to load user data from cookies if available
+      try {
+        const userId = Cookies.get("user_id");
+        const username = Cookies.get("username");
+        const email = Cookies.get("email");
+
+        if (userId && username && email) {
+          setUser({
+            user_id: userId,
+            username,
+            email,
+            profile_details: "", // Default empty string if not available
+          });
+        }
+      } catch (error) {
+        console.error("Error loading user data:", error);
+      }
     }
   }, []);
 
@@ -57,8 +112,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       navigate("/");
     } catch (error) {
       console.error("Error logging in: ", error);
-      toast.error(error?.response.data);
-      // Handle error
+      // Properly type check for axios error
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          // that falls out of the range of 2xx
+          toast.error(error.response.data || "Invalid email or password");
+        } else if (error.request) {
+          // The request was made but no response was received
+          toast.error("No response from server. Please try again.");
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          toast.error("Error logging in. Please try again.");
+        }
+      } else {
+        toast.error("An unexpected error occurred");
+      }
+      throw error; // Re-throw the error to be handled by the component
     }
   };
 

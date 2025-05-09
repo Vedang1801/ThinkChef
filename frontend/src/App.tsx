@@ -17,18 +17,13 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortType, setSortType] = useState("");
 
-  const handleSearch = (term: string) => {
-    setSearchTerm(term);
-  };
-
-  const handleSort = (sortType: string) => {
-    setSortType(sortType);
-  };
-
   return (
     <Router>
       <AuthProvider>
-        <Header onSearch={handleSearch} onSort={handleSort} />
+        <Header 
+          onSearchChange={setSearchTerm}
+          onSortChange={setSortType}
+        />
         <Routes>
           <Route path="/" element={<Home searchTerm={searchTerm} sortType={sortType} />} />
           <Route path="/addrecipes" element={<AddReceipe />} />

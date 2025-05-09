@@ -1,27 +1,16 @@
 .tips-container {
-    font-size: 18px;
-    font-family: 'Times New Roman', Times, serif;
-    font-style: italic;
-    font-weight:100000;
-    color: #000000;
-    margin: 0;
-  
-    background-color: rgba(255, 255, 255, 0.2);
-    /* Semi-transparent background */
-    backdrop-filter: blur(10px);
-    /* Blur effect for glassmorphism */
-    -webkit-backdrop-filter: blur(10px);
-    /* For Safari compatibility */
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    /* Semi-transparent border */
-    border-radius: 12px;
-    /* Rounded corners */
-    padding: 16px;
+    font-size: 1.2rem;
+    font-family: 'Inter', sans-serif;
+    font-style: normal;
+    font-weight: 500;
+    color: #ff7043;
+    background: #fffbe7;
+    border-radius: 1.5rem;
+    padding: 2rem 2.5rem;
     text-align: center;
-    max-width: 800px;
-    /* Set a maximum width for better responsiveness */
-    margin: 2rem auto;
-    /* Center the container horizontally */
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-    /* Shadow effect */
+    max-width: 700px;
+    margin: 2.5rem auto;
+    box-shadow: 0 8px 32px 0 rgba(255,112,67,0.10);
+    border: 1.5px solid #ffd54f;
+    letter-spacing: 0.5px;
   }
