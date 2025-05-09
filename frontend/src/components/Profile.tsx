@@ -81,7 +81,7 @@ const Profile = () => {
     }
   };
   
-  const handleDelete = (event, postId: number) => {
+  const handleDelete = (event: React.MouseEvent<HTMLButtonElement>, postId: number) => {
     event.stopPropagation();
     setPendingDelete(postId);
     setCountdown(5);
@@ -123,7 +123,7 @@ const Profile = () => {
     setPendingDelete(null);
   };
 
-  const handleUndo = (event) => {
+  const handleUndo = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     if (pendingDelete !== null) {
       if (undoTimeout) {
@@ -147,7 +147,7 @@ const Profile = () => {
     setIsRecipeWidgetOpen(false);
   };
 
-  const handleEdit = (event: React.MouseEvent, post: Post) => {
+  const handleEdit = (event: React.MouseEvent<HTMLButtonElement>, post: Post) => {
     event.stopPropagation();
     console.log("Original ingredients:", post.ingredients);
     

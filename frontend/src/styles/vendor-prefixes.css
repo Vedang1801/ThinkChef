@@ -1,0 +1,73 @@
+/*
+ * CSS Vendor Prefix Standardization
+ * 
+ * This file provides standardized properties alongside vendor-prefixed versions
+ * for better cross-browser compatibility.
+ */
+
+/* Background-clip standardization */
+.bg-clip-text {
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+/* Line-clamp standardization */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* User-select standardization */
+.user-select-none {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Backdrop-filter standardization */
+.backdrop-blur {
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+/* Box-shadow standardization */
+.shadow-standard {
+  -webkit-box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Text-fill-color - WebKit only */
+.text-fill-transparent {
+  -webkit-text-fill-color: transparent;
+  /* text-fill-color is not a standard property, only use the prefixed version */
+  /* color: transparent; can be used as a fallback for non-WebKit browsers */
+  color: transparent;
+}
+
+/* Transform standardization */
+.transform-translate-y-0 {
+  -webkit-transform: translateY(0);
+  -ms-transform: translateY(0);
+  transform: translateY(0);
+}

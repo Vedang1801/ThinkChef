@@ -1,0 +1,215 @@
+body, .homepage-root {
+  background: #FFF;
+  font-family: 'Inter', sans-serif;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+
+.homepage-root {
+  /* Add horizontal padding for large screens */
+  padding-left: 2vw;
+  padding-right: 2vw;
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 2rem 3rem 2rem;
+  background: linear-gradient(90deg, #FF7043 60%, #FFD54F 100%);
+  border-radius: 0 0 2rem 2rem;
+  min-height: 420px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 3rem;
+  box-shadow: 0 8px 32px rgba(255,112,67,0.10);
+}
+
+.hero-content {
+  max-width: 700px;
+  width: 100%;
+  z-index: 2;
+  background: rgba(255,255,255,0.13);
+  border-radius: 2rem;
+  padding: 3rem 2rem 2.5rem 2rem;
+  box-shadow: 0 4px 24px rgba(255,112,67,0.10);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.hero-content h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 3.5rem;
+  color: #fff;
+  margin-bottom: 1.2rem;
+  letter-spacing: 2px;
+  font-weight: 800;
+  text-align: center;
+  line-height: 1.1;
+  text-shadow: 0 2px 12px rgba(255,112,67,0.13);
+}
+
+.hero-content p {
+  font-size: 1.35rem;
+  color: #fffbe7;
+  margin-bottom: 2.2rem;
+  text-align: center;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.cta-btn {
+  background: #fff;
+  color: #FF7043;
+  font-weight: bold;
+  padding: 1.1rem 2.5rem;
+  border-radius: 2rem;
+  font-size: 1.2rem;
+  text-decoration: none;
+  box-shadow: 0 4px 16px rgba(255,112,67,0.12);
+  transition: background 0.2s, color 0.2s, transform 0.18s;
+  margin-top: 0.5rem;
+  border: none;
+  outline: none;
+  display: inline-block;
+}
+
+.cta-btn:hover,
+.cta-btn:focus {
+  background: #FFD54F;
+  color: #FF7043;
+  transform: translateY(-2px) scale(1.04);
+}
+
+.hero-image {
+  display: none; /* Hide the hero image for now, or adjust as needed */
+}
+
+.featured-section, .tips-section {
+  max-width: 1200px;
+  margin: 3rem auto 0 auto;
+  padding: 0 2rem;
+}
+
+.featured-section {
+  max-width: 1600px; /* Increased from 1200px */
+  margin: 3rem auto 0 auto;
+  padding: 0 2vw;
+}
+
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.4rem;
+  color: #333;
+  margin-bottom: 2rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+/* New Epicurious-style Recipe Grid */
+.epicurious-recipe-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 32px;
+  margin-bottom: 3rem;
+}
+
+/* Responsive grid adjustments */
+@media (min-width: 1400px) {
+  .epicurious-recipe-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 1200px) {
+  .epicurious-recipe-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .epicurious-recipe-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .epicurious-recipe-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.no-recipes-message {
+  color: #FF7043;
+  font-size: 1.3rem;
+  text-align: center;
+  padding: 2rem;
+}
+
+.loading-spinner {
+  text-align: center;
+  color: #FF7043;
+  font-size: 1.2rem;
+  padding: 2rem;
+}
+
+.footer {
+  background: #16181d;
+  color: #fff;
+  text-align: center;
+  padding: 2rem 0 1rem 0;
+  font-size: 1rem;
+  margin-top: 4rem;
+  border-top: 1px solid #ffd54f22;
+}
+
+.footer div {
+  margin: 0.5rem 0;
+}
+
+.footer a {
+  color: #FFD54F;
+  margin: 0 0.5rem;
+  text-decoration: none;
+}
+
+.footer a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 900px) {
+  .hero {
+    padding: 2.5rem 1rem 1.5rem 1rem;
+    min-height: 320px;
+  }
+  .hero-content {
+    padding: 2rem 1rem 1.5rem 1rem;
+  }
+  .hero-content h1 {
+    font-size: 2.2rem;
+  }
+  .hero-content p {
+    font-size: 1.05rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .hero {
+    padding: 1.5rem 0.5rem 1rem 0.5rem;
+    min-height: 220px;
+  }
+  .hero-content {
+    padding: 1.2rem 0.5rem 1rem 0.5rem;
+  }
+  .hero-content h1 {
+    font-size: 1.4rem;
+  }
+  .cta-btn {
+    font-size: 1rem;
+    padding: 0.8rem 1.5rem;
+  }
+}

@@ -8,8 +8,7 @@ import "../styles/main.css";
 import "../styles/login.css";
 import "../styles/addrecipe.css";
 
-import React, { useState, useEffect, FormEvent, ChangeEvent } from "react";
-import AWS from "aws-sdk";
+import React, { useState, FormEvent, ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Cookies from "js-cookie";
@@ -29,6 +28,8 @@ interface RecipeData {
   instructions: string;
   ingredients: Ingredient[];
   image: File | string;
+  totalTime: string;  // New field for total cooking time
+  servings: string;   // New field for number of servings
 }
 
 const AddRecipe: React.FC = () => {
@@ -38,6 +39,8 @@ const AddRecipe: React.FC = () => {
     instructions: '',
     ingredients: [{ item: '', quantity: '' }],
     image: '',
+    totalTime: '',  // Initialize new fields
+    servings: '',
   });
 
   const { loggedIn } = useAuth();
@@ -169,7 +172,9 @@ const AddRecipe: React.FC = () => {
     const requiredFieldsMissing = 
       !recipeData.title || 
       !recipeData.description || 
-      !recipeData.instructions || 
+      !recipeData.instructions ||
+      !recipeData.totalTime ||  // Validate time and servings
+      !recipeData.servings ||
       recipeData.ingredients.some(ing => !ing.item || !ing.quantity);
 
     if (requiredFieldsMissing) {
@@ -186,6 +191,8 @@ const AddRecipe: React.FC = () => {
         image: recipeData.image,
         instructions: recipeData.instructions,
         ingredients: recipeData.ingredients,
+        totalTime: recipeData.totalTime,  // Include in request
+        servings: recipeData.servings,    // Include in request
       };
 
       // Send recipe creation request
@@ -243,6 +250,36 @@ const AddRecipe: React.FC = () => {
               placeholder="Describe your recipe"
               required
             />
+          </div>
+
+          {/* New fields for Total Time and Servings */}
+          <div className="form-group recipe-info-row">
+            <div className="recipe-info-field">
+              <label htmlFor="totalTime" className="form-label">Total Time</label>
+              <input
+                type="text"
+                id="totalTime"
+                name="totalTime"
+                className="form-input"
+                value={recipeData.totalTime}
+                onChange={handleChange}
+                placeholder="e.g. 45 minutes"
+                required
+              />
+            </div>
+            <div className="recipe-info-field">
+              <label htmlFor="servings" className="form-label">Servings</label>
+              <input
+                type="text"
+                id="servings"
+                name="servings"
+                className="form-input"
+                value={recipeData.servings}
+                onChange={handleChange}
+                placeholder="e.g. 4"
+                required
+              />
+            </div>
           </div>
 
           {/* Instructions Input */}

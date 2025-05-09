@@ -61,14 +61,13 @@ const Login = () => {
     if (formData.email.trim() && formData.password.trim()) {
       setLoading(true); // Set loading state to true
       try {
-        const response = await login(formData.email, formData.password);
-        if (response.success) {
-          navigate("/"); // Redirect to home on successful login
-        } else {
-          setLoginError("Invalid email or password"); // Handle login failure
-        }
+        // The login function returns void, so we shouldn't check for success property
+        await login(formData.email, formData.password);
+        // If login is successful, the authContext will update loggedIn state
+        // and the useEffect will trigger navigation
       } catch (error) {
-        setLoginError("An error occurred. Please try again later.");
+        // If login throws an error, we handle it here
+        setLoginError("Invalid email or password");
       } finally {
         setLoading(false); // Reset loading state after API call
       }

@@ -285,6 +285,24 @@
   }
 }
 
+/* New styles for additional fields */
+.recipe-info-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.recipe-info-field {
+  flex: 1;
+}
+
+@media (max-width: 600px) {
+  .recipe-info-row {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+}
+
 .image-upload-btn:disabled {
 background-color: #95a5a6;
 cursor: not-allowed;

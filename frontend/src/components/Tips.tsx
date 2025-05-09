@@ -4,7 +4,7 @@ import "../styles/recipeCard.css";
 import "../styles/profile.css";
 import "../styles/main.css";
 import "../styles/login.css";
-import React, { useState, useEffect } from "react";
+import  { useState, useEffect } from "react";
 
 const Tips = () => {
   const tipsList = ["Preheat your oven before baking.",

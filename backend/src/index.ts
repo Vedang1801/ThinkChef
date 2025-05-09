@@ -363,15 +363,15 @@ app.get("/api/recipes/:id", (req, res) => {
 });
 
 app.post("/api/recipes/create", (req, res) => {
-  const { title, description, user_id, image, Instructions } = req.body;
+  const { title, description, user_id, image, instructions, totalTime, servings } = req.body;
   const ingredients = req.body.ingredients; // Array of ingredients
 
   // Insert recipe first
   const recipeQuery =
-    "INSERT INTO recipes (title, description, user_id, image, Instruction) VALUES (?, ?, ?, ?,?)";
+    "INSERT INTO recipes (title, description, user_id, image, Instruction, total_time, servings) VALUES (?, ?, ?, ?, ?, ?, ?)";
   connection.query(
     recipeQuery,
-    [title, description, user_id, image, Instructions],
+    [title, description, user_id, image, instructions, totalTime, servings],
     (err, results) => {
       if (err) {
         console.error("Error creating recipe: ", err);
@@ -528,7 +528,7 @@ app.get("/api/search/suggestions", (req, res) => {
 // Add this endpoint for updating recipes
 app.put("/api/recipes/update/:id", (req, res) => {
   const recipeId = req.params.id;
-  const { title, description, instruction, ingredients, image } = req.body;
+  const { title, description, instruction, ingredients, image, totalTime, servings } = req.body;
 
   // Start a transaction
   connection.beginTransaction(async (err) => {
@@ -541,14 +541,14 @@ app.put("/api/recipes/update/:id", (req, res) => {
       // First update the recipe
       const recipeQuery = `
         UPDATE recipes 
-        SET title = ?, description = ?, Instruction = ?, image = ?
+        SET title = ?, description = ?, Instruction = ?, image = ?, total_time = ?, servings = ?
         WHERE recipe_id = ?
       `;
       
       await new Promise<void>((resolve, reject) => {
         connection.query(
           recipeQuery,
-          [title, description, instruction, image, recipeId],
+          [title, description, instruction, image, totalTime, servings, recipeId],
           (error) => {
             if (error) reject(error);
             else resolve();
