@@ -31,6 +31,8 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
 
   // Set loading state when image loads
   useEffect(() => {
+    // Debug log to check the image URL
+    console.log("RecipeCard image URL:", recipe.image);
     const img = new Image();
     img.src = recipe.image || fallbackImage;
     img.onload = () => setLoading(false);
@@ -71,7 +73,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
     <div className="epicurious-recipe-card" onClick={handleClick}>
       <div className="epicurious-recipe-image">
         <img
-          src={recipe.image || fallbackImage}
+          src={recipe.image && recipe.image.startsWith("http") ? recipe.image : fallbackImage}
           alt={recipe.title}
           onError={(e) => {
             e.currentTarget.src = fallbackImage;

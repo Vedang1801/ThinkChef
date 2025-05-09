@@ -1,19 +1,14 @@
 import "./init";
-/*import "../App.css";*/
-import "../styles/home.css";
-import "../styles/tips.css";
-import "../styles/recipeCard.css";
-import "../styles/profile.css";
-import "../styles/main.css";
-import "../styles/login.css";
 import "../styles/addrecipe.css";
-
-import React, { useState, FormEvent, ChangeEvent } from "react";
+import React, { useState, FormEvent, ChangeEvent, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Cookies from "js-cookie";
 import { useAuth } from "./authContext";
-
+import { 
+  Upload, X, Image as ImageIcon, Loader2, Clock, Users, 
+  Plus, ChefHat, AlertCircle 
+} from "lucide-react";
 
 // Ingredient interface for type safety
 interface Ingredient {
@@ -28,358 +23,506 @@ interface RecipeData {
   instructions: string;
   ingredients: Ingredient[];
   image: File | string;
-  totalTime: string;  // New field for total cooking time
-  servings: string;   // New field for number of servings
+  totalTime: string;
+  servings: string;
 }
+
+const fallbackImage = "https://images.unsplash.com/photo-1495195134817-aeb325a55b65?auto=format&fit=crop&w=1200&q=80";
 
 const AddRecipe: React.FC = () => {
   const [recipeData, setRecipeData] = useState<RecipeData>({
-    title: '',
-    description: '',
-    instructions: '',
-    ingredients: [{ item: '', quantity: '' }],
-    image: '',
-    totalTime: '',  // Initialize new fields
-    servings: '',
+    title: "",
+    description: "",
+    instructions: "",
+    ingredients: [{ item: "", quantity: "" }],
+    image: "",
+    totalTime: "",
+    servings: "",
   });
 
   const { loggedIn } = useAuth();
   const navigate = useNavigate();
-
-  // Add new state for upload loading
   const [isUploading, setIsUploading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Redirect if not logged in
-  React.useEffect(() => {
+  useEffect(() => {
     if (!loggedIn) {
-      navigate('/login');
+      navigate("/login");
     }
   }, [loggedIn, navigate]);
 
-  // Handle basic input changes
+  // Handle input changes
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setRecipeData(prevState => ({
+    setRecipeData((prevState) => ({
       ...prevState,
       [name]: value,
     }));
   };
 
-  // Handle ingredient changes
-  const handleIngredientChange = (
-    index: number, 
-    field: keyof Ingredient, 
-    value: string
-  ) => {
+  // Ingredient management - updated to handle separate fields
+  const handleIngredientChange = (index: number, field: keyof Ingredient, value: string) => {
     const newIngredients = [...recipeData.ingredients];
     newIngredients[index][field] = value;
-    setRecipeData(prevState => ({
+    setRecipeData((prevState) => ({
       ...prevState,
       ingredients: newIngredients,
     }));
   };
 
-  // Remove an ingredient
   const handleDeleteIngredient = (index: number) => {
     const newIngredients = recipeData.ingredients.filter((_, i) => i !== index);
-    setRecipeData(prevState => ({
+    setRecipeData((prevState) => ({
       ...prevState,
       ingredients: newIngredients,
     }));
   };
 
-  // Add more ingredient fields
   const handleAddMoreIngredients = () => {
-    setRecipeData(prevState => ({
+    setRecipeData((prevState) => ({
       ...prevState,
-      ingredients: [...prevState.ingredients, { item: '', quantity: '' }],
+      ingredients: [...prevState.ingredients, { item: "", quantity: "" }],
     }));
   };
 
-  // Handle image file change
+  // Drag-and-drop image upload
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setRecipeData(prevState => ({
+      setRecipeData((prevState) => ({
         ...prevState,
         image: file,
       }));
     }
   };
 
-  // Upload image
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      setRecipeData((prevState) => ({
+        ...prevState,
+        image: e.dataTransfer.files[0],
+      }));
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragActive(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragActive(false);
+  };
+
+  // Upload image to S3
   const handleAddImageClick = async () => {
     try {
-      if (!recipeData.image) {
-        toast.error('Please select an image');
+      if (!recipeData.image || typeof recipeData.image === "string") {
+        toast.error("Please select an image");
         return;
       }
-
-      setIsUploading(true); // Start loading
+      setIsUploading(true);
       const formData = new FormData();
-      formData.append('image', recipeData.image);
+      formData.append("image", recipeData.image as File);
 
-      const response = await fetch('/api/upload-image', {
-        method: 'POST',
+      const response = await fetch("/api/upload-image", {
+        method: "POST",
         body: formData,
       });
 
       if (response.ok) {
         const responseData = await response.json();
-        toast.success('Image uploaded successfully');
-        setRecipeData(prevState => ({
+        toast.success("Image uploaded successfully");
+        setRecipeData((prevState) => ({
           ...prevState,
           image: responseData.imageUrl,
         }));
       } else {
-        toast.error('Failed to upload image');
+        toast.error("Failed to upload image");
       }
     } catch (error) {
-      console.error('Image upload error:', error);
-      toast.error('Error uploading image');
+      console.error("Image upload error:", error);
+      toast.error("Error uploading image");
     } finally {
-      setIsUploading(false); // End loading
+      setIsUploading(false);
     }
   };
 
   // Clear image
   const handleClearImage = () => {
-    setRecipeData(prevState => ({
+    setRecipeData((prevState) => ({
       ...prevState,
-      image: '',
+      image: "",
     }));
-    // Reset the file input
-    const fileInput = document.getElementById('image') as HTMLInputElement;
-    if (fileInput) fileInput.value = '';
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   // Submit recipe
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    // Validation
     if (!loggedIn) {
-      navigate('/login');
+      navigate("/login");
       return;
     }
-
-    // Check for required fields
-    if (!recipeData.image) {
-      toast.error('Please upload an image');
+    
+    if (!recipeData.image || typeof recipeData.image !== "string") {
+      toast.error("Please upload an image");
       return;
     }
-
-    const requiredFieldsMissing = 
-      !recipeData.title || 
-      !recipeData.description || 
+    
+    const requiredFieldsMissing =
+      !recipeData.title ||
+      !recipeData.description ||
       !recipeData.instructions ||
-      !recipeData.totalTime ||  // Validate time and servings
+      !recipeData.totalTime ||
       !recipeData.servings ||
-      recipeData.ingredients.some(ing => !ing.item || !ing.quantity);
-
+      recipeData.ingredients.some((ing) => !ing.item);
+    
     if (requiredFieldsMissing) {
-      toast.error('Please fill in all fields');
+      toast.error("Please fill in all required fields");
       return;
     }
 
     try {
-      // Prepare request data
+      setIsSubmitting(true);
+      
       const requestData = {
         title: recipeData.title,
         description: recipeData.description,
-        user_id: Cookies.get('user_id'),
+        user_id: Cookies.get("user_id"),
         image: recipeData.image,
         instructions: recipeData.instructions,
         ingredients: recipeData.ingredients,
-        totalTime: recipeData.totalTime,  // Include in request
-        servings: recipeData.servings,    // Include in request
+        totalTime: recipeData.totalTime,
+        servings: recipeData.servings,
       };
 
-      // Send recipe creation request
-      const response = await fetch('/api/recipes/create', {
-        method: 'POST',
+      const response = await fetch("/api/recipes/create", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(requestData),
       });
 
       if (response.ok) {
-        toast.success('Recipe created successfully');
-        navigate('/');
+        toast.success("Recipe created successfully");
+        navigate("/");
       } else {
         const errorData = await response.json();
-        toast.error(errorData.message || 'Error creating recipe');
+        toast.error(errorData.message || "Error creating recipe");
       }
     } catch (error) {
-      console.error('Recipe submission error:', error);
-      toast.error('Failed to create recipe');
+      console.error("Recipe submission error:", error);
+      toast.error("Failed to create recipe");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  // Live preview for sidebar
+  const previewImage =
+    typeof recipeData.image === "string" && recipeData.image
+      ? recipeData.image
+      : typeof recipeData.image === "object" && recipeData.image
+      ? URL.createObjectURL(recipeData.image)
+      : fallbackImage;
+
   return (
-    <div className="recipe-add-container">
-      <div className="recipe-add-wrapper">
-        <form onSubmit={handleSubmit} className="recipe-form">
-          <h2 className="recipe-form-title">Create New Recipe</h2>
+    <div className="recipe-form-container">
+      <div className="recipe-form-wrapper">
+        {/* Main Form */}
+        <main className="recipe-form-main">
+          <h1 className="recipe-form-title">Create a New Recipe</h1>
           
-          {/* Title Input */}
-          <div className="form-group">
-            <label htmlFor="title" className="form-label">Recipe Title</label>
-            <input
-              type="text"
-              id="title"
-              name="title"
-              className="form-input"
-              value={recipeData.title}
-              onChange={handleChange}
-              placeholder="Enter recipe title"
-              required
-            />
-          </div>
-
-          {/* Description Input */}
-          <div className="form-group">
-            <label htmlFor="description" className="form-label">Description</label>
-            <textarea
-              id="description"
-              name="description"
-              className="form-textarea"
-              value={recipeData.description}
-              onChange={handleChange}
-              placeholder="Describe your recipe"
-              required
-            />
-          </div>
-
-          {/* New fields for Total Time and Servings */}
-          <div className="form-group recipe-info-row">
-            <div className="recipe-info-field">
-              <label htmlFor="totalTime" className="form-label">Total Time</label>
+          <form onSubmit={handleSubmit}>
+            <div className="form-section">
+              <label htmlFor="title" className="form-label">Recipe Title</label>
               <input
                 type="text"
-                id="totalTime"
-                name="totalTime"
+                id="title"
+                name="title"
                 className="form-input"
-                value={recipeData.totalTime}
+                value={recipeData.title}
                 onChange={handleChange}
-                placeholder="e.g. 45 minutes"
+                placeholder="What's your dish called?"
                 required
               />
             </div>
-            <div className="recipe-info-field">
-              <label htmlFor="servings" className="form-label">Servings</label>
-              <input
-                type="text"
-                id="servings"
-                name="servings"
-                className="form-input"
-                value={recipeData.servings}
+            
+            <div className="form-section">
+              <label htmlFor="description" className="form-label">Description</label>
+              <p className="section-description">Write a brief introduction to your recipe</p>
+              <textarea
+                id="description"
+                name="description"
+                className="form-textarea"
+                value={recipeData.description}
                 onChange={handleChange}
-                placeholder="e.g. 4"
+                placeholder="Tell us the story behind this recipe or what makes it special..."
                 required
               />
             </div>
-          </div>
-
-          {/* Instructions Input */}
-          <div className="form-group">
-            <label htmlFor="instructions" className="form-label">Cooking Instructions</label>
-            <textarea
-              id="instructions"
-              name="instructions"
-              className="form-textarea"
-              value={recipeData.instructions}
-              onChange={handleChange}
-              placeholder="Step-by-step cooking instructions"
-              required
-            />
-          </div>
-
-          {/* Ingredients Section */}
-          <div className="form-group">
-            <label className="form-label">Ingredients</label>
-            {recipeData.ingredients.map((ingredient, index) => (
-              <div key={index} className="ingredient-input-group">
-                <input
-                  type="text"
-                  className="ingredient-input"
-                  placeholder="Ingredient"
-                  value={ingredient.item}
-                  onChange={(e) => handleIngredientChange(index, 'item', e.target.value)}
-                  required
-                />
-                <input
-                  type="text"
-                  className="ingredient-input"
-                  placeholder="Quantity"
-                  value={ingredient.quantity}
-                  onChange={(e) => handleIngredientChange(index, 'quantity', e.target.value)}
-                  required
-                />
+            
+            <div className="form-section">
+              <h2 className="section-title">Recipe Image</h2>
+              <p className="section-description">Upload a high-quality photo of your finished dish</p>
+              
+              <div className="image-upload-container">
+                <div
+                  className={`image-dropzone${dragActive ? " drag-active" : ""}`}
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <input
+                    type="file"
+                    id="image"
+                    name="image"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    onChange={handleImageChange}
+                    style={{ display: "none" }}
+                  />
+                  
+                  {typeof recipeData.image === "string" && recipeData.image ? (
+                    <img
+                      src={recipeData.image}
+                      alt="Recipe Preview"
+                      className="image-preview"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = fallbackImage;
+                      }}
+                    />
+                  ) : typeof recipeData.image === "object" && recipeData.image ? (
+                    <img
+                      src={URL.createObjectURL(recipeData.image)}
+                      alt="Recipe Preview"
+                      className="image-preview"
+                    />
+                  ) : (
+                    <div className="image-placeholder">
+                      <ImageIcon size={40} />
+                      <p>Drag and drop an image here, or click to select a file</p>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="image-controls">
+                  <button
+                    type="button"
+                    className="image-button upload-button"
+                    onClick={handleAddImageClick}
+                    disabled={isUploading || !recipeData.image || typeof recipeData.image === "string"}
+                  >
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="loading-spinner" size={18} />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload size={18} />
+                        Upload Image
+                      </>
+                    )}
+                  </button>
+                  
+                  {recipeData.image && (
+                    <button
+                      type="button"
+                      className="image-button clear-button"
+                      onClick={handleClearImage}
+                      disabled={isUploading}
+                    >
+                      <X size={18} />
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="form-section">
+              <div className="form-row">
+                <div>
+                  <label htmlFor="totalTime" className="form-label">Cooking Time</label>
+                  <input
+                    type="text"
+                    id="totalTime"
+                    name="totalTime"
+                    className="form-input"
+                    value={recipeData.totalTime}
+                    onChange={handleChange}
+                    placeholder="e.g. 45 minutes"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="servings" className="form-label">Servings</label>
+                  <input
+                    type="text"
+                    id="servings"
+                    name="servings"
+                    className="form-input"
+                    value={recipeData.servings}
+                    onChange={handleChange}
+                    placeholder="e.g. 4"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="form-section">
+              <h2 className="section-title">Ingredients</h2>
+              <p className="section-description">List all ingredients with their quantities</p>
+              
+              <div className="ingredients-container">
+                {recipeData.ingredients.map((ingredient, index) => (
+                  <div key={index} className="ingredient-row">
+                    <div className="ingredient-fields">
+                      <div className="ingredient-field-wrapper">
+                        <label htmlFor={`ingredient-${index}`} className="ingredient-label">Ingredient</label>
+                        <input
+                          type="text"
+                          id={`ingredient-${index}`}
+                          className="ingredient-input"
+                          placeholder="e.g. Flour"
+                          value={ingredient.item}
+                          onChange={(e) => handleIngredientChange(index, "item", e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="ingredient-field-wrapper">
+                        <label htmlFor={`quantity-${index}`} className="ingredient-label">Quantity</label>
+                        <input
+                          type="text"
+                          id={`quantity-${index}`}
+                          className="ingredient-input"
+                          placeholder="e.g. 2 cups"
+                          value={ingredient.quantity}
+                          onChange={(e) => handleIngredientChange(index, "quantity", e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    
+                    <button
+                      type="button"
+                      className="ingredient-delete"
+                      onClick={() => handleDeleteIngredient(index)}
+                      disabled={recipeData.ingredients.length <= 1}
+                      aria-label="Remove ingredient"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                ))}
+                
                 <button
                   type="button"
-                  className="ingredient-delete-btn"
-                  onClick={() => handleDeleteIngredient(index)}
-                  aria-label="Remove ingredient"
+                  className="add-ingredient"
+                  onClick={handleAddMoreIngredients}
                 >
-                  ✕
+                  <Plus size={18} /> 
+                  Add Another Ingredient
                 </button>
               </div>
-            ))}
-            <button
-              type="button"
-              className="add-ingredient-btn"
-              onClick={handleAddMoreIngredients}
+            </div>
+            
+            <div className="form-section">
+              <label htmlFor="instructions" className="form-label">Cooking Instructions</label>
+              <p className="section-description">Provide detailed step-by-step cooking directions</p>
+              <textarea
+                id="instructions"
+                name="instructions"
+                className="form-textarea"
+                value={recipeData.instructions}
+                onChange={handleChange}
+                placeholder="Step 1: Preheat the oven to 350°F (175°C)..."
+                required
+              />
+            </div>
+            
+            <button 
+              type="submit" 
+              className="submit-button"
+              disabled={isSubmitting}
             >
-              + Add Ingredient
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="loading-spinner" size={20} />
+                  Creating Recipe...
+                </>
+              ) : (
+                <>
+                  <ChefHat size={20} />
+                  Create Recipe
+                </>
+              )}
             </button>
-          </div>
-
-          {/* Image Upload */}
-          <div className="form-group">
-            <label htmlFor="image" className="form-label">Recipe Image</label>
-            <div className="image-upload-container">
-              <input
-                type="file"
-                id="image"
-                name="image"
-                accept="image/*"
-                className="image-input"
-                onChange={handleImageChange}
-                required
+          </form>
+        </main>
+        
+        {/* Preview Sidebar */}
+        <aside className="recipe-preview-sidebar">
+          <div className="preview-container">
+            <div className="preview-header">Recipe Preview</div>
+            <div className="preview-content">
+              <img
+                src={previewImage}
+                alt="Recipe Preview"
+                className="preview-image"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = fallbackImage;
+                }}
               />
-              <div className="image-upload-actions">
-                <button
-                  type="button"
-                  className="image-upload-btn"
-                  onClick={handleAddImageClick}
-                  disabled={isUploading || !recipeData.image || typeof recipeData.image === 'string'}
-                >
-                  {isUploading ? 'Uploading...' : 'Upload Image'}
-                </button>
-                <button
-                  type="button"
-                  className="clear-image-btn"
-                  onClick={handleClearImage}
-                  disabled={!recipeData.image || typeof recipeData.image === 'string'}
-                >
-                  Clear
-                </button>
+              
+              <h2 className="preview-title">
+                {recipeData.title || "Your Recipe Title"}
+              </h2>
+              
+              <p className="preview-description">
+                {recipeData.description || "Your recipe description will appear here. Add a brief introduction to tell readers about your dish."}
+              </p>
+              
+              <div className="preview-meta">
+                {recipeData.totalTime && (
+                  <span><Clock size={16} /> {recipeData.totalTime}</span>
+                )}
+                
+                {recipeData.servings && (
+                  <span><Users size={16} /> {recipeData.servings} servings</span>
+                )}
+              </div>
+              
+              <div className="preview-ingredients">
+                <h4>Ingredients</h4>
+                <ul>
+                  {recipeData.ingredients.map((ing, idx) =>
+                    ing.item ? (
+                      <li key={idx}>
+                        {ing.item}
+                        {ing.quantity ? `: ${ing.quantity}` : ""}
+                      </li>
+                    ) : null
+                  )}
+                </ul>
+                
+                {recipeData.ingredients.length === 0 && (
+                  <p className="no-ingredients">No ingredients added yet</p>
+                )}
               </div>
             </div>
-            {recipeData.image && typeof recipeData.image !== 'string' && (
-              <p className="image-filename">
-                {recipeData.image.name}
-              </p>
-            )}
           </div>
-
-          {/* Submit Button */}
-          <button type="submit" className="submit-recipe-btn">
-            Create Recipe
-          </button>
-        </form>
+        </aside>
       </div>
     </div>
   );
