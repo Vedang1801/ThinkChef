@@ -27,16 +27,24 @@ const fallbackImage =
 
 const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
   const [loading, setLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
   const navigate = useNavigate();
 
   // Set loading state when image loads
   useEffect(() => {
-    // Debug log to check the image URL
-    console.log("RecipeCard image URL:", recipe.image);
+    if (!recipe.image) {
+      setImageError(true);
+      setLoading(false);
+      return;
+    }
+
     const img = new Image();
-    img.src = recipe.image || fallbackImage;
+    img.src = recipe.image;
     img.onload = () => setLoading(false);
-    img.onerror = () => setLoading(false);
+    img.onerror = () => {
+      setImageError(true);
+      setLoading(false);
+    };
 
     return () => {
       img.onload = null;
@@ -46,6 +54,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
 
   // Navigate to the detail page when clicked
   const handleClick = () => {
+    if (!recipe || !recipe.recipe_id) return;
     navigate(`/recipes/${recipe.recipe_id}`);
   };
 
@@ -69,14 +78,19 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
     );
   };
 
+  if (!recipe || !recipe.title) {
+    return null; // Don't render invalid recipe cards
+  }
+
   return (
     <div className="epicurious-recipe-card" onClick={handleClick}>
       <div className="epicurious-recipe-image">
         <img
-          src={recipe.image && recipe.image.startsWith("http") ? recipe.image : fallbackImage}
-          alt={recipe.title}
+          src={imageError || !recipe.image ? fallbackImage : recipe.image}
+          alt={recipe.title || "Recipe"}
           onError={(e) => {
             e.currentTarget.src = fallbackImage;
+            setImageError(true);
           }}
           className={loading ? "loading" : ""}
         />
@@ -85,7 +99,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
         <div className="epicurious-recipe-category">
           RECIPES & MENUS
         </div>
-        <h2 className="epicurious-recipe-title">{recipe.title}</h2>
+        <h2 className="epicurious-recipe-title">{recipe.title || "Untitled Recipe"}</h2>
         <div className="epicurious-recipe-rating">
           {renderRatingStars(recipe.average_rating || 0)}
           <span className="rating-value">{formattedRating}</span>

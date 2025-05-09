@@ -143,7 +143,7 @@ app.post("/api/login", (req, res) => {
 // Recipe Management API endpoints
 app.get("/api/recipes", (req, res) => {
   const page = parseInt(req.query.page) || 1;
-  const limit = 10;
+  const limit = 12; // CHANGED from 10 to 12
   const offset = (page - 1) * limit;
   const searchTerm = req.query.search || '';
 

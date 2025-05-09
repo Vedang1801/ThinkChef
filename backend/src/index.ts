@@ -282,7 +282,8 @@ app.get("/api/recipes/:id/ratings", (req, res) => {
 // Recipe Management
 app.get("/api/recipes", (req, res) => {
   const page = parseInt(req.query.page) || 1;
-  const limit = 10; // recipes per page
+  const limit = 12; // Ensure this is 12
+  console.log(`Fetching recipes page ${page} with limit ${limit}`); // Add logging
   const offset = (page - 1) * limit;
   const searchTerm = req.query.search || '';
 
@@ -325,11 +326,15 @@ app.get("/api/recipes", (req, res) => {
         console.error("Error retrieving recipes: ", err);
         return res.status(500).send("Error retrieving recipes");
       }
+      // Log the number of results being returned
+      console.log(`Returning ${results.length} recipes out of ${totalRecipes} total`);
+      
       res.status(200).json({
         recipes: results,
         currentPage: page,
         totalPages: totalPages,
-        totalRecipes: totalRecipes
+        totalRecipes: totalRecipes,
+        limit: limit // Explicitly include the limit in the response
       });
     });
   });
@@ -444,49 +449,112 @@ app.post("/api/recipes/:id/comments/create", (req, res) => {
 // Add this endpoint for sorting recipes
 app.get("/api/recipes/sort/:type", (req, res) => {
   const sortType = req.params.type;
-  let query = "SELECT * FROM recipes";
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = 12; // Ensure this is 12
+  console.log(`Fetching sorted recipes (${sortType}) page ${page} with limit ${limit}`); // Add logging
+  const offset = (page - 1) * limit;
+  const searchTerm = req.query.search as string || '';
+  
+  let countQuery = `
+    SELECT COUNT(*) as total FROM (
+      SELECT r.recipe_id
+      FROM recipes r 
+      LEFT JOIN ratings rt ON r.recipe_id = rt.recipe_id 
+      WHERE r.title LIKE ? OR r.description LIKE ?
+      GROUP BY r.recipe_id
+    ) as counted_recipes
+  `;
+  
+  let query;
+  const searchPattern = `%${searchTerm}%`;
 
   switch (sortType) {
     case 'top-rated':
       query = `
-        SELECT r.*, COALESCE(AVG(rt.stars), 0) as average_rating 
+        SELECT r.*, COALESCE(AVG(rt.stars), 0) as average_rating, u.username as author 
         FROM recipes r 
         LEFT JOIN ratings rt ON r.recipe_id = rt.recipe_id 
-        GROUP BY r.recipe_id, r.title, r.description, r.user_id, r.image, r.Instruction, r.created_at 
-        ORDER BY average_rating DESC`;
+        LEFT JOIN users u ON r.user_id = u.user_id
+        WHERE r.title LIKE ? OR r.description LIKE ?
+        GROUP BY r.recipe_id 
+        ORDER BY average_rating DESC
+        LIMIT ? OFFSET ?`;
       break;
     case 'newest':
-      query = "SELECT *, 0 as average_rating FROM recipes ORDER BY created_at DESC";
+      query = `
+        SELECT r.*, 0 as average_rating, u.username as author 
+        FROM recipes r 
+        LEFT JOIN users u ON r.user_id = u.user_id
+        WHERE r.title LIKE ? OR r.description LIKE ?
+        ORDER BY r.created_at DESC
+        LIMIT ? OFFSET ?`;
       break;
     case 'oldest':
-      query = "SELECT *, 0 as average_rating FROM recipes ORDER BY created_at ASC";
+      query = `
+        SELECT r.*, 0 as average_rating, u.username as author 
+        FROM recipes r 
+        LEFT JOIN users u ON r.user_id = u.user_id
+        WHERE r.title LIKE ? OR r.description LIKE ?
+        ORDER BY r.created_at ASC
+        LIMIT ? OFFSET ?`;
       break;
     case 'rating-asc':
       query = `
-        SELECT r.*, COALESCE(AVG(rt.stars), 0) as average_rating 
+        SELECT r.*, COALESCE(AVG(rt.stars), 0) as average_rating, u.username as author 
         FROM recipes r 
         LEFT JOIN ratings rt ON r.recipe_id = rt.recipe_id 
-        GROUP BY r.recipe_id, r.title, r.description, r.user_id, r.image, r.Instruction, r.created_at 
-        ORDER BY average_rating ASC`;
+        LEFT JOIN users u ON r.user_id = u.user_id
+        WHERE r.title LIKE ? OR r.description LIKE ?
+        GROUP BY r.recipe_id 
+        ORDER BY average_rating ASC
+        LIMIT ? OFFSET ?`;
       break;
     case 'rating-desc':
       query = `
-        SELECT r.*, COALESCE(AVG(rt.stars), 0) as average_rating 
+        SELECT r.*, COALESCE(AVG(rt.stars), 0) as average_rating, u.username as author 
         FROM recipes r 
         LEFT JOIN ratings rt ON r.recipe_id = rt.recipe_id 
-        GROUP BY r.recipe_id, r.title, r.description, r.user_id, r.image, r.Instruction, r.created_at 
-        ORDER BY average_rating DESC`;
+        LEFT JOIN users u ON r.user_id = u.user_id
+        WHERE r.title LIKE ? OR r.description LIKE ?
+        GROUP BY r.recipe_id 
+        ORDER BY average_rating DESC
+        LIMIT ? OFFSET ?`;
       break;
     default:
-      query = "SELECT *, 0 as average_rating FROM recipes";
+      query = `
+        SELECT r.*, 0 as average_rating, u.username as author 
+        FROM recipes r 
+        LEFT JOIN users u ON r.user_id = u.user_id
+        WHERE r.title LIKE ? OR r.description LIKE ?
+        LIMIT ? OFFSET ?`;
   }
 
-  connection.query(query, (err, results) => {
+  connection.query(countQuery, [searchPattern, searchPattern], (err, countResult) => {
     if (err) {
-      console.error("Error retrieving sorted recipes: ", err);
+      console.error("Error counting recipes: ", err);
       return res.status(500).send("Error retrieving recipes");
     }
-    res.status(200).json(results);
+
+    const totalRecipes = countResult[0].total;
+    const totalPages = Math.ceil(totalRecipes / limit);
+
+    connection.query(query, [searchPattern, searchPattern, limit, offset], (err, results) => {
+      if (err) {
+        console.error("Error retrieving sorted recipes: ", err);
+        return res.status(500).send("Error retrieving recipes");
+      }
+      
+      // Log the number of results being returned
+      console.log(`Returning ${results.length} sorted recipes out of ${totalRecipes} total`);
+      
+      res.status(200).json({
+        recipes: results,
+        currentPage: page,
+        totalPages: totalPages,
+        totalRecipes: totalRecipes,
+        limit: limit // Explicitly include the limit in the response
+      });
+    });
   });
 });
 
