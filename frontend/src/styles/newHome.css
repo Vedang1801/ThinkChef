@@ -116,6 +116,27 @@ body, .homepage-root {
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 32px;
   margin-bottom: 3rem;
+  position: relative;
+}
+
+/* Ensure minimum height for grid items to prevent collapsing */
+.epicurious-recipe-grid > * {
+  min-height: 350px; /* Set a consistent minimum height */
+}
+
+/* Fix for empty grid cells */
+.epicurious-recipe-grid:empty::after {
+  content: "No recipes found";
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--recipe-text-light, #646464);
+  font-style: italic;
+}
+
+/* Make empty spaces not take up unnecessary space */
+.epicurious-recipe-grid > *:empty {
+  display: none;
 }
 
 /* Responsive grid adjustments */
@@ -212,4 +233,44 @@ body, .homepage-root {
     font-size: 1rem;
     padding: 0.8rem 1.5rem;
   }
+}
+
+/* Pagination controls */
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding: 1rem;
+}
+
+.pagination-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #fff;
+  color: var(--recipe-primary, #d54215);
+  border: 1px solid var(--recipe-border, #e8e4d9);
+  border-radius: 2rem;
+  padding: 0.6rem 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pagination-button:hover:not(:disabled) {
+  background-color: var(--recipe-accent, #f4d35e);
+  border-color: var(--recipe-accent, #f4d35e);
+  color: var(--recipe-primary, #d54215);
+}
+
+.pagination-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-weight: 500;
+  color: var(--recipe-text-light, #646464);
 }
