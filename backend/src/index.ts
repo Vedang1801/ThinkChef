@@ -215,8 +215,8 @@ app.post("/api/upload-image", upload.single("image"), (req, res) => {
       Bucket: "imagebucketforproject1",
       Key: `images/${file.originalname}`,
       Body: data,
-      // Remove the ACL: "public-read" line as your bucket doesn't support ACLs
       ContentType: file.mimetype // Add content type for proper MIME handling
+      // Do not set ACL if your bucket policy is public-read
     };
 
     // Upload file to S3
@@ -225,14 +225,14 @@ app.post("/api/upload-image", upload.single("image"), (req, res) => {
         console.error("Error uploading file:", err);
         return res.status(500).send("Error uploading file to S3");
       }
-      console.log("File uploaded successfully:", s3Data.Location);
+      // Always return the full S3 URL
+      res.status(200).json({ imageUrl: s3Data.Location });
       // Delete the file from disk after uploading to S3
       fs.unlink(file.path, (unlinkErr) => {
         if (unlinkErr) {
           console.error("Error deleting file from disk:", unlinkErr);
         }
       });
-      res.status(200).json({ imageUrl: s3Data.Location });
     });
   });
 });
