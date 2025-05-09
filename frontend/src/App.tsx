@@ -11,21 +11,26 @@ import ReceipeDetail from "./components/ReceipeDetail";
 import { AuthProvider } from "./components/authContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 function App() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortType, setSortType] = useState("");
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
   };
 
+  const handleSort = (sortType: string) => {
+    setSortType(sortType);
+  };
+
   return (
     <Router>
       <AuthProvider>
-        <Header onSearch={handleSearch} />
+        <Header onSearch={handleSearch} onSort={handleSort} />
         <Routes>
-          <Route path="/" element={<Home searchTerm={searchTerm} />} />
+          <Route path="/" element={<Home searchTerm={searchTerm} sortType={sortType} />} />
           <Route path="/addrecipes" element={<AddReceipe />} />
           <Route path="/recipes/:id" element={<ReceipeDetail />} />
           <Route path="/login" element={<Login />} />

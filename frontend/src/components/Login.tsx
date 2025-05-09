@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "./authContext";
 
-
 const Login = () => {
   const [formData, setFormData] = useState({
     email: "",
@@ -12,6 +11,8 @@ const Login = () => {
     email: "",
     password: "",
   });
+  const [loading, setLoading] = useState(false);  // Loading state
+  const [loginError, setLoginError] = useState(""); // To store error message from login failure
   const navigate = useNavigate();
   const { loggedIn, login } = useAuth();
 
@@ -21,7 +22,7 @@ const Login = () => {
     }
   }, [loggedIn, navigate]);
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({
       ...prevState,
@@ -29,8 +30,9 @@ const Login = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoginError(""); // Clear previous login error
 
     if (!formData.email.trim()) {
       setErrors((prevState) => ({
@@ -57,7 +59,19 @@ const Login = () => {
     }
 
     if (formData.email.trim() && formData.password.trim()) {
-      login(formData.email, formData.password);
+      setLoading(true); // Set loading state to true
+      try {
+        const response = await login(formData.email, formData.password);
+        if (response.success) {
+          navigate("/"); // Redirect to home on successful login
+        } else {
+          setLoginError("Invalid email or password"); // Handle login failure
+        }
+      } catch (error) {
+        setLoginError("An error occurred. Please try again later.");
+      } finally {
+        setLoading(false); // Reset loading state after API call
+      }
     }
   };
 
@@ -99,16 +113,21 @@ const Login = () => {
               <p className="text-red-500 text-sm mt-1">{errors.password}</p>
             )}
           </div>
+          
+          {loginError && (
+            <p className="text-red-500 text-sm mt-2">{loginError}</p> // Display login error message
+          )}
+
           <div className="mb-4 flex justify-center">
-            <button type="submit" className="formlogin-button">
-              Login
+            <button type="submit" className="formlogin-button" disabled={loading}>
+              {loading ? "Logging in..." : "Login"} {/* Show loading text */}
             </button>
           </div>
         </form>
         <div className="mt-4">
           <p className="loginlastline">
             Don't have an account?{" "}
-            <Link to="/register" className="text-blue-500 hover:underline">
+            <Link to="/register" className="text-black hover:underline">
               Register
             </Link>
           </p>

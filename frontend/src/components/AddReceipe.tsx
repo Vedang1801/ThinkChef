@@ -6,355 +6,341 @@ import "../styles/recipeCard.css";
 import "../styles/profile.css";
 import "../styles/main.css";
 import "../styles/login.css";
+import "../styles/addrecipe.css";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import AWS from "aws-sdk";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Cookies from "js-cookie";
 import { useAuth } from "./authContext";
 
-const AddRecipe = () => {
-  const [recipeData, setRecipeData] = useState({
-    title: "",
-    description: "",
-    Instructions: "",
-    ingredients: [{ item: "", quantity: "" }],
-    image: "",
+
+// Ingredient interface for type safety
+interface Ingredient {
+  item: string;
+  quantity: string;
+}
+
+// Recipe data interface
+interface RecipeData {
+  title: string;
+  description: string;
+  instructions: string;
+  ingredients: Ingredient[];
+  image: File | string;
+}
+
+const AddRecipe: React.FC = () => {
+  const [recipeData, setRecipeData] = useState<RecipeData>({
+    title: '',
+    description: '',
+    instructions: '',
+    ingredients: [{ item: '', quantity: '' }],
+    image: '',
   });
 
   const { loggedIn } = useAuth();
   const navigate = useNavigate();
 
-  const handleChange = (e: any) => {
+  // Add new state for upload loading
+  const [isUploading, setIsUploading] = useState(false);
+
+  // Redirect if not logged in
+  React.useEffect(() => {
+    if (!loggedIn) {
+      navigate('/login');
+    }
+  }, [loggedIn, navigate]);
+
+  // Handle basic input changes
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setRecipeData((prevState) => ({
+    setRecipeData(prevState => ({
       ...prevState,
       [name]: value,
     }));
   };
-  useEffect(() => {
-    if (!loggedIn) {
-      navigate("/login"); // Redirect to login if user is not logged in
-    }
-  });
 
-  const handleIngredientChange = (index, field, value) => {
+  // Handle ingredient changes
+  const handleIngredientChange = (
+    index: number, 
+    field: keyof Ingredient, 
+    value: string
+  ) => {
     const newIngredients = [...recipeData.ingredients];
     newIngredients[index][field] = value;
-    setRecipeData((prevState) => ({
+    setRecipeData(prevState => ({
       ...prevState,
       ingredients: newIngredients,
     }));
   };
 
-  const handleDeleteIngredient = (index) => {
-    const newIngredients = [...recipeData.ingredients];
-    newIngredients.splice(index, 1);
-    setRecipeData((prevState) => ({
+  // Remove an ingredient
+  const handleDeleteIngredient = (index: number) => {
+    const newIngredients = recipeData.ingredients.filter((_, i) => i !== index);
+    setRecipeData(prevState => ({
       ...prevState,
       ingredients: newIngredients,
     }));
   };
 
+  // Add more ingredient fields
   const handleAddMoreIngredients = () => {
-    setRecipeData((prevState) => ({
+    setRecipeData(prevState => ({
       ...prevState,
-      ingredients: [...prevState.ingredients, { item: "", quantity: "" }],
+      ingredients: [...prevState.ingredients, { item: '', quantity: '' }],
     }));
   };
 
-  const handleImageChange = (e: any) => {
-    setRecipeData((prevState) => ({
-      ...prevState,
-      image: e.target.files[0],
-    }));
-    console.log(e.target.files[0]);
+  // Handle image file change
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setRecipeData(prevState => ({
+        ...prevState,
+        image: file,
+      }));
+    }
   };
 
-  const handleSubmit = async (e) => {
+  // Upload image
+  const handleAddImageClick = async () => {
+    try {
+      if (!recipeData.image) {
+        toast.error('Please select an image');
+        return;
+      }
+
+      setIsUploading(true); // Start loading
+      const formData = new FormData();
+      formData.append('image', recipeData.image);
+
+      const response = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const responseData = await response.json();
+        toast.success('Image uploaded successfully');
+        setRecipeData(prevState => ({
+          ...prevState,
+          image: responseData.imageUrl,
+        }));
+      } else {
+        toast.error('Failed to upload image');
+      }
+    } catch (error) {
+      console.error('Image upload error:', error);
+      toast.error('Error uploading image');
+    } finally {
+      setIsUploading(false); // End loading
+    }
+  };
+
+  // Clear image
+  const handleClearImage = () => {
+    setRecipeData(prevState => ({
+      ...prevState,
+      image: '',
+    }));
+    // Reset the file input
+    const fileInput = document.getElementById('image') as HTMLInputElement;
+    if (fileInput) fileInput.value = '';
+  };
+
+  // Submit recipe
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    // Validation
     if (!loggedIn) {
-      navigate("/login"); // Redirect to login if user is not logged in
-      return;
-    }
-    if (!recipeData.image) {
-      toast.error("Image Not Uploaded");
+      navigate('/login');
       return;
     }
 
-    if (
-      !recipeData.title ||
-      !recipeData.description ||
-      !recipeData.Instructions ||
-      recipeData.ingredients.some(
-        (ingredient) => !ingredient.item || !ingredient.quantity
-      )
-    ) {
-      toast.error("Please fill in all fields");
+    // Check for required fields
+    if (!recipeData.image) {
+      toast.error('Please upload an image');
+      return;
+    }
+
+    const requiredFieldsMissing = 
+      !recipeData.title || 
+      !recipeData.description || 
+      !recipeData.instructions || 
+      recipeData.ingredients.some(ing => !ing.item || !ing.quantity);
+
+    if (requiredFieldsMissing) {
+      toast.error('Please fill in all fields');
       return;
     }
 
     try {
+      // Prepare request data
       const requestData = {
         title: recipeData.title,
         description: recipeData.description,
-        user_id: Cookies.get("user_id"),
+        user_id: Cookies.get('user_id'),
         image: recipeData.image,
-        Instructions: recipeData.Instructions,
+        instructions: recipeData.instructions,
         ingredients: recipeData.ingredients,
       };
 
-      const response = await fetch("/api/recipes/create", {
-        method: "POST",
+      // Send recipe creation request
+      const response = await fetch('/api/recipes/create', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestData),
       });
 
       if (response.ok) {
-        console.log("Recipe created successfully");
-        toast.success("Recipe created successfully");
-        navigate("/");
-        // Optionally reset form state here
+        toast.success('Recipe created successfully');
+        navigate('/');
       } else {
-        console.error("Error creating recipe client");
-        console.log(requestData);
-        toast.error("Error creating recipe client");
+        const errorData = await response.json();
+        toast.error(errorData.message || 'Error creating recipe');
       }
     } catch (error) {
-      console.error("Error:", error);
-      toast.error(error?.response.data);
+      console.error('Recipe submission error:', error);
+      toast.error('Failed to create recipe');
     }
   };
 
-// Update your frontend code to call the new API endpoint
-const handleAddImageClick = async () => {
-  try {
-    if (!recipeData.image) {
-      toast.error("Image Not Uploaded");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("image", recipeData.image);
-
-    const response = await fetch("/api/upload-image", {
-      method: "POST",
-      body: formData,
-    });
-
-    if (response.ok) {
-      const responseData = await response.json();
-      console.log("File uploaded successfully:", responseData.imageUrl);
-      toast.success("File uploaded successfully");
-
-      setRecipeData((prevState) => ({
-        ...prevState,
-        image: responseData.imageUrl,
-      }));
-    } else {
-      console.error("Error uploading file");
-      toast.error("Error uploading file");
-    }
-  } catch (error) {
-    console.error("Error:", error);
-    toast.error("Error uploading file");
-  }
-};
-
-
   return (
-    <div className="home-container">
-      <div className="home-background"></div>
-      <div className="container mx-auto px-4 py-8">
-        <div className="centered-container">
-          <div className="recipes-box">
-            <h2 className="addrecipeboxtitle">ADD RECIPE</h2>
-          </div>
-        </div>
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
-        >
-          <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="title"
-            >
-              Title:
-            </label>
+    <div className="recipe-add-container">
+      <div className="recipe-add-wrapper">
+        <form onSubmit={handleSubmit} className="recipe-form">
+          <h2 className="recipe-form-title">Create New Recipe</h2>
+          
+          {/* Title Input */}
+          <div className="form-group">
+            <label htmlFor="title" className="form-label">Recipe Title</label>
             <input
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              type="text"
               id="title"
               name="title"
-              type="text"
-              placeholder="Enter title"
+              className="form-input"
               value={recipeData.title}
               onChange={handleChange}
+              placeholder="Enter recipe title"
               required
             />
           </div>
-          <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="description"
-            >
-              Description:
-            </label>
+
+          {/* Description Input */}
+          <div className="form-group">
+            <label htmlFor="description" className="form-label">Description</label>
             <textarea
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               id="description"
               name="description"
-              placeholder="Enter description"
+              className="form-textarea"
               value={recipeData.description}
               onChange={handleChange}
+              placeholder="Describe your recipe"
               required
-            ></textarea>
-          </div>
-          <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="Instructions"
-            >
-              Instruction:
-            </label>
-            <textarea
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="Instructions"
-              name="Instructions"
-              placeholder="Enter Instructions"
-              value={recipeData.Instructions}
-              onChange={handleChange}
-              required
-            ></textarea>
+            />
           </div>
 
-          <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="ingredients"
-            >
-              Ingredients:
-            </label>
+          {/* Instructions Input */}
+          <div className="form-group">
+            <label htmlFor="instructions" className="form-label">Cooking Instructions</label>
+            <textarea
+              id="instructions"
+              name="instructions"
+              className="form-textarea"
+              value={recipeData.instructions}
+              onChange={handleChange}
+              placeholder="Step-by-step cooking instructions"
+              required
+            />
+          </div>
+
+          {/* Ingredients Section */}
+          <div className="form-group">
+            <label className="form-label">Ingredients</label>
             {recipeData.ingredients.map((ingredient, index) => (
-              <div key={index} className="mb-2 flex items-center">
+              <div key={index} className="ingredient-input-group">
                 <input
-                  className="shadow appearance-none border rounded w-1/2 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mr-2"
                   type="text"
-                  placeholder={`Ingredient ${index + 1}`}
+                  className="ingredient-input"
+                  placeholder="Ingredient"
                   value={ingredient.item}
-                  onChange={(e) =>
-                    handleIngredientChange(index, "item", e.target.value)
-                  }
+                  onChange={(e) => handleIngredientChange(index, 'item', e.target.value)}
                   required
                 />
                 <input
-                  className="shadow appearance-none border rounded w-1/2 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mr-2"
                   type="text"
-                  placeholder={`Quantity ${index + 1}`}
+                  className="ingredient-input"
+                  placeholder="Quantity"
                   value={ingredient.quantity}
-                  onChange={(e) =>
-                    handleIngredientChange(index, "quantity", e.target.value)
-                  }
+                  onChange={(e) => handleIngredientChange(index, 'quantity', e.target.value)}
                   required
                 />
                 <button
-                  className="bin-button"
+                  type="button"
+                  className="ingredient-delete-btn"
                   onClick={() => handleDeleteIngredient(index)}
+                  aria-label="Remove ingredient"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 39 7"
-                    className="bin-top"
-                  >
-                    <line
-                      strokeWidth="4"
-                      stroke="white"
-                      y2="5"
-                      x2="39"
-                      y1="5"
-                    ></line>
-                    <line
-                      strokeWidth="3"
-                      stroke="white"
-                      y2="1.5"
-                      x2="26.0357"
-                      y1="1.5"
-                      x1="12"
-                    ></line>
-                  </svg>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 33 39"
-                    className="bin-bottom"
-                  >
-                    <mask fill="white" id="path-1-inside-1_8_19">
-                      <path d="M0 0H33V35C33 37.2091 31.2091 39 29 39H4C1.79086 39 0 37.2091 0 35V0Z"></path>
-                    </mask>
-                    <path
-                      mask="url(#path-1-inside-1_8_19)"
-                      fill="white"
-                      d="M0 0H33H0ZM37 35C37 39.4183 33.4183 43 29 43H4C-0.418278 43 -4 39.4183 -4 35H4H29H37ZM4 43C-0.418278 43 -4 39.4183 -4 35V0H4V35V43ZM37 0V35C37 39.4183 33.4183 43 29 43V35V0H37Z"
-                    ></path>
-                    <path strokeWidth="4" stroke="white" d="M12 6L12 29"></path>
-                    <path strokeWidth="4" stroke="white" d="M21 6V29"></path>
-                  </svg>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 89 80"
-                    className="garbage"
-                  >
-                    <path
-                      fill="white"
-                      d="M20.5 10.5L37.5 15.5L42.5 11.5L51.5 12.5L68.75 0L72 11.5L79.5 12.5H88.5L87 22L68.75 31.5L75.5066 25L86 26L87 35.5L77.5 48L70.5 49.5L80 50L77.5 71.5L63.5 58.5L53.5 68.5L65.5 70.5L45.5 73L35.5 79.5L28 67L16 63L12 51.5L0 48L16 25L22.5 17L20.5 10.5Z"
-                    ></path>
-                  </svg>
+                  ✕
                 </button>
               </div>
             ))}
             <button
               type="button"
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              className="add-ingredient-btn"
               onClick={handleAddMoreIngredients}
             >
-              Add More
+              + Add Ingredient
             </button>
           </div>
 
-          <div className="mb-4">
-            <label
-              className="block text-gray-700 text-sm font-bold mb-2"
-              htmlFor="image"
-            >
-              Image:
-            </label>
-            <input
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              id="image"
-              name="image"
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              required
-            />
-            <button
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-2"
-              type="button"
-              onClick={handleAddImageClick}
-            >
-              Add Image
-            </button>
+          {/* Image Upload */}
+          <div className="form-group">
+            <label htmlFor="image" className="form-label">Recipe Image</label>
+            <div className="image-upload-container">
+              <input
+                type="file"
+                id="image"
+                name="image"
+                accept="image/*"
+                className="image-input"
+                onChange={handleImageChange}
+                required
+              />
+              <div className="image-upload-actions">
+                <button
+                  type="button"
+                  className="image-upload-btn"
+                  onClick={handleAddImageClick}
+                  disabled={isUploading || !recipeData.image || typeof recipeData.image === 'string'}
+                >
+                  {isUploading ? 'Uploading...' : 'Upload Image'}
+                </button>
+                <button
+                  type="button"
+                  className="clear-image-btn"
+                  onClick={handleClearImage}
+                  disabled={!recipeData.image || typeof recipeData.image === 'string'}
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+            {recipeData.image && typeof recipeData.image !== 'string' && (
+              <p className="image-filename">
+                {recipeData.image.name}
+              </p>
+            )}
           </div>
-          <button
-            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            type="submit"
-          >
-            Submit
+
+          {/* Submit Button */}
+          <button type="submit" className="submit-recipe-btn">
+            Create Recipe
           </button>
         </form>
       </div>

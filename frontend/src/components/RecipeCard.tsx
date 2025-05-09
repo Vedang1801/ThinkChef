@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import Cookies from "js-cookie";
 import { useAuth } from "./authContext";
 import { Link } from "react-router-dom";
@@ -15,11 +15,13 @@ interface RecipeCardProps {
   recipe: {
     recipe_id: number;
     title: string;
-    Instruction: string;
     description: string;
-    ingredients: string[] | undefined;
+    Instruction: string;
     image: string;
     created_at: string;
+    ingredients?: string[];
+    average_rating?: number;
+    author?: string;
   };
 }
 
@@ -40,6 +42,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
   const [showRatingInput, setShowRatingInput] = useState(false);
   const [showThankYouSnackbar, setShowThankYouSnackbar] = useState(false);
   const { user, loggedIn } = useAuth();
+  const [hoverRating, setHoverRating] = useState(0);
 
   useEffect(() => {
     fetchComments();
@@ -47,25 +50,38 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
   }, [recipe.recipe_id]);
 
   useEffect(() => {
-    if (loggedIn) {
+    const token = Cookies.get("token");
+    if (loggedIn && token) {
       checkIfUserHasRated();
-      fetchUserRating(); // New API call to fetch user rating
+      fetchUserRating();
     } else {
       resetUserRatingState();
     }
   }, [user, loggedIn, recipe.recipe_id]);
 
   const fetchUserRating = async () => {
+    const token = Cookies.get("token");
+    if (!token) {
+      return;
+    }
+
     try {
       const response = await axios.get(
         `/api/recipes/${recipe.recipe_id}/ratings/user`,
-        { headers: { Authorization: `Bearer ${Cookies.get("token")}` } }
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
       );
       if (response.data.hasRated) {
         setUserRating(response.data.userRating);
       }
     } catch (error) {
-      console.error("Error fetching user rating:", error);
+      const axiosError = error as AxiosError;
+      if (axiosError.response?.status !== 401) {
+        console.error("Error fetching user rating:", error);
+      }
     }
   };
 
@@ -97,8 +113,10 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
   };
 
   const checkIfUserHasRated = async () => {
+    const token = Cookies.get("token");
     const userId = Cookies.get("user_id");
-    if (!userId) {
+    
+    if (!token || !userId) {
       setUserHasRated(false);
       return;
     }
@@ -108,8 +126,8 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
         `/api/recipes/${recipe.recipe_id}/ratings/user`,
         {
           headers: {
-            Authorization: `Bearer ${Cookies.get("token")}`,
-          },
+            Authorization: `Bearer ${token}`
+          }
         }
       );
       if (response.data.hasRated) {
@@ -120,16 +138,27 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
         setUserRating(0);
       }
     } catch (error) {
-      console.error("Error checking if user has rated:", error);
+      const axiosError = error as AxiosError;
+      if (axiosError.response?.status !== 401) {
+        console.error("Error checking if user has rated:", error);
+      }
       setUserHasRated(false);
       setUserRating(0);
     }
   };
 
   const handleCommentSubmit = async () => {
+    const trimmedComment = commentText.trim();
+    
+    if (!trimmedComment) {
+      setSnackbarMessage("Comment cannot be empty.");
+      setSnackbarOpen(true);
+      return;
+    }
+
     try {
       await axios.post(`/api/recipes/${recipe.recipe_id}/comments/create`, {
-        comment_text: commentText,
+        comment_text: trimmedComment,
         user_id: Cookies.get("user_id"),
         username: Cookies.get("username"),
       });
@@ -137,6 +166,8 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
       fetchComments();
     } catch (error) {
       console.error("Error adding comment:", error);
+      setSnackbarMessage("Failed to submit comment.");
+      setSnackbarOpen(true);
     }
   };
 
@@ -174,8 +205,8 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
       setSnackbarMessage("Rating submitted successfully.");
       setSnackbarOpen(true);
       setShowRatingInput(false);
-      setShowThankYouSnackbar(true); // Show the thank you snackbar
-      fetchRating(); // Fetch updated average rating
+      setShowThankYouSnackbar(true);
+      fetchRating();
     } catch (error) {
       console.error("Error submitting rating:", error);
       setSnackbarMessage("An error occurred while rating the recipe.");
@@ -184,8 +215,8 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
   };
 
   const renderRatingStars = (rating: number) => {
-    const fullStars = Math.floor(userRating || rating); // Use userRating if available, otherwise fallback to average rating
-    const hasHalfStar = (userRating || rating) - fullStars >= 0.5; // Use userRating if available, otherwise fallback to average rating
+    const fullStars = Math.floor(userRating || rating);
+    const hasHalfStar = (userRating || rating) - fullStars >= 0.5;
     const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
     return (
       <div className="rating-stars">
@@ -206,7 +237,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
     );
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).format(date);
   };
@@ -219,6 +250,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
         </div>
         <div className="recipe-content">
           <h2 className="recipe-title">{recipe.title}</h2>
+          <p className="recipe-author">Recipe by: {recipe.author || 'Anonymous'}</p>
           <p className="recipe-description">{recipe.description}</p>
           <div className="recipe-details">
             <div className="recipe-instructions">
@@ -229,7 +261,9 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
               <h3>Ingredients</h3>
               <ul>
                 {recipe?.ingredients?.map((ingredient, index) => (
-                  <li key={index}>{ingredient}</li>
+                  <li key={index}>
+                    {ingredient}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -262,13 +296,17 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
             )}
           </div>
           <div className="recipe-rating">
-            <h3>Rate this recipe:</h3>
             {showRatingInput ? (
               <div className="rating-stars">
                 {[...Array(5)].map((_, index) => (
                   <span
                     key={index}
-                    className={`star ${index < userRating ? "golden" : ""}`}
+                    className={`star 
+                      ${index < userRating ? "golden" : ""}
+                      ${index < hoverRating ? "hover" : ""}
+                    `}
+                    onMouseEnter={() => setHoverRating(index + 1)}
+                    onMouseLeave={() => setHoverRating(0)}
                     onClick={() => handleRatingClick(index)}
                   >
                     &#9733;
