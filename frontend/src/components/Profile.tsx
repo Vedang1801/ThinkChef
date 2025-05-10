@@ -31,7 +31,7 @@ interface EditingRecipe {
 }
 
 // Updated fallback images
-const fallbackImage = "https://images.unsplash.com/photo-1546241072-48010ad2862c?auto=format&fit=crop&q=80&w=1200&h=900";
+const fallbackImage = "https://images.unsplash.com/photo-1588505617603-f80b72bf8f24?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 
 const Profile: React.FC = () => {
   const { loggedIn } = useAuth();
