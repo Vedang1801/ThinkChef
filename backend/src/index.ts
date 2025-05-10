@@ -281,13 +281,11 @@ app.get("/api/recipes/:id/ratings", (req, res) => {
 
 // Recipe Management
 app.get("/api/recipes", (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = 12; // Ensure this is 12
-  console.log(`Fetching recipes page ${page} with limit ${limit}`); // Add logging
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = 12;
   const offset = (page - 1) * limit;
-  const searchTerm = req.query.search || '';
+  const searchTerm = req.query.search as string || '';
 
-  // Modified count query to use proper grouping
   const countQuery = `
     SELECT COUNT(*) as total FROM (
       SELECT r.recipe_id
@@ -298,7 +296,6 @@ app.get("/api/recipes", (req, res) => {
     ) as counted_recipes
   `;
   
-  // The main query remains the same
   const query = `
     SELECT r.*, COALESCE(AVG(rt.stars), 0) as average_rating, u.username as author 
     FROM recipes r 
@@ -318,23 +315,31 @@ app.get("/api/recipes", (req, res) => {
       return res.status(500).send("Error retrieving recipes");
     }
 
-    const totalRecipes = countResult[0].total;
-    const totalPages = Math.ceil(totalRecipes / limit);
+    // Fix: If there are no recipes, return empty array and pagination info
+    const totalRecipes = parseInt(countResult[0]?.total || 0, 10);
+    const totalPages = Math.ceil(totalRecipes / limit) || 1;
+
+    if (totalRecipes === 0) {
+      return res.status(200).json({
+        recipes: [],
+        currentPage: page,
+        totalPages: 1,
+        totalRecipes: 0,
+        limit: limit
+      });
+    }
 
     connection.query(query, [searchPattern, searchPattern, limit, offset], (err, results) => {
       if (err) {
         console.error("Error retrieving recipes: ", err);
         return res.status(500).send("Error retrieving recipes");
       }
-      // Log the number of results being returned
-      console.log(`Returning ${results.length} recipes out of ${totalRecipes} total`);
-      
       res.status(200).json({
         recipes: results,
         currentPage: page,
         totalPages: totalPages,
         totalRecipes: totalRecipes,
-        limit: limit // Explicitly include the limit in the response
+        limit: limit
       });
     });
   });

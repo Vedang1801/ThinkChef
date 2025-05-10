@@ -7,6 +7,7 @@ import "../styles/newHome.css";
 import { toast } from "react-toastify";
 import { ChevronRight, ChevronLeft, ArrowRight, ChefHat, Facebook, Twitter, Instagram } from "lucide-react";
 
+// Update the interface to match what the database actually returns
 interface Recipe {
   recipe_id: number;
   title: string;
@@ -14,7 +15,7 @@ interface Recipe {
   user_id: number;
   image: string;
   created_at: string;
-  Instruction: string;
+  instruction: string; // Changed to lowercase to match database column
   ingredients?: string[];
   average_rating?: number;
   author?: string;

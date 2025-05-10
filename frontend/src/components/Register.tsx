@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "./authContext";
+// import { useAuth } from "./authContext"; // Remove this line
 import { ChefHat } from "lucide-react";
 import "../styles/register.css";
 
@@ -22,7 +22,7 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [registerError, setRegisterError] = useState("");
   const navigate = useNavigate();
-  const { register } = useAuth();
+  // const { register } = useAuth(); // Remove this line
 
   const handleChange = (e: { target: { name: string; value: string } }) => {
     const { name, value } = e.target;
@@ -32,66 +32,65 @@ const Register = () => {
     }));
   };
 
-  const validateForm = () => {
-    let valid = true;
+  // Add registration logic here
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRegisterError("");
+    setErrors({
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    });
+
+    // Basic validation
+    let hasError = false;
     const newErrors = {
       username: "",
       email: "",
       password: "",
       confirmPassword: "",
     };
-
-    // Username validation
-    if (!formData.username.trim()) {
+    if (!formData.username) {
       newErrors.username = "Username is required";
-      valid = false;
+      hasError = true;
     }
-
-    // Email validation
-    if (!formData.email.trim()) {
+    if (!formData.email) {
       newErrors.email = "Email is required";
-      valid = false;
-    } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
-      newErrors.email = "Invalid email format";
-      valid = false;
+      hasError = true;
     }
-
-    // Password validation
-    if (!formData.password.trim()) {
+    if (!formData.password) {
       newErrors.password = "Password is required";
-      valid = false;
-    } else if (formData.password.length <= 5) {
-      newErrors.password = "Password must be at least 6 characters long";
-      valid = false;
+      hasError = true;
     }
-
-    // Confirm Password validation
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match";
-      valid = false;
+      hasError = true;
     }
-
     setErrors(newErrors);
-    return valid;
-  };
+    if (hasError) return;
 
-  const handleSubmit = async (e: { preventDefault: () => void }) => {
-    e.preventDefault();
-    if (validateForm()) {
-      setLoading(true);
-      setRegisterError("");
-      try {
-        await register(formData.email, formData.password, formData.username);
+    setLoading(true);
+    try {
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+        }),
+      });
+      if (response.ok) {
         navigate("/login");
-      } catch (error) {
-        setLoading(false);
-        if (error instanceof Error) {
-          setRegisterError(error.message);
-        } else {
-          console.error("Unexpected error:", error);
-          setRegisterError("Failed to register. Please try again.");
-        }
+      } else {
+        const msg = await response.text();
+        setRegisterError(msg || "Registration failed");
       }
+    } catch (err) {
+      setRegisterError("Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 

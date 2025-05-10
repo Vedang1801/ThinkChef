@@ -202,7 +202,8 @@ const AddRecipe: React.FC = () => {
         description: recipeData.description,
         user_id: Cookies.get("user_id"),
         image: recipeData.image,
-        instructions: recipeData.instructions,
+        // Ensure this matches database column name 'instruction' (singular)
+        instructions: recipeData.instructions, 
         ingredients: recipeData.ingredients,
         totalTime: recipeData.totalTime,
         servings: recipeData.servings,
