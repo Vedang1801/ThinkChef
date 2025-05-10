@@ -1,94 +1,62 @@
-/* Existing styles remain unchanged */
+/* Modern Login Page - Think Chef Theme with Improved Visibility */
+
+.loginbackground {
+  min-height: 100vh;
+  background: #f9f9f9; /* Lighter background consistent with other pages */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
 .formbody {
-  padding: 2rem;
-  position: relative;
+  background: white;
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  padding: 2.5rem 2.5rem 2rem 2.5rem;
+  max-width: 400px;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  max-height: 420px;
-  overflow: hidden;
-  border-radius: 12px;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(25px);
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(249, 242, 242, 0.18);
+  gap: 1.5rem;
+  position: relative;
 }
 
 .formbodytitle {
-  transition: .5s ease-in-out;
-  text-align: center;
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   font-weight: 700;
-  margin-bottom: 1rem;
-  color: #fff;
+  color: #ff7043; /* Orange text for consistency */
+  text-align: center;
+  margin-bottom: 0.5rem;
 }
 
-.formlogin-button {
-  width: 70%;
-  height: 40px;
-  margin: 12px auto 10%;
-  color: #fff;
-  background: #bb47fd;
-  font-size: 1rem;
-  font-weight: bold;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: .2s ease-in;
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-.formlogin-button:hover {
-  background-color: #6d44b8;
-}
-
-.formlogin-button:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px #bb47fd;
+.input-group {
+  position: relative;
 }
 
 .inputemail,
 .inputpassword {
   width: 100%;
-  height: 40px;
-  background: transparent;
-  border: 1px solid #ccc;
-  transition: all 0.3s ease;
-  padding: 10px 10px 10px 40px;
-  position: relative;
-  color: #fff; 
-}
-
-.floating-label {
-  position: absolute;
-  cursor: text;
-  z-index: 2;
-  top: 10px;
-  left: 15px;
-  font-size: 12px;
-  font-weight: bold;
-  background-color: rgba(255, 255, 255, 0);
-  padding: 0 5px;
-  color: #999;
-  transition: all 0.3s ease;
-}
-
-.inputemail:focus + .floating-label,
-.inputemail:valid + .floating-label,
-.inputpassword:focus + .floating-label,
-.inputpassword:valid + .floating-label {
-  font-size: 10px;
-  top: -10px;
-  padding: 0 5px;
-}
-
-.inputemail:focus + .floating-label,
-.inputpassword:focus + .floating-label {
-  color: #999;
+  padding: 1rem 1.2rem;
+  border: 1.5px solid #ffd54f;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  background: white; /* White background for better visibility */
+  color: #333;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .inputemail:focus,
 .inputpassword:focus {
-  border: 1px solid #bb47fd;
-  outline: 2px solid #bb47fd;
+  border-color: #ff7043;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 112, 67, 0.1);
 }
 
 .inputemail.error,
@@ -96,51 +64,123 @@
   border-color: #ef4444;
 }
 
-.inputemail.error + .error-message,
-.inputpassword.error + .error-message {
-  color: #ef4444;
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
-}
-
-#chk {
-  display: none;
-}
-
-#chk:checked ~ .formbodytitle {
-  transform: scale(.6);
-  margin: 5% 0 5%;
-}
-
-.toggle-button {
+.floating-label {
   position: absolute;
-  bottom: 1rem;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 0.5rem 1rem;
-  background-color: #573b8a;
-  color: #fff;
+  left: 1.2rem;
+  top: 1.1rem;
+  font-size: 1rem;
+  color: #757575; /* Darker color for better contrast */
+  pointer-events: none;
+  transition: 0.2s ease all;
+  padding: 0 0.3rem;
+}
+
+.inputemail:focus ~ .floating-label,
+.inputemail:not(:placeholder-shown) ~ .floating-label,
+.inputpassword:focus ~ .floating-label,
+.inputpassword:not(:placeholder-shown) ~ .floating-label {
+  top: -0.7rem;
+  left: 1rem;
+  font-size: 0.85rem;
+  color: #ff7043;
+  background: white; /* Label background */
+  font-weight: 600;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 0.92rem;
+  margin-top: 0.3rem;
+}
+
+.formlogin-button {
+  width: 100%;
+  padding: 0.9rem 0;
+  background: #ff7043; /* Solid orange for better visibility */
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 600;
   border: none;
-  border-radius: 0.25rem;
+  border-radius: 0.75rem;
   cursor: pointer;
-  transition: background-color 0.3s ease-in-out;
+  margin-top: 0.5rem;
+  transition: background 0.2s, transform 0.18s;
+  box-shadow: 0 4px 12px rgba(255, 112, 67, 0.15);
 }
 
-.toggle-button:hover {
-  background-color: #6d44b8;
+.formlogin-button:hover,
+.formlogin-button:focus {
+  background: #ffd54f;
+  color: #ff7043;
+  transform: translateY(-2px);
 }
 
-.loginbackground {
+.formlogin-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.form-separator {
   display: flex;
   align-items: center;
-  justify-content: center;
-  height: 100vh;
-  background-color: black;
-  background-size: contain;
-  background-position: center;
-  background-image: url('./login_img.jpg');
+  margin: 1rem 0;
+  color: #757575;
+}
+
+.form-separator::before,
+.form-separator::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #e0e0e0; /* Lighter separator for better visibility */
+  margin: 0 0.7rem;
+}
+
+.form-separator span {
+  padding: 0 0.8rem;
+  font-size: 0.95rem;
+  color: #757575; /* Darker text for better visibility */
 }
 
 .loginlastline {
-  color: #ffffff;
+  text-align: center;
+  color: #333;
+  margin-top: 1rem;
+  font-size: 1rem;
+}
+
+.loginlastline a {
+  color: #ff7043;
+  font-weight: 600;
+  text-decoration: none; /* Removed underline */
+  transition: color 0.18s;
+}
+
+.loginlastline a:hover {
+  color: #ffd54f;
+}
+
+.login-error-message {
+  color: #ef4444;
+  background: #fff1f1;
+  border-radius: 0.7rem;
+  padding: 0.7rem 1rem;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+@media (max-width: 600px) {
+  .formbody {
+    padding: 1.5rem 1rem;
+    max-width: 90vw;
+  }
+  .formbodytitle {
+    font-size: 1.6rem;
+  }
 }
