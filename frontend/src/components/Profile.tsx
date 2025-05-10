@@ -5,9 +5,9 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { toast } from "react-toastify";
 import { 
-  Edit2, Trash2, RefreshCw, Plus, Clock, User, Bookmark, Settings, 
-  Calendar, ArrowRight, ChevronLeft, ChevronRight, Grid, List, Heart,
-  X, Save, Upload, Loader2, ChefHat
+  Edit2, Trash2, RefreshCw, Plus, User, Bookmark, Settings, 
+  Calendar, Grid, List, Heart,
+  X, Save, Upload, Loader2, 
 } from "lucide-react";
 import "../styles/profile.css";
 
@@ -16,6 +16,8 @@ interface Post {
   title: string;
   description: string;
   Instruction: string;
+  instruction?: string;    // <-- Add this line
+  instructions?: string;   // <-- Add this line
   user_id: number;
   image: string;
   created_at: Date | string;
@@ -54,7 +56,6 @@ const Profile: React.FC = () => {
   const [undoTimeout, setUndoTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState<EditingRecipe | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [activeTab, setActiveTab] = useState<'recipes' | 'stats' | 'settings'>('recipes');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -185,7 +186,7 @@ const Profile: React.FC = () => {
     formData.append("image", file);
     
     try {
-      setIsUploading(true);
+      // setIsUploading(true); // <-- Remove this line
       // Upload to AWS S3 via backend endpoint
       const response = await axios.post("/api/upload-image", formData, {
         headers: {
@@ -193,7 +194,7 @@ const Profile: React.FC = () => {
         }
       });
       
-      setIsUploading(false);
+      // setIsUploading(false); // <-- Remove this line
       if (response.data && response.data.imageUrl) {
         return response.data.imageUrl;
       } else {
@@ -201,7 +202,7 @@ const Profile: React.FC = () => {
         return null;
       }
     } catch (error) {
-      setIsUploading(false);
+      // setIsUploading(false); // <-- Remove this line
       toast.error("Image upload failed", { position: "bottom-right" });
       return null;
     }

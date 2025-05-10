@@ -1,4 +1,3 @@
-import { useState } from "react";
 import "../styles/tips.css";
 import { BookOpen, Coffee, ChefHat } from "lucide-react";
 
@@ -37,17 +36,10 @@ const Tips = () => {
     },
   ];
 
-  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
-
   return (
     <div className="tips-container">
       {tipsList.map((tipItem, index) => (
-        <div 
-          className="tip-card" 
-          key={index}
-          onMouseEnter={() => setHoveredCard(index)}
-          onMouseLeave={() => setHoveredCard(null)}
-        >
+        <div className="tip-card" key={index}>
           <div className="tip-icon">{tipItem.icon}</div>
           <div className="tip-category">{tipItem.category}</div>
           <h3>Cooking Tip</h3>

@@ -7,7 +7,7 @@ import Cookies from "js-cookie";
 import { useAuth } from "./authContext";
 import { 
   Upload, X, Image as ImageIcon, Loader2, Clock, Users, 
-  Plus, ChefHat, AlertCircle 
+  Plus, ChefHat,  
 } from "lucide-react";
 
 // Ingredient interface for type safety
