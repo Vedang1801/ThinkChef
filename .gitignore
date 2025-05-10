@@ -4,6 +4,7 @@
 config.env
 .env.*
 !.env.example
+backend/config.env
 
 # Node modules
 node_modules/
