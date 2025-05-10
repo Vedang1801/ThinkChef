@@ -29,6 +29,11 @@ interface RecipeData {
 
 const fallbackImage = "https://images.unsplash.com/photo-1495195134817-aeb325a55b65?auto=format&fit=crop&w=1200&q=80";
 
+// Utility to capitalize the first letter of each word in the title
+function capitalizeTitle(title: string) {
+  return title.replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 const AddRecipe: React.FC = () => {
   const [recipeData, setRecipeData] = useState<RecipeData>({
     title: "",
@@ -192,7 +197,8 @@ const AddRecipe: React.FC = () => {
       setIsSubmitting(true);
       
       const requestData = {
-        title: recipeData.title,
+        // Capitalize the title before sending
+        title: capitalizeTitle(recipeData.title),
         description: recipeData.description,
         user_id: Cookies.get("user_id"),
         image: recipeData.image,
