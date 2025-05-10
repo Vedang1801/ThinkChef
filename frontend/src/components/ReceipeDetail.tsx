@@ -11,7 +11,9 @@ interface Recipe {
   recipe_id: number;
   title: string;
   description: string;
-  Instruction: string;
+  Instruction?: string;  // Make this optional
+  instruction?: string;  // Add lowercase variant
+  instructions?: string; // Add plural variant
   image: string;
   created_at: string;
   ingredients?: string[];
@@ -341,12 +343,16 @@ const RecipeDetail: React.FC = () => {
         <div className="recipe-detail-instructions">
           <h2>Preparation</h2>
           <div className="instructions-content">
-            {recipe.Instruction.split("\n").map((paragraph, i) =>
-              paragraph.trim() ? (
-                <p key={i} className="instruction-paragraph">
-                  {paragraph}
-                </p>
-              ) : null
+            {recipe.Instruction || recipe.instruction || recipe.instructions ? (
+              (recipe.Instruction || recipe.instruction || recipe.instructions)?.split("\n").map((paragraph, i) =>
+                paragraph.trim() ? (
+                  <p key={i} className="instruction-paragraph">
+                    {paragraph}
+                  </p>
+                ) : null
+              )
+            ) : (
+              <p className="instruction-paragraph">No instructions available.</p>
             )}
           </div>
         </div>
