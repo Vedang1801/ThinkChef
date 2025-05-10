@@ -1,165 +1,59 @@
-import "../styles/home.css";
+import { useState } from "react";
 import "../styles/tips.css";
-import "../styles/recipeCard.css";
-import "../styles/profile.css";
-import "../styles/main.css";
-import "../styles/login.css";
-import  { useState, useEffect } from "react";
+import { BookOpen, Coffee, ChefHat } from "lucide-react";
 
 const Tips = () => {
-  const tipsList = ["Preheat your oven before baking.",
-  "Use fresh herbs for better flavor.",
-  "Season your food throughout the cooking process.",
-  "Don't overcrowd the pan when sautéing vegetables.",
-  "Taste as you cook and adjust seasoning as needed.",
-  "Invest in high-quality kitchen tools and utensils.",
-  "Keep your knives sharp for safer and more efficient cutting.",
-  "Read recipes thoroughly before starting to ensure you have all the ingredients and understand the steps.",
-  "Use a kitchen timer to avoid overcooking or burning your food.",
-  "Use a meat thermometer to ensure meat is cooked to the proper temperature.",
-  "Use different cooking methods such as roasting, grilling, and steaming to enhance flavors and textures.",
-  "Taste your food as you cook and adjust seasoning accordingly.",
-  "Use fresh, seasonal ingredients for optimal flavor.",
-  "Don't be afraid to experiment with new ingredients and recipes.",
-  "Keep your kitchen clean and organized for efficient cooking.",
-  "Use salt sparingly and taste your food before adding more.",
-  "Use olive oil for sautéing and salad dressings, and vegetable oil for frying.",
-  "Use citrus juice and zest to add brightness and acidity to dishes.",
-  "Use aromatics like onions, garlic, and ginger to enhance flavor in dishes.",
-  "Use low-sodium broth and sauces to control the saltiness of your dishes.",
-  "Let meat rest before slicing to allow juices to redistribute.",
-"Use a food processor or blender to quickly chop or puree ingredients.",
-"Toast spices before using to enhance their flavor and aroma.",
-"Marinate proteins for added flavor and tenderness.",
-"Use a cast-iron skillet for even heat distribution and a crispy sear.",
-"Invest in a good set of kitchen towels for easy cleanup.",
-"Organize your pantry and refrigerator for easy access to ingredients.",
-"Use a kitchen scale for precise measurements in baking recipes.",
-"Bake in the center of the oven for even heat distribution.",
-"Use parchment paper or silicone mats for easy cleanup and non-stick surfaces.",
-"Mise en place (prepare ingredients before cooking) for a smoother cooking process.",
-"Taste and adjust seasoning at the end of the cooking process.",
-"Roast vegetables at high temperatures for caramelization and maximum flavor.",
-"Use a meat mallet or rolling pin to tenderize tough cuts of meat.",
-"Use a vegetable peeler to create thin strips of vegetables for garnishes or salads.",
-"Use a smoker box or wood chips to add a smoky flavor to grilled foods.",
-"Invest in a quality chef's knife and keep it sharp for easy and safe cutting.",
-"Use a garlic press or microplane for easy mincing and grating of garlic and citrus zest.",
-"Deglaze pans with wine, broth, or vinegar to create flavorful sauces and gravies.",
-"Use a pizza stone or steel for crispier, evenly cooked pizzas and breads.",
-"Blanch vegetables in boiling water before sautéing or roasting to retain color and crispness.",
-"Use a mortar and pestle to grind spices and create flavorful pastes and marinades.",
-"Invest in a quality kitchen timer to avoid overcooking or undercooking foods.",
-"Use a pastry brush to evenly glaze breads, meats, and pastries.",
-"Soak wooden skewers in water before using them to prevent burning on the grill.",
-"Use a potato ricer or food mill for perfectly smooth mashed potatoes or pureed soups.",
-"Toast nuts and seeds before using them to enhance their flavor and crunch.",
-"Use a zester or microplane to add fresh citrus zest to dishes for a burst of flavor.",
-"Invest in a quality immersion blender for easy pureeing and emulsifying sauces.",
-"Use a fine mesh strainer to sift dry ingredients for baking and to remove lumps from sauces.",
-"Use a meat tenderizer or mallet to flatten chicken breasts or steaks for even cooking.",
-"Roast garlic heads for a sweet, caramelized flavor to add to dips, spreads, and sauces.",
-"Use a grill basket or wok for easier cooking and tossing of small ingredients on the grill.",
-"Invest in a quality Dutch oven for braising, slow cooking, and baking bread.",
-"Use a Microplane or zester to add fresh citrus zest to dishes for a burst of flavor and aroma.",
-"Toast spices before grinding or using them to enhance their flavor and aroma.",
-"Invest in a quality kitchen scale for precise measurements when baking or following recipes.",
-"Use a food processor or blender to quickly chop or puree ingredients for sauces, dips, pestos.",
-"Use a meat thermometer to ensure that meat is cooked to the proper temperature and doneness.",
-"Learn proper knife skills and invest in a quality chef's knife for efficient and safe cutting.",
-"Use a silicone baking mat or parchment paper for easy cleanup and non-stick surfaces when baking.",
-"Toast bread crumbs or breadcrumbs before using them to add a crispy texture to dishes.",
-"Use a pastry brush to evenly glaze breads, meats, and pastries with butter, egg wash, or sauces.",
-"Invest in a quality pepper mill for freshly ground black pepper, which has more flavor than pre-ground pepper.",
-"Use a mandoline or V-slicer for consistent, thin slices of vegetables and fruits.",
-"Soak wooden skewers in water before using them to prevent burning on the grill or in the oven.",
-"Use a potato ricer or food mill for perfectly smooth mashed potatoes or pureed vegetable soups.",
-"Toast nuts and seeds  before using them to enhance their flavor and crunch in salads, baked goods, and as garnishes or toppings.",
-"Use a zester or microplane to add fresh citrus zest to dishes for a burst of flavor and aroma.",
-"Invest in a quality immersion blender for easy pureeing and emulsifying of soups, sauces, dressings, and smoothies.",
-"Use a fine mesh strainer to sift dry ingredients for baking and to remove lumps from sauces, gravies, custards, and coulis.",
-"Use a meat tenderizer or mallet to flatten chicken breasts or steaks for even cooking and tenderness, or to break down tough fibers in tougher cuts of meat like pork shoulder, beef chuck, or brisket.",
-"Roast garlic heads for a sweet, caramelized flavor to add to dips, spreads, sauces, mashed potatoes, and roasted vegetables.",
-"Use a grill basket or wok for easier cooking and tossing of small ingredients like vegetables, shrimp, or stir-fries on the grill or stovetop.",
-"Invest in a quality Dutch oven for braising meats, slow cooking stews, chilis, and braises, and baking bread, pot pies, or casseroles.",
-"Use a Microplane or zester to add fresh citrus zest to dishes for a burst of flavor and aroma in desserts, cocktails, marinades, and dressings.",
-"Toast spices before grinding or using them to enhance their flavor and aroma in curries, marinades, dry rubs, and baked goods like spice cookies or quick breads.",
-"Invest in a quality kitchen scale for precise measurements when baking or following recipes, especially for bread, pastries, delicate dishes like soufflés, and for portioning ingredients.",
-"Use a food processor or blender to quickly chop or puree ingredients for sauces, dips, pestos, smoothies, nut butters, and hummus.",
-"Use a meat thermometer to ensure that poultry, pork, beef, and fish are cooked to the proper temperature and doneness for food safety and optimal texture, and to prevent overcooking.",
-"Learn proper knife skills and invest in a quality chef's knife, paring knife, and serrated bread knife for efficient and safe cutting of meats, vegetables, fruits, herbs, and breads.",
-"Use a silicone baking mat or parchment paper for easy cleanup and non-stick surfaces when baking cookies, bread, roasting vegetables, making candies, or drying fruit leather.",
-"Toast breadcrumbs, panko, or nuts before using them to add a crispy texture to dishes like meatballs, casseroles, baked vegetables, or as a topping for salads or yogurt parfaits.",
-"Use a pastry brush to evenly glaze breads, meats, pastries, and tarts with butter, egg wash, or sauces for a golden brown finish and added flavor.",
-"Invest in a quality pepper mill and sea salt grinder for freshly ground spices, which have more flavor and aroma than pre-ground versions.",
-"Use a mandoline or V-slicer for consistent, thin slices of vegetables and fruits for salads, garnishes, chips, or pickling.",
-"Soak wooden skewers in water before using them to prevent burning on the grill or in the oven when skewering meats, vegetables, fruits, or making kebabs.",
-"Use a potato ricer or food mill for perfectly smooth mashed potatoes, pureed vegetable soups, sauces, and baby foods.",
-"Sauté onions till golden brown.",
-"Don't overcrowd the pan when cooking spices.",
-"Pinch of sugar balances spice in curries.",
-"Heavy-bottomed pan for even heat distribution.",
-"Let your tadka sizzle before adding it.",
-"Gently fold cooked ingredients to avoid breaking.",
-"Marinate meats in yogurt for tenderness.",
-"Adjust heat to your preference.",
-"Leftovers store in airtight containers for a few days.",
-"Fresh cilantro is a common garnish, but mint works too.",
-"Bloom saffron in warm milk for intense color and aroma.",
-"Char vegetables for depth of flavor.",
-"Grind your own spice mixes for vibrant flavor.",
-"Use ghee for a touch of richness and higher smoke point.",
-"Repurpose leftover lentils and vegetables into pakoras or samosas.",
-"Balance your flavors: sweet, salty, sour, spicy, bitter.",
-"Use coconut milk for a creamy South Indian curry.",
-"Don't skip the garnish: fresh cilantro, chopped onions, or lime squeeze.",
-"Leftovers taste even better the next day.",
-"Embrace the power of dal: protein and fiber powerhouse.",
-"Rinse rice before cooking for fluffy grains.",
-"Soak basmati rice for 30 minutes for extra length.",
-"Temper spices in hot oil to release their aroma.",
-"Add a bay leaf for a subtle floral note.",
-"Finish curries with a pat of butter for a silky texture.",
-"Use a pressure cooker to save time on lentils and beans.",
-"Start with a basic spice mix like garam masala.",
-"Taste as you go and adjust seasoning throughout.",
-"Don't be afraid to experiment with different regions and dishes.",
-"Fresh is best, but dried herbs and spices work too.",
-"Double or triple your spice mix recipe for future use.",
-"Store spices in a cool, dark place for maximum freshness.",
-"Grind nuts and seeds into pastes for curries and chutneys.",
-"Use a mortar and pestle for a truly authentic experience.",
-"Serve Indian food with flatbreads like roti or naan.",
-"Accompany your meal with chutneys for a flavor explosion.",
-"Yogurt raita cools down a spicy meal.",
-"Pair your food with a refreshing lassi drink.",
-"Don't be afraid to get your hands dirty while cooking!",
-"Cooking is a fun and rewarding experience.",
-"Have fun and enjoy the process!",
-"Don't be discouraged by failures, learn from them.",
-"Practice makes perfect!",
-"Cooking with friends and family creates lasting memories.",
-"Share your love for Indian food with others!",
-"Indian cuisine offers endless possibilities for creativity.",
-"Be mindful of dietary restrictions when cooking for others.",
-"Substitute ingredients based on your preferences and allergies.",
-"There's no single right way to cook Indian food, get creative!",
-"Most importantly, have fun and enjoy the delicious journey!"
-];
+  // Only import the first 6 tips for display in the grid
+  const tipsList = [
+    {
+      icon: <ChefHat size={22} />,
+      tip: "Preheat your oven before baking for consistent results.",
+      category: "Basics"
+    },
+    {
+      icon: <Coffee size={22} />,
+      tip: "Use fresh herbs for better flavor in your dishes.",
+      category: "Flavor"
+    },
+    {
+      icon: <BookOpen size={22} />,
+      tip: "Read recipes thoroughly before starting to ensure you have all the ingredients.",
+      category: "Preparation"
+    },
+    {
+      icon: <ChefHat size={22} />,
+      tip: "Don't overcrowd the pan when sautéing vegetables.",
+      category: "Technique"
+    },
+    {
+      icon: <Coffee size={22} />,
+      tip: "Season your food throughout the cooking process.",
+      category: "Flavor"
+    },
+    {
+      icon: <BookOpen size={22} />,
+      tip: "Let meat rest before slicing to allow juices to redistribute.",
+      category: "Advanced"
+    },
+  ];
 
-  const [currentTipIndex, setCurrentTipIndex] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTipIndex((prevIndex) => (prevIndex + 1) % tipsList.length);
-    }, 20000); // Change tip every 30 seconds
-
-    return () => clearInterval(interval);
-  }, []);
+  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
 
   return (
     <div className="tips-container">
-      <p>{tipsList[currentTipIndex]}</p>
+      {tipsList.map((tipItem, index) => (
+        <div 
+          className="tip-card" 
+          key={index}
+          onMouseEnter={() => setHoveredCard(index)}
+          onMouseLeave={() => setHoveredCard(null)}
+        >
+          <div className="tip-icon">{tipItem.icon}</div>
+          <div className="tip-category">{tipItem.category}</div>
+          <h3>Cooking Tip</h3>
+          <p>{tipItem.tip}</p>
+        </div>
+      ))}
     </div>
   );
 };
