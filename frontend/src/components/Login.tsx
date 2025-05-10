@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "./authContext";
+import { AlertCircle } from "lucide-react";
+import "../styles/login.css";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -11,14 +13,14 @@ const Login = () => {
     email: "",
     password: "",
   });
-  const [loading, setLoading] = useState(false);  // Loading state
-  const [loginError, setLoginError] = useState(""); // To store error message from login failure
+  const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState("");
   const navigate = useNavigate();
   const { loggedIn, login } = useAuth();
 
   useEffect(() => {
     if (loggedIn) {
-      navigate("/"); // Redirect to home page if logged in
+      navigate("/");
     }
   }, [loggedIn, navigate]);
 
@@ -28,109 +30,123 @@ const Login = () => {
       ...prevState,
       [name]: value,
     }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
+    setLoginError("");
+  };
+
+  const validateForm = () => {
+    let valid = true;
+    const newErrors = { email: "", password: "" };
+
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+      valid = false;
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Invalid email format";
+      valid = false;
+    }
+
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+      valid = false;
+    }
+
+    setErrors(newErrors);
+    return valid;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoginError(""); // Clear previous login error
 
-    if (!formData.email.trim()) {
-      setErrors((prevState) => ({
-        ...prevState,
-        email: "Email is required",
-      }));
-    } else {
-      setErrors((prevState) => ({
-        ...prevState,
-        email: "",
-      }));
-    }
+    if (!validateForm()) return;
 
-    if (!formData.password.trim()) {
-      setErrors((prevState) => ({
-        ...prevState,
-        password: "Password is required",
-      }));
-    } else {
-      setErrors((prevState) => ({
-        ...prevState,
-        password: "",
-      }));
-    }
+    setLoginError("");
+    setLoading(true);
 
-    if (formData.email.trim() && formData.password.trim()) {
-      setLoading(true); // Set loading state to true
-      try {
-        // The login function returns void, so we shouldn't check for success property
-        await login(formData.email, formData.password);
-        // If login is successful, the authContext will update loggedIn state
-        // and the useEffect will trigger navigation
-      } catch (error) {
-        // If login throws an error, we handle it here
-        setLoginError("Invalid email or password");
-      } finally {
-        setLoading(false); // Reset loading state after API call
-      }
+    try {
+      await login(formData.email, formData.password);
+      // Successful login will redirect in the useEffect above
+    } catch (error: any) {
+      console.error("Login error:", error);
+      setLoginError(
+        error?.response?.data ||
+          error?.message ||
+          "Invalid email or password. Please try again."
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="loginbackground">
       <div className="formbody">
-        <h2 className="formbodytitle">Login</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4" style={{ position: "relative" }}>
+        <h1 className="formbodytitle">Sign In</h1>
+
+        {loginError && (
+          <div className="login-error-message">
+            <AlertCircle size={16} />
+            {loginError}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="login-form">
+          <div className="input-group">
             <input
-              type="text"
+              type="email"
               id="email"
               name="email"
-              placeholder=" "
+              className={`inputemail${
+                errors.email ? " error" : ""
+              }`}
               value={formData.email}
               onChange={handleChange}
-              className={`inputemail ${errors.email ? "border-red-500" : ""}`}
-              required
+              placeholder=" "
             />
-            <label htmlFor="email" className="floating-label">Email</label>
+            <label htmlFor="email" className="floating-label">
+              Email
+            </label>
             {errors.email && (
-              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+              <div className="error-message">{errors.email}</div>
             )}
           </div>
 
-          <div className="mb-4" style={{ position: "relative" }}>
+          <div className="input-group">
             <input
               type="password"
               id="password"
               name="password"
-              placeholder=" "
+              className={`inputpassword${
+                errors.password ? " error" : ""
+              }`}
               value={formData.password}
               onChange={handleChange}
-              className={`inputpassword ${errors.password ? "border-red-500" : ""}`}
-              required
+              placeholder=" "
             />
-            <label htmlFor="password" className="floating-label">Password</label>
+            <label htmlFor="password" className="floating-label">
+              Password
+            </label>
             {errors.password && (
-              <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+              <div className="error-message">{errors.password}</div>
             )}
           </div>
-          
-          {loginError && (
-            <p className="text-red-500 text-sm mt-2">{loginError}</p> // Display login error message
-          )}
 
-          <div className="mb-4 flex justify-center">
-            <button type="submit" className="formlogin-button" disabled={loading}>
-              {loading ? "Logging in..." : "Login"} {/* Show loading text */}
-            </button>
-          </div>
+          <button
+            type="submit"
+            className="formlogin-button"
+            disabled={loading}
+          >
+            {loading ? "Signing in..." : "Sign In"}
+          </button>
         </form>
-        <div className="mt-4">
-          <p className="loginlastline">
-            Don't have an account?{" "}
-            <Link to="/register" className="text-black hover:underline">
-              Register
-            </Link>
-          </p>
+
+        <div className="form-separator">
+          <span>or</span>
         </div>
+
+        <p className="loginlastline">
+          Don't have an account? <Link to="/register">Create Account</Link>
+        </p>
       </div>
     </div>
   );
