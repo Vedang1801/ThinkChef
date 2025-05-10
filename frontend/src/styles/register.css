@@ -1,144 +1,162 @@
-/* Register Page with Improved Visibility */
+/* Epicurious-inspired Register Page */
+
 .loginbackground {
   min-height: 100vh;
-  background: #f9f9f9; /* Lighter background consistent with other pages */
   display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Inter', system-ui, sans-serif;
+  background-color: white;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.login-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+  height: 100vh;
+}
+
+.login-image {
+  background-image: url('/food_main.jpg');
+  background-size: cover;
+  background-position: center;
+  height: 100%;
 }
 
 .formbody {
-  background: white;
-  border-radius: 1.5rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  padding: 2.5rem 2.5rem 2rem 2.5rem;
-  max-width: 400px;
+  padding: 3rem 4rem;
+  max-width: 480px;
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  position: relative;
-  overflow: visible;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.brand-logo {
+  color: #e32726;
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  text-align: center;
 }
 
 .formbodytitle {
-  font-size: 1.8rem;
+  font-size: 2rem;
   font-weight: 700;
-  color: #ff7043; /* Orange text for consistency */
-  text-align: center;
+  color: #333;
+  margin-bottom: 2rem;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.mb-4 {
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #333;
   margin-bottom: 0.5rem;
-}
-
-.formlogin-button {
-  width: 100%;
-  padding: 0.9rem 0;
-  background: #ff7043; /* Solid orange for better visibility */
-  color: white;
-  font-size: 1.1rem;
-  font-weight: 600;
-  border: none;
-  border-radius: 0.75rem;
-  cursor: pointer;
-  margin: 1rem auto 0;
-  transition: background 0.2s, transform 0.18s;
-  box-shadow: 0 4px 12px rgba(255, 112, 67, 0.15);
-}
-
-.formlogin-button:hover,
-.formlogin-button:focus {
-  background: #ffd54f;
-  color: #ff7043;
-  transform: translateY(-2px);
 }
 
 .inputusername,
 .inputemail,
 .inputpassword {
   width: 100%;
-  padding: 1rem 1.2rem;
-  border: 1.5px solid #ffd54f;
-  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d1d1;
+  border-radius: 0;
   font-size: 1rem;
-  background: white; /* White background for better visibility */
+  background: white;
   color: #333;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.floating-label {
-  position: absolute;
-  left: 1.2rem;
-  top: 1.1rem;
-  font-size: 1rem;
-  color: #757575; /* Darker color for better contrast */
-  pointer-events: none;
-  transition: 0.2s ease all;
-  padding: 0 0.3rem;
-}
-
-.inputusername:focus + .floating-label,
-.inputusername:not(:placeholder-shown) + .floating-label,
-.inputemail:focus + .floating-label,
-.inputemail:not(:placeholder-shown) + .floating-label,
-.inputpassword:focus + .floating-label,
-.inputpassword:not(:placeholder-shown) + .floating-label {
-  top: -0.7rem;
-  left: 1rem;
-  font-size: 0.85rem;
-  color: #ff7043;
-  background: white; /* Label background */
-  font-weight: 600;
 }
 
 .inputusername:focus,
 .inputemail:focus,
 .inputpassword:focus {
-  border-color: #ff7043;
+  border-color: #333;
   outline: none;
-  box-shadow: 0 0 0 2px rgba(255, 112, 67, 0.1);
 }
 
 .inputusername.error,
 .inputemail.error,
 .inputpassword.error {
-  border-color: #ef4444;
+  border-color: #e32726;
+}
+
+.floating-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 0.5rem;
 }
 
 .error-message {
-  color: #ef4444;
-  font-size: 0.92rem;
+  color: #e32726;
+  font-size: 0.875rem;
   margin-top: 0.3rem;
 }
 
-.mb-4 {
-  margin-bottom: 1.5rem;
-  position: relative;
+.formlogin-button {
+  width: 100%;
+  padding: 0.875rem 0;
+  background: #333;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  margin-top: 1.5rem;
+  transition: background 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.formlogin-button:hover,
+.formlogin-button:focus {
+  background: #000;
+}
+
+.formlogin-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .loginlastline {
   text-align: center;
   color: #333;
-  margin-top: 1rem;
-  font-size: 1rem;
+  margin-top: 1.5rem;
+  font-size: 0.95rem;
 }
 
 .loginlastline a {
-  color: #ff7043;
-  font-weight: 600;
-  text-decoration: none;
-  transition: color 0.18s;
+  color: #e32726;
+  font-weight: 500;
+  text-decoration: underline;
 }
 
 .loginlastline a:hover {
-  color: #ffd54f;
+  text-decoration: none;
 }
 
-@media (max-width: 600px) {
-  .formbody {
-    padding: 1.5rem 1rem;
-    max-width: 90vw;
+@media (max-width: 768px) {
+  .login-container {
+    grid-template-columns: 1fr;
   }
-  .formbodytitle {
-    font-size: 1.6rem;
+  
+  .login-image {
+    display: none;
+  }
+  
+  .formbody {
+    padding: 2rem 1.5rem;
+    max-width: 100%;
   }
 }

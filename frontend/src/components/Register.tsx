@@ -1,7 +1,6 @@
-import { useState } from "react";
-import axios from "axios";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
+import { useAuth } from "./authContext";
 import "../styles/register.css";
 
 const Register = () => {
@@ -9,15 +8,20 @@ const Register = () => {
     username: "",
     email: "",
     password: "",
+    confirmPassword: "",
   });
 
   const [errors, setErrors] = useState({
     username: "",
     email: "",
     password: "",
+    confirmPassword: "",
   });
 
+  const [loading, setLoading] = useState(false);
+  const [registerError, setRegisterError] = useState("");
   const navigate = useNavigate();
+  const { register } = useAuth();
 
   const handleChange = (e: { target: { name: string; value: string } }) => {
     const { name, value } = e.target;
@@ -33,6 +37,7 @@ const Register = () => {
       username: "",
       email: "",
       password: "",
+      confirmPassword: "",
     };
 
     // Username validation
@@ -59,6 +64,12 @@ const Register = () => {
       valid = false;
     }
 
+    // Confirm Password validation
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+      valid = false;
+    }
+
     setErrors(newErrors);
     return valid;
   };
@@ -66,85 +77,127 @@ const Register = () => {
   const handleSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     if (validateForm()) {
+      setLoading(true);
+      setRegisterError("");
       try {
-        const response = await axios.post("/api/register", formData);
-        toast.success(response.data);
+        await register(formData.email, formData.password, formData.username);
         navigate("/login");
-        console.log(response.data); // Assuming server sends back a success message
       } catch (error) {
-        console.error("Error registering user: ", error);
-        toast.error("Registration failed");
+        setLoading(false);
+        if (error instanceof Error) {
+          setRegisterError(error.message);
+        } else {
+          console.error("Unexpected error:", error);
+          setRegisterError("Failed to register. Please try again.");
+        }
       }
     }
   };
 
   return (
     <div className="loginbackground">
-      <div className="formbody">
-        <h2 className="formbodytitle">Register</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4" style={{ position: "relative" }}>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              placeholder=" "
-              value={formData.username}
-              onChange={handleChange}
-              className={`inputusername ${errors.username ? "error" : ""}`}
-              required
-            />
-            <label htmlFor="username" className="floating-label">Username</label>
-            {errors.username && (
-              <p className="error-message">{errors.username}</p>
-            )}
-          </div>
+      <div className="login-container">
+        <div className="login-image"></div>
+        <div className="formbody">
+          <div className="brand-logo">Think Chef</div>
+          <h1 className="formbodytitle">Create an account</h1>
 
-          <div className="mb-4" style={{ position: "relative" }}>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              placeholder=" "
-              value={formData.email}
-              onChange={handleChange}
-              className={`inputemail ${errors.email ? "error" : ""}`}
-              required
-            />
-            <label htmlFor="email" className="floating-label">Email</label>
-            {errors.email && <p className="error-message">{errors.email}</p>}
-          </div>
+          {registerError && (
+            <div className="error-message" style={{ marginBottom: "1rem" }}>
+              {registerError}
+            </div>
+          )}
 
-          <div className="mb-4" style={{ position: "relative" }}>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              placeholder=" "
-              value={formData.password}
-              onChange={handleChange}
-              className={`inputpassword ${errors.password ? "error" : ""}`}
-              required
-            />
-            <label htmlFor="password" className="floating-label">Password</label>
-            {errors.password && (
-              <p className="error-message">{errors.password}</p>
-            )}
-          </div>
+          <form onSubmit={handleSubmit} className="register-form">
+            <div className="mb-4">
+              <label htmlFor="username" className="form-label">
+                Username
+              </label>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                className={`inputusername${
+                  errors.username ? " error" : ""
+                }`}
+                value={formData.username}
+                onChange={handleChange}
+              />
+              {errors.username && (
+                <div className="error-message">{errors.username}</div>
+              )}
+            </div>
 
-          <div className="mb-4 flex justify-center">
-            <button type="submit" className="formlogin-button">
-              Register
+            <div className="mb-4">
+              <label htmlFor="email" className="form-label">
+                Email address
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                className={`inputemail${errors.email ? " error" : ""}`}
+                value={formData.email}
+                onChange={handleChange}
+              />
+              {errors.email && (
+                <div className="error-message">{errors.email}</div>
+              )}
+            </div>
+
+            <div className="mb-4">
+              <label htmlFor="password" className="form-label">
+                Password
+              </label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                className={`inputpassword${
+                  errors.password ? " error" : ""
+                }`}
+                value={formData.password}
+                onChange={handleChange}
+              />
+              {errors.password && (
+                <div className="error-message">{errors.password}</div>
+              )}
+            </div>
+
+            <div className="mb-4">
+              <label htmlFor="confirmPassword" className="form-label">
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                className={`inputpassword${
+                  errors.confirmPassword ? " error" : ""
+                }`}
+                value={formData.confirmPassword}
+                onChange={handleChange}
+              />
+              {errors.confirmPassword && (
+                <div className="error-message">{errors.confirmPassword}</div>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              className="formlogin-button"
+              disabled={loading}
+            >
+              {loading ? "Creating Account..." : "Create Account"}
             </button>
-          </div>
-        </form>
-        <div className="mt-4">
-          <p className="loginlastline">
+          </form>
+
+          <div className="loginlastline">
             Already have an account?{" "}
             <Link to="/login" className="text-black hover:underline">
-              Login
+              Sign in
             </Link>
-          </p>
+          </div>
         </div>
       </div>
     </div>

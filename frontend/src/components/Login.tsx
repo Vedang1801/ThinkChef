@@ -80,73 +80,75 @@ const Login = () => {
 
   return (
     <div className="loginbackground">
-      <div className="formbody">
-        <h1 className="formbodytitle">Sign In</h1>
+      <div className="login-container">
+        <div className="login-image"></div>
+        <div className="formbody">
+          <div className="brand-logo">Think Chef</div>
+          <h1 className="formbodytitle">Sign in or create an account</h1>
 
-        {loginError && (
-          <div className="login-error-message">
-            <AlertCircle size={16} />
-            {loginError}
+          {loginError && (
+            <div className="login-error-message">
+              <AlertCircle size={16} />
+              {loginError}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="login-form">
+            <div className="input-group">
+              <label htmlFor="email" className="form-label">
+                Email address
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                className={`inputemail${
+                  errors.email ? " error" : ""
+                }`}
+                value={formData.email}
+                onChange={handleChange}
+              />
+              {errors.email && (
+                <div className="error-message">{errors.email}</div>
+              )}
+            </div>
+
+            <div className="input-group">
+              <label htmlFor="password" className="form-label">
+                Password
+              </label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                className={`inputpassword${
+                  errors.password ? " error" : ""
+                }`}
+                value={formData.password}
+                onChange={handleChange}
+              />
+              {errors.password && (
+                <div className="error-message">{errors.password}</div>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              className="formlogin-button"
+              disabled={loading}
+            >
+              {loading ? "Signing in..." : "Continue with Email"}
+            </button>
+          </form>
+
+          <div className="form-separator">
+            <span>or</span>
           </div>
-        )}
 
-        <form onSubmit={handleSubmit} className="login-form">
-          <div className="input-group">
-            <input
-              type="email"
-              id="email"
-              name="email"
-              className={`inputemail${
-                errors.email ? " error" : ""
-              }`}
-              value={formData.email}
-              onChange={handleChange}
-              placeholder=" "
-            />
-            <label htmlFor="email" className="floating-label">
-              Email
-            </label>
-            {errors.email && (
-              <div className="error-message">{errors.email}</div>
-            )}
-          </div>
-
-          <div className="input-group">
-            <input
-              type="password"
-              id="password"
-              name="password"
-              className={`inputpassword${
-                errors.password ? " error" : ""
-              }`}
-              value={formData.password}
-              onChange={handleChange}
-              placeholder=" "
-            />
-            <label htmlFor="password" className="floating-label">
-              Password
-            </label>
-            {errors.password && (
-              <div className="error-message">{errors.password}</div>
-            )}
-          </div>
-
-          <button
-            type="submit"
-            className="formlogin-button"
-            disabled={loading}
-          >
-            {loading ? "Signing in..." : "Sign In"}
-          </button>
-        </form>
-
-        <div className="form-separator">
-          <span>or</span>
+          <p className="loginlastline">
+            Don't have an account? <Link to="/register">Create Account</Link>
+          </p>
         </div>
-
-        <p className="loginlastline">
-          Don't have an account? <Link to="/register">Create Account</Link>
-        </p>
       </div>
     </div>
   );
