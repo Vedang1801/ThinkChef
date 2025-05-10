@@ -5,7 +5,7 @@ import RecipeCard from "./RecipeCard";
 import Tips from "./Tips";
 import "../styles/newHome.css";
 import { toast } from "react-toastify";
-import { ChevronRight, ChevronLeft } from "lucide-react";
+import { ChevronRight, ChevronLeft, ArrowRight, ChefHat, Facebook, Twitter, Instagram } from "lucide-react";
 
 interface Recipe {
   recipe_id: number;
@@ -102,24 +102,30 @@ const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
       {/* Hero Section */}
       <section className="hero">
         <div className="hero-content">
-          <h1>Discover, Cook, Share</h1>
+          <h1>Discover Delicious Recipes</h1>
           <p>
-            Find your next favorite recipe or share your own culinary creations with the world.
+            Find your next favorite recipe or share your own culinary creations with our community of food lovers.
           </p>
-          <a href="/addrecipes" className="cta-btn">Share a Recipe</a>
+          <a href="/addrecipes" className="cta-btn">Create Recipe</a>
         </div>
       </section>
 
-      {/* Featured Recipes - Epicurious Style */}
+      {/* Featured Recipes Section */}
       <section className="featured-section">
-        <h2 className="section-title">Featured Recipes</h2>
+        <div className="section-header">
+          <h2 className="section-title">Featured Recipes</h2>
+          <a href="/recipes" className="view-all">
+            View all <ArrowRight size={16} />
+          </a>
+        </div>
+        
         {loading ? (
           <div className="loading-spinner">Loading recipes...</div>
         ) : (
           <>
             <div className="epicurious-recipe-grid">
               {recipes.length === 0 ? (
-                <p className="no-recipes-message">No recipes found.</p>
+                <p className="no-recipes-message">No recipes found matching your search.</p>
               ) : (
                 recipes.map((recipe) => (
                   <RecipeCard key={recipe.recipe_id} recipe={recipe} />
@@ -135,7 +141,7 @@ const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
                   disabled={currentPage === 1}
                   className="pagination-button"
                 >
-                  <ChevronLeft size={20} />
+                  <ChevronLeft size={18} />
                   Previous
                 </button>
                 <span className="pagination-info">
@@ -147,25 +153,84 @@ const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
                   className="pagination-button"
                 >
                   Next
-                  <ChevronRight size={20} />
+                  <ChevronRight size={18} />
                 </button>
               </div>
             )}
           </>
         )}
       </section>
+      
+      {/* Promotional Banner - Between Recipe and Tips */}
+      <div className="promo-section">
+        <div className="promo-container">
+          <div className="promo-banner">
+            <h3>Ready to Share Your Recipe?</h3>
+            <p>Join our community and showcase your culinary creations with food enthusiasts worldwide.</p>
+            <a href="/addrecipes" className="secondary-cta-btn">Create Recipe</a>
+          </div>
+        </div>
+      </div>
 
-      {/* Tips Section */}
+      {/* Tips Section - At Bottom */}
       <section className="tips-section">
-        <h2 className="section-title">Cooking Tips</h2>
+        <div className="section-header">
+          <h2 className="section-title">Cooking Tips</h2>
+          <a href="/tips" className="view-all">
+            More tips <ArrowRight size={16} />
+          </a>
+        </div>
         <Tips />
       </section>
 
       {/* Footer Section */}
       <footer className="footer">
-        <div>© {new Date().getFullYear()} Think Chef. All rights reserved.</div>
-        <div>
-          <a href="/about">About</a> | <a href="/contact">Contact</a>
+        <div className="footer-container">
+          <div className="footer-brand">
+            <h3><ChefHat size={24} style={{ display: 'inline', marginRight: '8px' }} />Think Chef</h3>
+            <p>Discover, cook, and share delicious recipes with food lovers around the world.</p>
+          </div>
+          
+          <div className="footer-links">
+            <h4>Explore</h4>
+            <ul>
+              <li><a href="/recipes">All Recipes</a></li>
+              <li><a href="/categories">Categories</a></li>
+              <li><a href="/popular">Popular</a></li>
+              <li><a href="/latest">Latest</a></li>
+            </ul>
+          </div>
+          
+          <div className="footer-links">
+            <h4>Information</h4>
+            <ul>
+              <li><a href="/about">About Us</a></li>
+              <li><a href="/contact">Contact</a></li>
+              <li><a href="/privacy">Privacy Policy</a></li>
+              <li><a href="/terms">Terms of Use</a></li>
+            </ul>
+          </div>
+          
+          <div className="footer-links">
+            <h4>Account</h4>
+            <ul>
+              <li><a href="/profile">My Profile</a></li>
+              <li><a href="/addrecipes">Create Recipe</a></li>
+              <li><a href="/favorites">Favorites</a></li>
+              <li><a href="/settings">Settings</a></li>
+            </ul>
+          </div>
+          
+          <div className="footer-bottom">
+            <div className="copyright">
+              © {new Date().getFullYear()} Think Chef. All rights reserved.
+            </div>
+            <div className="social-links">
+              <a href="#" aria-label="Facebook"><Facebook size={18} /></a>
+              <a href="#" aria-label="Twitter"><Twitter size={18} /></a>
+              <a href="#" aria-label="Instagram"><Instagram size={18} /></a>
+            </div>
+          </div>
         </div>
       </footer>
     </div>
