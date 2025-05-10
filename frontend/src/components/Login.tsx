@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "./authContext";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ChefHat } from "lucide-react";
 import "../styles/login.css";
 
 const Login = () => {
@@ -83,7 +83,10 @@ const Login = () => {
       <div className="login-container">
         <div className="login-image"></div>
         <div className="formbody">
-          <div className="brand-logo">Think Chef</div>
+          <div className="brand-logo">
+            <ChefHat size={24} className="logo-icon" />
+            <span className="logo-text">Think Chef</span>
+          </div>
           <h1 className="formbodytitle">Sign in or create an account</h1>
 
           {loginError && (

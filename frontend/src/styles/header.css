@@ -1,10 +1,10 @@
 /* Import Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Playfair+Display:wght@700&display=swap');
 
-/* Modern Navbar Layout */
+/* Modern Epicurious-inspired Navbar */
 .navbar {
   width: 100%;
-  height: 84px;
+  height: 70px;
   position: sticky;
   top: 0;
   left: 0;
@@ -12,13 +12,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 3.5rem;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(18px);
-  box-shadow: 0 4px 24px 0 rgba(255,112,67,0.10), 0 2px 0 #ffd54f;
-  border-bottom: 2px solid #ffd54f;
+  padding: 0 1.5rem;
+  background: white;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   font-family: 'Inter', sans-serif;
-  transition: background 0.3s;
 }
 
 /* Brand/Logo Left-Aligned */
@@ -31,79 +28,81 @@
 
 .brand-text {
   font-family: 'Playfair Display', serif;
-  font-size: 2.3rem;
-  color: #ff7043;
-  letter-spacing: 3px;
-  font-weight: 800;
-  text-decoration: none;
+  font-size: 1.75rem;
+  color: #FF7043; /* Using your original orange color instead of Epicurious red */
+  letter-spacing: 1px;
+  font-weight: 700;
+  text-decoration: none !important; /* Force no text-decoration */
   background: none;
-  transition: color 0.2s;
-  padding: 0.5rem 1.2rem 0.5rem 0;
-  border-radius: 1.5rem;
-  background: linear-gradient(90deg, #ff7043 60%, #ffd54f 100%);
-  -webkit-background-clip: text;
-  background-clip: text; /* Standard property for compatibility */
-  -webkit-text-fill-color: transparent;
+  position: relative;
+  transition: color 0.2s, transform 0.2s;
+  padding: 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
+/* Static underline that matches your logo */
+.brand-text::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, #FF7043 60%, #FFD54F 100%);
+}
+
+/* New hover effect - subtle scale and brightness */
 .brand-text:hover {
-  color: #ffd54f;
-  -webkit-text-fill-color: #ffd54f;
+  transform: scale(1.02);
+  filter: brightness(1.1);
 }
 
-/* Navigation Links Right-Aligned */
+.brand-text .chef-icon {
+  margin-right: 0.2rem;
+  transition: transform 0.2s;
+}
+
+/* Add a subtle rotation to the chef icon on hover */
+.brand-text:hover .chef-icon {
+  transform: rotate(-5deg);
+}
+
+/* Navigation Items Right-Aligned */
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 2.5rem;
-  flex: 1 1 auto;
-  justify-content: flex-end;
+  gap: 1rem;
+  flex: 0 0 auto;
 }
 
-/* Nav Link Styles - text only, no border, no background */
+/* Nav Link Styles - clean and minimal */
 .nav-link {
   font-family: 'Inter', sans-serif;
-  font-size: 1.13rem;
-  color: #ff7043;
+  font-size: 0.95rem;
+  color: #333;
   background: none;
   border: none;
-  border-radius: 2rem;
-  padding: 0.7rem 1.6rem;
-  font-weight: 600;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
   text-decoration: none;
   display: flex;
   align-items: center;
-  gap: 0.7rem;
-  transition: background 0.18s, color 0.18s;
+  gap: 0.5rem;
+  transition: color 0.18s;
   cursor: pointer;
-  position: relative;
-  box-shadow: none;
-  outline: none;
 }
 
 .nav-link:hover,
 .nav-link:focus {
-  background: #fffbe7;
-  color: #ff7043;
+  color: #e32726;
 }
 
-/* Logout Button: filled accent pill */
-.logout-btn {
-  background: #ff7043;
-  color: #fff;
-  border: none;
-  border-radius: 2rem;
-  font-weight: 700;
-  padding: 0.7rem 2.2rem;
-  margin-left: 0.5rem;
-  transition: background 0.18s, color 0.18s;
-  box-shadow: none;
-}
-
-.logout-btn:hover,
-.logout-btn:focus {
-  background: #ffd54f;
-  color: #ff7043;
+/* Login link with special styling */
+.nav-link.login-link {
+  color: #e32726;
+  font-weight: 500;
 }
 
 /* Hamburger Menu for Mobile */
@@ -111,201 +110,168 @@
   display: none;
   background: none;
   border: none;
-  color: #ff7043;
+  color: #333;
   cursor: pointer;
   padding: 0.5rem;
-  margin-left: 1rem;
-  font-size: 2.2rem;
   z-index: 1101;
-  transition: color 0.18s;
 }
 
-.menu-toggle:hover,
-.menu-toggle:focus {
-  color: #ffd54f;
-}
-
-/* Add these styles for the search and sort functionality */
+/* Search and Sort Section */
 .nav-search {
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-right: auto;
-  margin-left: 2rem;
+  margin-left: auto;
+  margin-right: 1rem;
 }
 
 .search-form {
+  position: relative;
   display: flex;
   align-items: center;
-  position: relative;
+  width: 220px; /* Set a fixed width to account for the input and buttons */
 }
 
 .search-input {
-  padding: 0.5rem 2.5rem 0.5rem 1rem;
-  border: 1px solid #ffd54f;
-  border-radius: 2rem;
+  padding: 0.5rem 2.5rem 0.5rem 1rem; /* Adjust right padding to make room for search button */
+  border: 1px solid #e0e0e0;
+  background: #f9f9f9;
+  border-radius: 4px;
   font-size: 0.9rem;
-  width: 200px;
-  background: #fffbe7;
-  color: #ff7043;
+  width: 100%; /* Fill the container */
+  color: #333;
 }
 
 .search-input:focus {
   outline: none;
-  border-color: #ff7043;
-  box-shadow: 0 0 0 2px rgba(255, 112, 67, 0.2);
+  border-color: #333;
+  background: white;
 }
 
 .search-btn {
-  background: #ff7043;
-  color: white;
-  border: none;
-  border-radius: 0 2rem 2rem 0;
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-  cursor: pointer;
   position: absolute;
   right: 0;
-  height: 100%;
+  top: 0;
+  bottom: 0;
+  background: transparent;
+  border: none;
+  color: #333;
+  padding: 0 0.75rem;
+  cursor: pointer;
 }
 
 .search-close-btn {
   background: none;
   border: none;
-  color: #ff7043;
+  color: #333;
   cursor: pointer;
   padding: 0.5rem;
-  margin-left: 0.5rem;
+  margin-left: 0.5rem; /* Increase margin to separate from search input */
+  flex-shrink: 0; /* Prevent the button from shrinking */
 }
 
 .search-icon-btn {
   background: none;
   border: none;
-  color: #ff7043;
+  color: #333;
   cursor: pointer;
-  padding: 0.5rem;
+  padding: 0.25rem;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+/* Sort dropdown with cleaner styling */
 .sort-dropdown {
   padding: 0.5rem;
-  border: 1px solid #ffd54f;
-  border-radius: 0.5rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
   background: white;
-  color: #ff7043;
+  color: #333;
   font-size: 0.9rem;
   cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  padding-right: 2rem;
 }
 
 .sort-dropdown:focus {
   outline: none;
-  border-color: #ff7043;
-  box-shadow: 0 0 0 2px rgba(255, 112, 67, 0.2);
+  border-color: #333;
 }
 
-/* Responsive: Stack links, shrink brand, show hamburger */
-@media (max-width: 1100px) {
-  .navbar {
-    padding: 0 1.2rem;
-    height: 64px;
-  }
-  .brand-text {
-    font-size: 1.5rem;
-    padding: 0.5rem 0.7rem 0.5rem 0;
-  }
+/* Responsive breakpoints */
+@media (max-width: 992px) {
   .nav-links {
-    gap: 1.1rem;
+    gap: 0.5rem;
+  }
+  
+  .nav-link {
+    padding: 0.5rem 0.75rem;
   }
 }
 
 @media (max-width: 768px) {
   .navbar {
-    padding: 0 0.5rem;
-    height: 54px;
+    padding: 0 1rem;
+    height: 60px;
   }
+  
   .brand-text {
-    font-size: 1.1rem;
-    padding: 0.3rem 0.3rem 0.3rem 0;
+    font-size: 1.5rem;
   }
+  
   .nav-links {
     position: fixed;
     top: 0;
-    right: -100vw;
-    width: 100vw;
+    right: -100%;
+    width: 100%;
     height: 100vh;
-    background: rgba(255,255,255,0.97);
-    backdrop-filter: blur(16px);
+    background: white;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 2.2rem;
+    gap: 1.5rem;
     transition: right 0.3s;
     z-index: 1100;
-    box-shadow: 0 8px 32px 0 rgba(255,112,67,0.10);
-    pointer-events: none;
-    opacity: 0;
   }
+  
   .nav-links.active {
     right: 0;
-    pointer-events: auto;
-    opacity: 1;
   }
-  .nav-link,
-  .logout-btn {
-    font-size: 1.3rem;
-    width: 80vw;
-    justify-content: center;
-    padding: 1rem 0;
-    border-radius: 2rem;
-    margin: 0.2rem 0;
-    background: none;
-    color: #ff7043;
-  }
-  .logout-btn {
-    background: #ff7043;
-    color: #fff;
-  }
-  .nav-link:hover,
-  .nav-link:focus {
-    background: #fffbe7;
-    color: #ff7043;
-  }
-  .logout-btn:hover,
-  .logout-btn:focus {
-    background: #ffd54f;
-    color: #ff7043;
-  }
+  
   .menu-toggle {
     display: block;
   }
+  
   .nav-search {
-    position: absolute;
-    top: 54px;
+    position: fixed;
+    top: 60px;
     left: 0;
     right: 0;
     background: white;
-    padding: 0.5rem 1rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    display: flex;
-    justify-content: space-between;
-    z-index: 990;
+    padding: 0.75rem 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 99;
   }
-
+  
   .search-input {
     width: 100%;
   }
-
-  .sort-dropdown {
-    width: auto;
-  }
 }
 
-/* Accessibility and Focus States */
-.nav-link:focus,
-.logout-btn:focus,
-.menu-toggle:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px #ffd54f99;
+@media (max-width: 480px) {
+  .navbar {
+    height: 50px;
+  }
+  
+  .brand-text {
+    font-size: 1.35rem;
+  }
+  
+  .nav-search {
+    top: 50px;
+  }
 }

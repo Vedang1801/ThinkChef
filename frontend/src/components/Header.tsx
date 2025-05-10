@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from './authContext';
-import { Home, PlusSquare, User, LogOut, Menu, X, Search } from 'lucide-react';
+import { Search, X, Menu, ChefHat } from 'lucide-react';
 import '../styles/header.css';
 
 interface HeaderProps {
@@ -46,43 +46,51 @@ const Header: React.FC<HeaderProps> = ({ onSearchChange, onSortChange }) => {
 
   return (
     <nav className="navbar">
+      {/* Left-aligned brand/logo */}
       <div className="nav-brand">
         <Link to="/" className="brand-text">
-          THINK CHEF
+          <ChefHat size={24} className="chef-icon" />
+          Think Chef
         </Link>
       </div>
 
-      {/* Add search and sort functionality */}
+      {/* Center/right-aligned search and sort */}
       <div className="nav-search">
         {showSearch ? (
-          <form onSubmit={handleSearchSubmit} className="search-form">
-            <input
-              type="text"
-              placeholder="Search recipes..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="search-input"
-              autoFocus
-            />
-            <button type="submit" className="search-btn">Search</button>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <form onSubmit={handleSearchSubmit} className="search-form">
+              <input
+                type="text"
+                placeholder="Search recipes..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="search-input"
+                autoFocus
+              />
+              <button type="submit" className="search-btn">
+                <Search size={16} />
+              </button>
+            </form>
             <button 
               type="button" 
               onClick={() => setShowSearch(false)}
               className="search-close-btn"
+              aria-label="Close search"
             >
               <X size={16} />
             </button>
-          </form>
+          </div>
         ) : (
           <button 
             className="search-icon-btn" 
             onClick={() => setShowSearch(true)}
+            aria-label="Search"
           >
             <Search size={20} />
           </button>
         )}
 
-        {/* Sort dropdown (optional) */}
+        {/* Sort dropdown */}
         <select 
           onChange={handleSortChange}
           className="sort-dropdown"
@@ -95,40 +103,33 @@ const Header: React.FC<HeaderProps> = ({ onSearchChange, onSortChange }) => {
         </select>
       </div>
 
+      {/* Right-aligned nav links */}
       <div className={`nav-links ${showMenu ? 'active' : ''}`}>
+        <Link to="/" className="nav-link" onClick={handleLinkClick}>
+          Home
+        </Link>
+        
         {loggedIn ? (
           <>
-            <Link to="/" className="nav-link" onClick={handleLinkClick}>
-              <Home size={20} />
-              <span>Home</span>
-            </Link>
             <Link to="/addrecipes" className="nav-link" onClick={handleLinkClick}>
-              <PlusSquare size={20} />
-              <span>Add Recipe</span>
+              Add Recipe
             </Link>
             <Link to="/profile" className="nav-link" onClick={handleLinkClick}>
-              <User size={20} />
-              <span>Profile</span>
+              Profile
             </Link>
-            <button className="nav-link logout-btn" onClick={handleLogout}>
-              <LogOut size={20} />
-              <span>Logout</span>
+            <button className="nav-link" onClick={handleLogout}>
+              Logout
             </button>
           </>
         ) : (
-          <>
-            <Link to="/" className="nav-link" onClick={handleLinkClick}>
-              <Home size={20} />
-              <span>Home</span>
-            </Link>
-            <Link to="/login" className="nav-link" onClick={handleLinkClick}>
-              <LogOut size={20} />
-              <span>Login</span>
-            </Link>
-          </>
+          <Link to="/login" className="nav-link login-link" onClick={handleLinkClick}>
+            Login
+          </Link>
         )}
       </div>
-      <button className="menu-toggle" onClick={toggleMenu}>
+      
+      {/* Mobile menu button */}
+      <button className="menu-toggle" onClick={toggleMenu} aria-label="Toggle menu">
         {showMenu ? <X size={24} /> : <Menu size={24} />}
       </button>
     </nav>

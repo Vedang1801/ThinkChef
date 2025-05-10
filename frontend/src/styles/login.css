@@ -32,11 +32,37 @@
 }
 
 .brand-logo {
-  color: #e32726;
-  font-size: 1.125rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  align-self: center;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.8rem;
   font-weight: 700;
-  margin-bottom: 2rem;
-  text-align: center;
+  color: #FF7043;
+  margin-bottom: 2.5rem;
+  letter-spacing: 1px;
+}
+
+.brand-logo::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, #FF7043 60%, #FFD54F 100%);
+  transform: scaleX(0.8);
+}
+
+.logo-icon {
+  stroke-width: 1.75;
+}
+
+.logo-text {
+  font-family: 'Playfair Display', serif;
 }
 
 .formbodytitle {
