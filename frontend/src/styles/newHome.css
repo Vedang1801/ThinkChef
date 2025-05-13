@@ -235,6 +235,7 @@ body, .homepage-root {
   line-height: 1.6;
 }
 
+
 /* Loading States */
 .no-recipes-message {
   color: #757575;
@@ -246,11 +247,51 @@ body, .homepage-root {
   box-shadow: 0 8px 30px rgba(0,0,0,0.08);
 }
 
-.loading-spinner {
+/* Loading container */
+.loading-container {
   text-align: center;
-  color: #FF7043;
-  font-size: 1.2rem;
-  padding: 4rem 2rem;
+  padding: 4rem 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+/* New loader animation */
+.loader {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: inline-block;
+  position: relative;
+  background: linear-gradient(0deg, rgba(255, 61, 0, 0.2) 33%, #ff3d00 100%);
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+}
+
+.loader::after {
+  content: '';  
+  box-sizing: border-box;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+@keyframes rotation {
+  0% { transform: rotate(0deg) }
+  100% { transform: rotate(360deg)}
+} 
+
+.loading-text {
+  color: #666;
+  font-weight: 500;
+  margin-top: 16px;
 }
 
 /* Custom Footer */
@@ -454,6 +495,47 @@ body, .homepage-root {
   max-width: 600px;
   margin-left: auto;
   margin-right: auto;
+}
+
+/* Empty state styling */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background-color: #f9f9f9;
+  border-radius: 0;
+  margin: 2rem auto;
+  max-width: 500px;
+  border: 1px solid #e0e0e0;
+}
+
+.empty-state h2 {
+  font-family: 'Playfair Display', serif;
+  color: #333;
+  margin-bottom: 1rem;
+  font-size: 1.8rem;
+}
+
+.empty-state p {
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+.add-recipe-btn {
+  background-color: #FF7043;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 0;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.add-recipe-btn:hover {
+  background-color: #e26035;
 }
 
 /* Responsive Adjustments */

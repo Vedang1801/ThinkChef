@@ -82,6 +82,20 @@ function verifyToken(req, res, next) {
   });
 }
 
+// Middleware to verify Firebase token
+async function verifyFirebaseToken(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).send("No token provided");
+  const token = authHeader.split(" ")[1];
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    req.user = decodedToken;
+    next();
+  } catch (err) {
+    return res.status(401).send("Invalid or expired token");
+  }
+}
+
 // Add this block before AWS.config.update
 if (
   !process.env.AWS_ACCESS_KEY_ID ||
@@ -103,7 +117,7 @@ AWS.config.update({
 const s3 = new AWS.S3();
 
 // Middleware to parse JSON body
-app.use(bodyParser.json());
+app.use(bodyParser.json()); // Note the parentheses here - it needs to be called as a function
 
 // User Management
 app.post("/api/register", (req, res) => {
@@ -111,6 +125,9 @@ app.post("/api/register", (req, res) => {
   if (!username || !email || !password) {
     return res.status(400).send("All fields are required");
   }
+
+  // Generate a unique ID for the user (since we now have VARCHAR user_id)
+  const user_id = 'local_' + Date.now().toString() + '_' + Math.random().toString(36).substring(2, 15);
 
   // Hash the password
   bcrypt.hash(password, 10, (err, hashedPassword) => {
@@ -120,16 +137,32 @@ app.post("/api/register", (req, res) => {
     }
 
     const query =
-      "INSERT INTO Users (username, email, password_hash) VALUES ($1, $2, $3)";
+      "INSERT INTO users (user_id, username, email, password_hash, provider) VALUES ($1, $2, $3, $4, $5)";
     pool.query(
       query,
-      [username, email, hashedPassword],
+      [user_id, username, email, hashedPassword, 'email'],
       (err, results) => {
         if (err) {
           console.error("Error registering user: ", err);
           return res.status(500).send("Error registering user");
         }
-        res.status(201).send("User registered successfully");
+        
+        // Generate a token for the newly registered user
+        const token = generateToken({
+          user_id: user_id,
+          username: username,
+          email: email
+        });
+        
+        res.status(201).json({
+          message: "User registered successfully",
+          user: {
+            user_id: user_id,
+            username: username,
+            email: email
+          },
+          token: token
+        });
       }
     );
   });
@@ -363,11 +396,30 @@ app.get("/api/ingredients", (req, res) => {
   });
 });
 
+// Modify the endpoint to handle Firebase UIDs properly
 app.get("/api/recipes/:id", (req, res) => {
   const userId = req.params.id;
+
+  // Check if userId is valid
+  if (!userId || userId === "undefined" || userId === "null") {
+    console.log("Invalid user ID:", userId);
+    return res.status(200).json([]); // Return empty array for invalid IDs
+  }
+  
   // Use lowercase "instruction" to match what's in the database
   const query = "SELECT recipe_id, title, description, user_id, image, instruction, created_at FROM Recipes WHERE user_id = $1";
-  pool.query(query, [userId], (err, results) => {
+  
+  // Attempt to parse the ID as an integer if possible
+  // This helps with legacy users while supporting Firebase string UIDs
+  let parsedId;
+  try {
+    parsedId = parseInt(userId, 10);
+    if (isNaN(parsedId)) parsedId = userId;
+  } catch (e) {
+    parsedId = userId;
+  }
+  
+  pool.query(query, [parsedId], (err, results) => {
     if (err) {
       console.error("Error retrieving recipe: ", err);
       return res.status(500).send("Error retrieving recipe");
@@ -725,6 +777,62 @@ app.put("/api/recipes/update/:id", (req, res) => {
       );
     });
   });
+});
+
+// Add endpoint to sync Firebase users with your database - updated to handle duplicate emails
+app.post("/api/users/sync", async (req, res) => {
+  const { user_id, username, email, provider } = req.body;
+  
+  if (!user_id || !email) {
+    return res.status(400).json({ error: "User ID and email are required" });
+  }
+  
+  try {
+    // First check if the user_id already exists (same Firebase user)
+    const userByIdQuery = "SELECT * FROM users WHERE user_id = $1";
+    const userByIdResult = await pool.query(userByIdQuery, [user_id]);
+    
+    if (userByIdResult.rows.length > 0) {
+      // User with this ID exists, update their info
+      const updateQuery = 
+        "UPDATE users SET username = $1, provider = $2 WHERE user_id = $3 RETURNING *";
+      // Note: We don't update email since it might conflict with another user
+      const updateResult = await pool.query(updateQuery, [username, provider, user_id]);
+      return res.status(200).json({ message: "User updated", user: updateResult.rows[0] });
+    } 
+    
+    // Check if email already exists with a different user_id
+    const emailCheckQuery = "SELECT * FROM users WHERE email = $1";
+    const emailCheckResult = await pool.query(emailCheckQuery, [email]);
+    
+    if (emailCheckResult.rows.length > 0) {
+      // There's already a user with this email - handle the situation
+      // Option 1: Return a conflict error
+      return res.status(409).json({ 
+        message: "Email already in use by another account", 
+        existingUser: {
+          user_id: emailCheckResult.rows[0].user_id,
+          username: emailCheckResult.rows[0].username,
+          provider: emailCheckResult.rows[0].provider
+        }
+      });
+      
+      // Option 2 (alternative): Generate a unique email for storage
+      // This would modify the email to make it unique in the database
+      // while the actual Firebase auth would use the real email
+      // const uniqueEmail = `${email}_${user_id.substring(0, 8)}`;
+      // ... continue with insert using uniqueEmail
+    }
+    
+    // Email not found, create new user
+    const insertQuery = 
+      "INSERT INTO users (user_id, username, email, provider, created_at) VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP) RETURNING *";
+    const insertResult = await pool.query(insertQuery, [user_id, username, email, provider]);
+    return res.status(201).json({ message: "User created", user: insertResult.rows[0] });
+  } catch (error) {
+    console.error("Error syncing user:", error);
+    return res.status(500).json({ error: "Error synchronizing user" });
+  }
 });
 
 // Start the server

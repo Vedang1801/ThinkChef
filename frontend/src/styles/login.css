@@ -91,15 +91,24 @@
   margin-bottom: 0.5rem;
 }
 
+.form-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  margin-top: 4px;
+}
+
+.inputusername,
 .inputemail,
 .inputpassword {
   width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid #d1d1d1;
-  border-radius: 0;
-  font-size: 1rem;
-  background: white;
-  color: #333;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  margin-top: 4px;
 }
 
 .inputemail:focus,
@@ -143,6 +152,27 @@
 .formlogin-button:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+}
+
+/* Google Button styling */
+.formlogin-button.google {
+  background-color: #333;  /* Same dark color as the email button */
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  position: relative;
+}
+
+.formlogin-button.google:hover {
+  background: #000; /* Same hover color as email button */
+}
+
+.google-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 5px;
 }
 
 .form-separator {
@@ -194,6 +224,62 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+/* Password header with forgot link */
+.password-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.forgot-password-link {
+  font-size: 0.85rem;
+  color: #FF7043;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.forgot-password-link:hover {
+  color: #e26035;
+  text-decoration: underline;
+}
+
+/* Reset password page */
+.reset-instructions {
+  margin-bottom: 1.5rem;
+  color: #555;
+}
+
+.email-sent {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.success-message {
+  color: #4caf50;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.back-to-login {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #FF7043;
+  text-decoration: none;
+  font-weight: 500;
+  margin-top: 1.5rem;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.back-to-login:hover {
+  color: #e26035;
+  text-decoration: underline;
 }
 
 @media (max-width: 768px) {

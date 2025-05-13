@@ -12,6 +12,7 @@ import { AuthProvider } from "./components/authContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useState } from 'react';
+import ForgotPassword from "./components/ForgotPassword";
 
 function App() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -30,6 +31,7 @@ function App() {
           <Route path="/recipes/:id" element={<ReceipeDetail />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/profile" element={<Profile />} />
         </Routes>
         <ToastContainer position="bottom-right" theme="colored" />
