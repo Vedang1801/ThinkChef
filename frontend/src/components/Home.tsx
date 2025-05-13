@@ -63,23 +63,27 @@ const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
       console.log(`Page ${data.currentPage} of ${data.totalPages}, Limit: ${data.limit}`);
       
       // Ensure we're handling the response format correctly
-      const recipesList = data.recipes || data;
+      const recipesList = data.recipes || [];
       const totalPages = data.totalPages || 1;
       const currentPage = data.currentPage || 1;
       
-      // Get ingredients data
-      const ingredientsResponse = await axios.get("/api/ingredients");
-      const ingredientsData = ingredientsResponse.data;
+      // Get ingredients data (only if we have recipes)
+      let combinedRecipes: Recipe[] = [];
+      
+      if (recipesList.length > 0) {
+        const ingredientsResponse = await axios.get("/api/ingredients");
+        const ingredientsData = ingredientsResponse.data;
 
-      // Combine recipes with their ingredients & filter invalid recipes
-      const combinedRecipes: Recipe[] = recipesList
-        .filter((recipe: any) => recipe && recipe.recipe_id) // Filter out invalid recipes
-        .map((recipe: Recipe) => {
-          const ingredients = ingredientsData
-            .filter((ingredient: any) => ingredient.recipe_id === recipe.recipe_id)
-            .map((ingredient: any) => `${ingredient.item}: ${ingredient.quantity}`);
-          return { ...recipe, ingredients };
-        });
+        // Combine recipes with their ingredients & filter invalid recipes
+        combinedRecipes = recipesList
+          .filter((recipe: any) => recipe && recipe.recipe_id)
+          .map((recipe: Recipe) => {
+            const ingredients = ingredientsData
+              .filter((ingredient: any) => ingredient.recipe_id === recipe.recipe_id)
+              .map((ingredient: any) => `${ingredient.item}: ${ingredient.quantity}`);
+            return { ...recipe, ingredients };
+          });
+      }
 
       setRecipes(combinedRecipes);
       setTotalPages(totalPages);
@@ -87,6 +91,8 @@ const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
     } catch (error) {
       console.error("Error fetching recipes:", error);
       toast.error("Failed to load recipes. Please try again later.");
+      // Set empty recipes array on error to avoid endless loading
+      setRecipes([]);
     } finally {
       setLoading(false);
     }
@@ -121,44 +127,49 @@ const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
         </div>
         
         {loading ? (
-          <div className="loading-spinner">Loading recipes...</div>
+          <div className="loading-container">
+            <div className="loader"></div>
+            <div className="loading-text">Loading Recipes...</div>
+          </div>
+        ) : recipes.length === 0 ? (
+          <div className="empty-state">
+            <h2>No recipes found</h2>
+            <p>Be the first to add a delicious recipe!</p>
+            <a href="/addrecipes" className="add-recipe-btn">
+              Add Recipe
+            </a>
+          </div>
         ) : (
-          <>
-            <div className="epicurious-recipe-grid">
-              {recipes.length === 0 ? (
-                <p className="no-recipes-message">No recipes found matching your search.</p>
-              ) : (
-                recipes.map((recipe) => (
-                  <RecipeCard key={recipe.recipe_id} recipe={recipe} />
-                ))
-              )}
-            </div>
-            
-            {/* Pagination controls */}
-            {totalPages > 1 && (
-              <div className="pagination-controls">
-                <button 
-                  onClick={() => handlePageChange(currentPage - 1)} 
-                  disabled={currentPage === 1}
-                  className="pagination-button"
-                >
-                  <ChevronLeft size={18} />
-                  Previous
-                </button>
-                <span className="pagination-info">
-                  Page {currentPage} of {totalPages}
-                </span>
-                <button 
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="pagination-button"
-                >
-                  Next
-                  <ChevronRight size={18} />
-                </button>
-              </div>
-            )}
-          </>
+          <div className="epicurious-recipe-grid">
+            {recipes.map((recipe) => (
+              <RecipeCard key={recipe.recipe_id} recipe={recipe} />
+            ))}
+          </div>
+        )}
+        
+        {/* Pagination controls (only show if there are recipes and multiple pages) */}
+        {!loading && recipes.length > 0 && totalPages > 1 && (
+          <div className="pagination-controls">
+            <button 
+              onClick={() => handlePageChange(currentPage - 1)} 
+              disabled={currentPage === 1}
+              className="pagination-button"
+            >
+              <ChevronLeft size={18} />
+              Previous
+            </button>
+            <span className="pagination-info">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button 
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="pagination-button"
+            >
+              Next
+              <ChevronRight size={18} />
+            </button>
+          </div>
         )}
       </section>
       

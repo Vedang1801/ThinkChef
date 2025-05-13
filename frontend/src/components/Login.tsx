@@ -16,7 +16,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState("");
   const navigate = useNavigate();
-  const { loggedIn, login } = useAuth();
+  const { loggedIn, login, loginWithGoogle } = useAuth();
 
   useEffect(() => {
     if (loggedIn) {
@@ -68,11 +68,32 @@ const Login = () => {
       // Successful login will redirect in the useEffect above
     } catch (error: any) {
       console.error("Login error:", error);
-      setLoginError(
-        error?.response?.data ||
-          error?.message ||
-          "Invalid email or password. Please try again."
-      );
+
+      // Map Firebase error codes to user-friendly messages
+      let errorMessage = "Failed to sign in";
+
+      switch (error.code) {
+        case "auth/invalid-credential":
+        case "auth/invalid-email":
+        case "auth/wrong-password":
+        case "auth/user-not-found":
+          errorMessage = "Incorrect email or password. Please try again.";
+          break;
+        case "auth/user-disabled":
+          errorMessage = "This account has been disabled. Please contact support.";
+          break;
+        case "auth/too-many-requests":
+          errorMessage =
+            "Too many unsuccessful login attempts. Please try again later.";
+          break;
+        case "auth/network-request-failed":
+          errorMessage = "Network error. Please check your internet connection.";
+          break;
+        default:
+          errorMessage = "Failed to sign in. Please try again later.";
+      }
+
+      setLoginError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -117,9 +138,14 @@ const Login = () => {
             </div>
 
             <div className="input-group">
-              <label htmlFor="password" className="form-label">
-                Password
-              </label>
+              <div className="password-header">
+                <label htmlFor="password" className="form-label">
+                  Password
+                </label>
+                <Link to="/forgot-password" className="forgot-password-link">
+                  Forgot password?
+                </Link>
+              </div>
               <input
                 type="password"
                 id="password"
@@ -147,6 +173,36 @@ const Login = () => {
           <div className="form-separator">
             <span>or</span>
           </div>
+
+          <button
+            className="formlogin-button google"
+            type="button"
+            onClick={async () => {
+              setLoading(true);
+              setLoginError("");
+              try {
+                await loginWithGoogle();
+              } catch (error: any) {
+                setLoginError(error?.message || "Google sign-in failed");
+              } finally {
+                setLoading(false);
+              }
+            }}
+            disabled={loading}
+          >
+            {loading ? (
+              "Signing in..."
+            ) : (
+              <>
+                <img
+                  src="/google-icon.svg"
+                  alt="Google"
+                  className="google-icon"
+                />
+                Continue with Google
+              </>
+            )}
+          </button>
 
           <p className="loginlastline">
             Don't have an account? <Link to="/register">Create Account</Link>

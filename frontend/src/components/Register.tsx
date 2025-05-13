@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-// import { useAuth } from "./authContext"; // Remove this line
-import { ChefHat } from "lucide-react";
-import "../styles/register.css";
+import { useAuth } from "./authContext";
+import { ChefHat } from "lucide-react"; // Remove AlertCircle
+import { auth } from "../firebase";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import "../styles/login.css";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -17,12 +19,19 @@ const Register = () => {
     email: "",
     password: "",
     confirmPassword: "",
+    form: "",
   });
 
   const [loading, setLoading] = useState(false);
-  const [registerError, setRegisterError] = useState("");
   const navigate = useNavigate();
-  // const { register } = useAuth(); // Remove this line
+  const { loggedIn } = useAuth();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (loggedIn) {
+      navigate("/");
+    }
+  }, [loggedIn, navigate]);
 
   const handleChange = (e: { target: { name: string; value: string } }) => {
     const { name, value } = e.target;
@@ -32,24 +41,15 @@ const Register = () => {
     }));
   };
 
-  // Add registration logic here
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setRegisterError("");
-    setErrors({
-      username: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    });
-
-    // Basic validation
+  // Basic validation
+  const validateForm = () => {
     let hasError = false;
     const newErrors = {
       username: "",
       email: "",
       password: "",
       confirmPassword: "",
+      form: "", // Add the missing 'form' property
     };
     if (!formData.username) {
       newErrors.username = "Username is required";
@@ -68,27 +68,48 @@ const Register = () => {
       hasError = true;
     }
     setErrors(newErrors);
-    if (hasError) return;
+    return !hasError;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Validate form
+    if (!validateForm()) return;
 
     setLoading(true);
     try {
-      const response = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: formData.username,
-          email: formData.email,
-          password: formData.password,
-        }),
-      });
-      if (response.ok) {
-        navigate("/login");
-      } else {
-        const msg = await response.text();
-        setRegisterError(msg || "Registration failed");
+      // 1. Register with Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
+
+      // 2. Update the user's profile with username
+      if (userCredential.user) {
+        await updateProfile(userCredential.user, {
+          displayName: formData.username,
+        });
       }
-    } catch (err) {
-      setRegisterError("Registration failed. Please try again.");
+
+      // No need to manually sync with the database - authContext will handle this
+
+      // Show success and redirect
+      navigate("/");
+    } catch (error: any) {
+      console.error("Registration error:", error);
+
+      let errorMessage = "Failed to create account";
+
+      // Handle common Firebase auth errors
+      if (error.code === "auth/email-already-in-use") {
+        errorMessage = "This email is already in use";
+      } else if (error.code === "auth/weak-password") {
+        errorMessage = "Password should be at least 6 characters";
+      }
+
+      setErrors({ ...errors, form: errorMessage });
     } finally {
       setLoading(false);
     }
@@ -105,14 +126,14 @@ const Register = () => {
           </div>
           <h1 className="formbodytitle">Create an account</h1>
 
-          {registerError && (
+          {errors.form && (
             <div className="error-message" style={{ marginBottom: "1rem" }}>
-              {registerError}
+              {errors.form}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="register-form">
-            <div className="mb-4">
+            <div className="input-group">
               <label htmlFor="username" className="form-label">
                 Username
               </label>
@@ -120,7 +141,7 @@ const Register = () => {
                 type="text"
                 id="username"
                 name="username"
-                className={`inputusername${
+                className={`form-input${
                   errors.username ? " error" : ""
                 }`}
                 value={formData.username}
@@ -131,7 +152,7 @@ const Register = () => {
               )}
             </div>
 
-            <div className="mb-4">
+            <div className="input-group">
               <label htmlFor="email" className="form-label">
                 Email address
               </label>
@@ -139,7 +160,7 @@ const Register = () => {
                 type="email"
                 id="email"
                 name="email"
-                className={`inputemail${errors.email ? " error" : ""}`}
+                className={`form-input${errors.email ? " error" : ""}`}
                 value={formData.email}
                 onChange={handleChange}
               />
@@ -148,7 +169,7 @@ const Register = () => {
               )}
             </div>
 
-            <div className="mb-4">
+            <div className="input-group">
               <label htmlFor="password" className="form-label">
                 Password
               </label>
@@ -156,7 +177,7 @@ const Register = () => {
                 type="password"
                 id="password"
                 name="password"
-                className={`inputpassword${
+                className={`form-input${
                   errors.password ? " error" : ""
                 }`}
                 value={formData.password}
@@ -167,7 +188,7 @@ const Register = () => {
               )}
             </div>
 
-            <div className="mb-4">
+            <div className="input-group">
               <label htmlFor="confirmPassword" className="form-label">
                 Confirm Password
               </label>
@@ -175,7 +196,7 @@ const Register = () => {
                 type="password"
                 id="confirmPassword"
                 name="confirmPassword"
-                className={`inputpassword${
+                className={`form-input${
                   errors.confirmPassword ? " error" : ""
                 }`}
                 value={formData.confirmPassword}
