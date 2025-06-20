@@ -179,11 +179,9 @@ const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
         <div className="promo-container">
           <div className="promo-banner">
             <h3>Ready to Get Creative in the Kitchen?</h3>
-            <p>Try our new AI Recipe Generator! Input the ingredients you have on hand, and we'll create a delicious recipe just for you.</p>
-            <div className="promo-actions">
+            <p>Try our new AI Recipe Generator! Input the ingredients you have on hand, and we'll create a delicious recipe just for you.</p>            <div className="promo-actions">
               <Link to="/addrecipes" className="secondary-cta-btn">Create Recipe</Link>
               <Link to="/recipe-generator" className="secondary-cta-btn ai-btn">
-                <ChefHat size={16} style={{ marginRight: '8px' }} />
                 AI Recipe Generator
               </Link>
             </div>

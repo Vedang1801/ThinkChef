@@ -1,13 +1,13 @@
 require('dotenv').config({ path: '../.env' }); 
 
-
 const express = require("express");
 const cors = require("cors");
-const { Pool } = require('pg'); // Changed from mysql2 to pg
+const { Pool } = require('pg');
 const AWS = require("aws-sdk");
 const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
+const OpenAI = require("openai");
 // Specify the destination directory for file uploads
 const secretKey = process.env.JWT_SECRET || "FinalProject@1234";
 const bcrypt = require("bcrypt");
@@ -115,6 +115,11 @@ AWS.config.update({
     
 
 const s3 = new AWS.S3();
+
+// Initialize OpenAI
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 // Middleware to parse JSON body
 app.use(bodyParser.json()); // Note the parentheses here - it needs to be called as a function
@@ -826,72 +831,88 @@ app.post("/api/users/sync", async (req, res) => {
   }
 });
 
-// Import the HuggingFace Inference API client
-// const { HfInference } = require('@huggingface/inference');
+// Recipe Generation using OpenAI
+app.post("/api/recipe/generate", async (req, res) => {
+  try {
+    const { ingredients } = req.body;
+    
+    // Validate input
+    if (!ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
+      return res.status(400).json({ 
+        error: "Please provide a valid array of ingredients" 
+      });
+    }
+    
+    console.log("Generating recipe for ingredients:", ingredients);
+    
+    // Create a prompt for OpenAI
+    const prompt = `Create a delicious recipe using these ingredients: ${ingredients.join(', ')}.
 
-// Initialize HuggingFace with your API token
-// You'll need to sign up at huggingface.co and get an API token
-// const hf = new HfInference(process.env.HUGGINGFACE_API_KEY);
+Please provide the response in the following JSON format:
+{
+  "title": "Recipe Name",
+  "ingredients": ["ingredient 1 with quantity", "ingredient 2 with quantity", ...],
+  "method": "Step-by-step cooking instructions with each step on a new line, numbered like:\n1. First step here\n2. Second step here\n3. Third step here"
+}
 
-// Endpoint to generate recipes from ingredients
-// app.post("/api/recipe/generate", async (req, res) => {
-//   try {
-//     const { ingredients } = req.body;
+Make sure the recipe is practical, delicious, and uses the provided ingredients as main components. You can suggest additional common ingredients if needed. Format the method with clear numbered steps separated by newlines.`;
+
+    // Call OpenAI API
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4.1-nano",
+      messages: [
+        {
+          role: "system",
+          content: "You are a professional chef who creates amazing recipes. Always respond with valid JSON format."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 1000,
+    });
+
+    const responseText = completion.choices[0].message.content;
     
-//     // Validate input
-//     if (!ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
-//       return res.status(400).json({ 
-//         error: "Please provide a valid array of ingredients" 
-//       });
-//     }
-    
-//     console.log("Generating recipe for ingredients:", ingredients);
-    
-//     // Prepare input for the model
-//     const input_text = `{"prompt": ${JSON.stringify(ingredients)}}`;
-    
-//     // Call the Hugging Face model using the inference API
-//     const result = await hf.textGeneration({
-//       model: "Ashikan/dut-recipe-generator",
-//       inputs: input_text,
-//       parameters: {
-//         max_length: 1024,
-//         temperature: 0.2,
-//         do_sample: true,
-//         return_full_text: true
-//       }
-//     });
-    
-//     // Parse the generated text into JSON
-//     try {
-//       // The model returns the input text plus the generated recipe in JSON format
-//       // We need to extract just the JSON part
-//       const fullText = result.generated_text;
-//       const jsonStartIndex = fullText.indexOf('{');
-//       const jsonText = fullText.substring(jsonStartIndex);
+    try {
+      // Parse the JSON response
+      const recipe = JSON.parse(responseText);
       
-//       // Parse the JSON
-//       const recipe = JSON.parse(jsonText);
+      // Validate the response structure
+      if (!recipe.title || !recipe.ingredients || !recipe.method) {
+        throw new Error("Invalid recipe structure");
+      }
       
-//       return res.status(200).json({ 
-//         success: true, 
-//         recipe 
-//       });
-//     } catch (jsonError) {
-//       console.error("Error parsing recipe JSON:", jsonError);
-//       return res.status(500).json({ 
-//         error: "Error parsing generated recipe", 
-//         rawOutput: result.generated_text 
-//       });
-//     }
-//   } catch (error) {
-//     console.error("Error generating recipe:", error);
-//     return res.status(500).json({ 
-//       error: "Failed to generate recipe", 
-//       message: error.message 
-//     });
-//   }
-// });
+      return res.status(200).json({ 
+        success: true, 
+        recipe 
+      });
+    } catch (jsonError) {
+      console.error("Error parsing recipe JSON:", jsonError);
+      console.log("Raw OpenAI response:", responseText);
+      
+      // If JSON parsing fails, try to extract recipe info manually
+      const fallbackRecipe = {
+        title: `Recipe with ${ingredients.join(', ')}`,
+        ingredients: ingredients.map(ing => `${ing} - as needed`),
+        method: responseText || "Recipe generation failed. Please try again."
+      };
+      
+      return res.status(200).json({ 
+        success: true, 
+        recipe: fallbackRecipe
+      });
+    }
+  } catch (error) {
+    console.error("Error generating recipe:", error);
+    return res.status(500).json({ 
+      error: "Failed to generate recipe", 
+      message: error.message 
+    });
+  }
+});
 
 // Start the server
 app.listen(port, () => {

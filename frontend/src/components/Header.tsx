@@ -101,12 +101,13 @@ const Header: React.FC<HeaderProps> = ({ onSearchChange, onSortChange }) => {
           <option value="oldest">Oldest</option>
           <option value="top-rated">Top Rated</option>
         </select>
-      </div>
-
-      {/* Right-aligned nav links */}
+      </div>      {/* Right-aligned nav links */}
       <div className={`nav-links ${showMenu ? 'active' : ''}`}>
         <Link to="/" className="nav-link" onClick={handleLinkClick}>
           Home
+        </Link>
+        <Link to="/recipe-generator" className="nav-link" onClick={handleLinkClick}>
+          AI Generator
         </Link>
         
         {loggedIn ? (

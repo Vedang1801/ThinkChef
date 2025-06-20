@@ -8,6 +8,7 @@ import Login from "./components/Login";
 import Register from "./components/Register";
 import AddReceipe from "./components/AddReceipe";
 import ReceipeDetail from "./components/ReceipeDetail";
+import RecipeGenerator from "./components/RecipeGenerator";
 import { AuthProvider } from "./components/authContext";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -24,11 +25,11 @@ function App() {
         <Header 
           onSearchChange={setSearchTerm}
           onSortChange={setSortType}
-        />
-        <Routes>
+        />        <Routes>
           <Route path="/" element={<Home searchTerm={searchTerm} sortType={sortType} />} />
           <Route path="/addrecipes" element={<AddReceipe />} />
           <Route path="/recipes/:id" element={<ReceipeDetail />} />
+          <Route path="/recipe-generator" element={<RecipeGenerator />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />

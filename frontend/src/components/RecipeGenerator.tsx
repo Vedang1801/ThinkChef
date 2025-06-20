@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { ChefHat, Loader2, Plus, X } from 'lucide-react';
+import { ChefHat, Loader2 } from 'lucide-react';
 import '../styles/recipeGenerator.css';
 
 interface Recipe {
@@ -11,34 +11,19 @@ interface Recipe {
 }
 
 const RecipeGenerator: React.FC = () => {
-  const [ingredients, setIngredients] = useState<string[]>([]);
-  const [inputValue, setInputValue] = useState('');
+  const [ingredientsInput, setIngredientsInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [generatedRecipe, setGeneratedRecipe] = useState<Recipe | null>(null);
 
-  const handleAddIngredient = () => {
-    if (inputValue.trim() !== '' && !ingredients.includes(inputValue.trim().toLowerCase())) {
-      setIngredients([...ingredients, inputValue.trim().toLowerCase()]);
-      setInputValue('');
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleAddIngredient();
-    }
-  };
-
-  const handleRemoveIngredient = (index: number) => {
-    const newIngredients = [...ingredients];
-    newIngredients.splice(index, 1);
-    setIngredients(newIngredients);
-  };
-
   const handleGenerateRecipe = async () => {
+    // Parse ingredients from comma-separated input
+    const ingredients = ingredientsInput
+      .split(',')
+      .map(ingredient => ingredient.trim().toLowerCase())
+      .filter(ingredient => ingredient.length > 0);
+
     if (ingredients.length < 2) {
-      toast.warning('Please add at least 2 ingredients');
+      toast.warning('Please enter at least 2 ingredients separated by commas');
       return;
     }
 
@@ -46,7 +31,18 @@ const RecipeGenerator: React.FC = () => {
     try {
       const response = await axios.post('/api/recipe/generate', { ingredients });
       console.log('Recipe generated:', response.data);
-      setGeneratedRecipe(response.data.recipe);
+      
+      // Process the recipe to format instructions properly
+      const recipe = response.data.recipe;
+      if (recipe.method) {
+        // Split by numbers followed by period or by sentences, then clean up
+        recipe.method = recipe.method
+          .replace(/(\d+\.\s*)/g, '\n$1') // Add newline before numbered steps
+          .replace(/^\n/, '') // Remove leading newline
+          .trim();
+      }
+      
+      setGeneratedRecipe(recipe);
       toast.success('Recipe generated successfully!');
     } catch (error) {
       console.error('Failed to generate recipe:', error);
@@ -74,40 +70,24 @@ const RecipeGenerator: React.FC = () => {
       <div className="generator-main">
         <div className="ingredients-input-container">
           <h2>Your Ingredients</h2>
-          <div className="input-with-button">
-            <input
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Add an ingredient (e.g. chicken, rice, tomatoes)"
+          <div className="ingredients-input-section">
+            <textarea
+              value={ingredientsInput}
+              onChange={(e) => setIngredientsInput(e.target.value)}
+              placeholder="Enter ingredients separated by commas (e.g. chicken, rice, tomatoes, onions, garlic)"
               disabled={loading}
+              className="ingredients-textarea"
+              rows={4}
             />
-            <button 
-              onClick={handleAddIngredient} 
-              disabled={loading || inputValue.trim() === ''}
-              className="add-ingredient-btn"
-            >
-              <Plus size={18} />
-              Add
-            </button>
-          </div>
-
-          <div className="ingredients-list">
-            {ingredients.map((ingredient, index) => (
-              <div key={index} className="ingredient-tag">
-                {ingredient}
-                <button onClick={() => handleRemoveIngredient(index)} disabled={loading}>
-                  <X size={14} />
-                </button>
-              </div>
-            ))}
+            <p className="input-hint">
+              💡 Tip: Separate each ingredient with a comma. Example: "chicken breast, rice, bell peppers, soy sauce"
+            </p>
           </div>
 
           <button 
             className="generate-button" 
             onClick={handleGenerateRecipe} 
-            disabled={loading || ingredients.length < 2}
+            disabled={loading || ingredientsInput.trim().length === 0}
           >
             {loading ? (
               <>

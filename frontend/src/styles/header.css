@@ -90,19 +90,27 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  transition: color 0.18s;
+  transition: all 0.3s ease;
   cursor: pointer;
+  border-radius: 0px;
 }
 
 .nav-link:hover,
 .nav-link:focus {
-  color: #e32726;
+  background-color: #FF7043;
+  color: white;
 }
 
 /* Login link with special styling */
 .nav-link.login-link {
   color: #e32726;
   font-weight: 500;
+}
+
+.nav-link.login-link:hover,
+.nav-link.login-link:focus {
+  background-color: #FF7043;
+  color: white;
 }
 
 /* Hamburger Menu for Mobile */
