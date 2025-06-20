@@ -51,6 +51,8 @@ const AddRecipe: React.FC = () => {
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showBulkInput, setShowBulkInput] = useState(false);
+  const [bulkInput, setBulkInput] = useState("");
 
   useEffect(() => {
     if (!loggedIn) {
@@ -230,6 +232,38 @@ const AddRecipe: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Bulk add handler
+  const handleBulkAddIngredients = () => {
+    // Split by newlines, trim, and filter out empty lines
+    const lines = bulkInput
+      .split(/\n|\r/)
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+    if (lines.length === 0) {
+      toast.warning("No valid ingredients found");
+      return;
+    }
+    // For each line, split on the first comma
+    const parsed = lines.map(line => {
+      const [item, ...rest] = line.split(",");
+      return {
+        item: item.trim(),
+        quantity: rest.join(",").trim() // join in case quantity has commas
+      };
+    });
+    // Remove all empty ingredient rows before adding new ones
+    setRecipeData(prev => ({
+      ...prev,
+      ingredients: [
+        ...prev.ingredients.filter(ing => ing.item.trim() || ing.quantity.trim()),
+        ...parsed
+      ]
+    }));
+    setBulkInput("");
+    setShowBulkInput(false);
+    toast.success(`${parsed.length} ingredients added!`);
   };
 
   // Live preview for sidebar
@@ -441,6 +475,54 @@ const AddRecipe: React.FC = () => {
                   <Plus size={18} /> 
                   Add Another Ingredient
                 </button>
+                <button
+                  type="button"
+                  className="add-ingredient"
+                  style={{ marginTop: 8 }}
+                  onClick={() => setShowBulkInput(v => !v)}
+                >
+                  <Plus size={18} />
+                  Add Multiple Ingredients
+                </button>
+                {showBulkInput && (
+                  <div className="bulk-ingredient-input">
+                    <textarea
+                      className="form-textarea"
+                      rows={4}
+                      placeholder={
+                        [
+                          "Paste or type multiple ingredients below.",
+                          "Format: Ingredient, Quantity (comma separated)",
+                          "One ingredient per line.",
+                          "Example:",
+                          "Paneer (cubed), 250 grams",
+                          "Butter, 3 tablespoons",
+                          "Tomatoes (chopped), 4 medium"
+                        ].join('\n')
+                      }
+                      value={bulkInput}
+                      onChange={e => setBulkInput(e.target.value)}
+                      style={{ marginTop: 8, marginBottom: 8 }}
+                    />
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button
+                        type="button"
+                        className="add-ingredient"
+                        onClick={handleBulkAddIngredients}
+                      >
+                        Add All
+                      </button>
+                      <button
+                        type="button"
+                        className="add-ingredient"
+                        onClick={() => setShowBulkInput(false)}
+                        style={{ background: '#eee', color: '#333' }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             

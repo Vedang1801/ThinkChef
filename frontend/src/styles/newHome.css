@@ -538,6 +538,23 @@ body, .homepage-root {
   background-color: #e26035;
 }
 
+/* AI Button Style */
+.ai-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Promo Actions */
+.promo-actions {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem; /* space between the two buttons */
+  margin-top: 2rem;
+}
+
 /* Responsive Adjustments */
 @media (max-width: 1200px) {
   .epicurious-recipe-grid {

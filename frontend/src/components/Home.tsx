@@ -6,6 +6,7 @@ import Tips from "./Tips";
 import "../styles/newHome.css";
 import { toast } from "react-toastify";
 import { ChevronRight, ChevronLeft, ArrowRight, ChefHat, Facebook, Twitter, Instagram } from "lucide-react";
+import { Link } from "react-router-dom";
 
 // Update the interface to match what the database actually returns
 interface Recipe {
@@ -113,7 +114,7 @@ const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
           <p>
             Find your next favorite recipe or share your own culinary creations with our community of food lovers.
           </p>
-          <a href="/addrecipes" className="cta-btn">Create Recipe</a>
+          <Link to="/addrecipes" className="cta-btn">Create Recipe</Link>
         </div>
       </section>
 
@@ -135,9 +136,9 @@ const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
           <div className="empty-state">
             <h2>No recipes found</h2>
             <p>Be the first to add a delicious recipe!</p>
-            <a href="/addrecipes" className="add-recipe-btn">
+            <Link to="/addrecipes" className="add-recipe-btn">
               Add Recipe
-            </a>
+            </Link>
           </div>
         ) : (
           <div className="epicurious-recipe-grid">
@@ -177,9 +178,15 @@ const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
       <div className="promo-section">
         <div className="promo-container">
           <div className="promo-banner">
-            <h3>Ready to Share Your Recipe?</h3>
-            <p>Join our community and showcase your culinary creations with food enthusiasts worldwide.</p>
-            <a href="/addrecipes" className="secondary-cta-btn">Create Recipe</a>
+            <h3>Ready to Get Creative in the Kitchen?</h3>
+            <p>Try our new AI Recipe Generator! Input the ingredients you have on hand, and we'll create a delicious recipe just for you.</p>
+            <div className="promo-actions">
+              <Link to="/addrecipes" className="secondary-cta-btn">Create Recipe</Link>
+              <Link to="/recipe-generator" className="secondary-cta-btn ai-btn">
+                <ChefHat size={16} style={{ marginRight: '8px' }} />
+                AI Recipe Generator
+              </Link>
+            </div>
           </div>
         </div>
       </div>

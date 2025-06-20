@@ -407,19 +407,10 @@ app.get("/api/recipes/:id", (req, res) => {
   }
   
   // Use lowercase "instruction" to match what's in the database
-  const query = "SELECT recipe_id, title, description, user_id, image, instruction, created_at FROM Recipes WHERE user_id = $1";
+  const query = "SELECT recipe_id, title, description, user_id, image, instruction, created_at, total_time, servings FROM Recipes WHERE user_id = $1";
   
-  // Attempt to parse the ID as an integer if possible
-  // This helps with legacy users while supporting Firebase string UIDs
-  let parsedId;
-  try {
-    parsedId = parseInt(userId, 10);
-    if (isNaN(parsedId)) parsedId = userId;
-  } catch (e) {
-    parsedId = userId;
-  }
-  
-  pool.query(query, [parsedId], (err, results) => {
+  // Always use userId as string (no integer parsing)
+  pool.query(query, [userId], (err, results) => {
     if (err) {
       console.error("Error retrieving recipe: ", err);
       return res.status(500).send("Error retrieving recipe");
@@ -834,6 +825,73 @@ app.post("/api/users/sync", async (req, res) => {
     return res.status(500).json({ error: "Error synchronizing user" });
   }
 });
+
+// Import the HuggingFace Inference API client
+// const { HfInference } = require('@huggingface/inference');
+
+// Initialize HuggingFace with your API token
+// You'll need to sign up at huggingface.co and get an API token
+// const hf = new HfInference(process.env.HUGGINGFACE_API_KEY);
+
+// Endpoint to generate recipes from ingredients
+// app.post("/api/recipe/generate", async (req, res) => {
+//   try {
+//     const { ingredients } = req.body;
+    
+//     // Validate input
+//     if (!ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
+//       return res.status(400).json({ 
+//         error: "Please provide a valid array of ingredients" 
+//       });
+//     }
+    
+//     console.log("Generating recipe for ingredients:", ingredients);
+    
+//     // Prepare input for the model
+//     const input_text = `{"prompt": ${JSON.stringify(ingredients)}}`;
+    
+//     // Call the Hugging Face model using the inference API
+//     const result = await hf.textGeneration({
+//       model: "Ashikan/dut-recipe-generator",
+//       inputs: input_text,
+//       parameters: {
+//         max_length: 1024,
+//         temperature: 0.2,
+//         do_sample: true,
+//         return_full_text: true
+//       }
+//     });
+    
+//     // Parse the generated text into JSON
+//     try {
+//       // The model returns the input text plus the generated recipe in JSON format
+//       // We need to extract just the JSON part
+//       const fullText = result.generated_text;
+//       const jsonStartIndex = fullText.indexOf('{');
+//       const jsonText = fullText.substring(jsonStartIndex);
+      
+//       // Parse the JSON
+//       const recipe = JSON.parse(jsonText);
+      
+//       return res.status(200).json({ 
+//         success: true, 
+//         recipe 
+//       });
+//     } catch (jsonError) {
+//       console.error("Error parsing recipe JSON:", jsonError);
+//       return res.status(500).json({ 
+//         error: "Error parsing generated recipe", 
+//         rawOutput: result.generated_text 
+//       });
+//     }
+//   } catch (error) {
+//     console.error("Error generating recipe:", error);
+//     return res.status(500).json({ 
+//       error: "Failed to generate recipe", 
+//       message: error.message 
+//     });
+//   }
+// });
 
 // Start the server
 app.listen(port, () => {
