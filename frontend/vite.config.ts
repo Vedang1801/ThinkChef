@@ -7,10 +7,9 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
-    proxy: {
-      '/api': {
+    proxy: {      '/api': {
         target: process.env.NODE_ENV === 'production' 
-          ? 'https://your-api-domain.com' // We'll update this tomorrow
+          ? 'http://52.14.60.162:3000' // Live backend API
           : 'http://localhost:3000',
         changeOrigin: true,
         secure: false

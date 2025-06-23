@@ -21,6 +21,8 @@ import {
 } from "firebase/auth";
 import axios from "axios";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 interface User {
   uid: string;
   email: string | null;
@@ -50,7 +52,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const syncUserWithDatabase = async (firebaseUser: any) => {
     try {
       // Check if user exists in your PostgreSQL DB or create them
-      const response = await axios.post('/api/users/sync', {
+      const response = await axios.post(`${API_URL}/api/users/sync`, {
         user_id: firebaseUser.uid,
         username: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || "Chef",
         email: firebaseUser.email,

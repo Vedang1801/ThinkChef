@@ -37,6 +37,8 @@ interface Comment {
 const fallbackImage =
   "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const RecipeDetail: React.FC = () => {
   const { id } = useParams();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
@@ -62,7 +64,7 @@ const RecipeDetail: React.FC = () => {
 
     try {
       // Fetch recipe data
-      const recipeRes = await axios.get(`/api/recipes`);
+      const recipeRes = await axios.get(`${API_URL}/api/recipes`);
       const allRecipes = Array.isArray(recipeRes.data.recipes)
         ? recipeRes.data.recipes
         : recipeRes.data;
@@ -75,15 +77,15 @@ const RecipeDetail: React.FC = () => {
       setRecipe(foundRecipe);
 
       // Fetch ingredients
-      const ingredientsRes = await axios.get(`/api/recipes/${id}/ingredients`);
+      const ingredientsRes = await axios.get(`${API_URL}/api/recipes/${id}/ingredients`);
       setIngredients(ingredientsRes.data || []);
 
       // Fetch comments
-      const commentsRes = await axios.get(`/api/recipes/${id}/comments`);
+      const commentsRes = await axios.get(`${API_URL}/api/recipes/${id}/comments`);
       setComments(commentsRes.data || []);
 
       // Fetch rating
-      const ratingRes = await axios.get(`/api/recipes/${id}/ratings`);
+      const ratingRes = await axios.get(`${API_URL}/api/recipes/${id}/ratings`);
       setRating(ratingRes.data.averageRating || 0);
 
       // Check if user has rated this recipe
@@ -103,7 +105,7 @@ const RecipeDetail: React.FC = () => {
     if (!token || !id) return;
 
     try {
-      const response = await axios.get(`/api/recipes/${id}/ratings/user`, {
+      const response = await axios.get(`${API_URL}/api/recipes/${id}/ratings/user`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -140,7 +142,7 @@ const RecipeDetail: React.FC = () => {
 
     try {
       await axios.post(
-        `/api/recipes/${id}/ratings/create`,
+        `${API_URL}/api/recipes/${id}/ratings/create`,
         {
           rating: starIndex + 1,
           user_id: Cookies.get("user_id"),
@@ -158,7 +160,7 @@ const RecipeDetail: React.FC = () => {
       setSnackbarOpen(true);
 
       // Refresh rating data
-      const ratingRes = await axios.get(`/api/recipes/${id}/ratings`);
+      const ratingRes = await axios.get(`${API_URL}/api/recipes/${id}/ratings`);
       setRating(ratingRes.data.averageRating || 0);
     } catch (error) {
       console.error("Error submitting rating:", error);
@@ -189,7 +191,7 @@ const RecipeDetail: React.FC = () => {
     }
 
     try {
-      await axios.post(`/api/recipes/${id}/comments/create`, {
+      await axios.post(`${API_URL}/api/recipes/${id}/comments/create`, {
         comment_text: trimmedComment,
         user_id: Cookies.get("user_id"),
         username: Cookies.get("username"),
@@ -200,7 +202,7 @@ const RecipeDetail: React.FC = () => {
       setSnackbarOpen(true);
 
       // Refresh comments
-      const commentsRes = await axios.get(`/api/recipes/${id}/comments`);
+      const commentsRes = await axios.get(`${API_URL}/api/recipes/${id}/comments`);
       setComments(commentsRes.data || []);
     } catch (error) {
       console.error("Error adding comment:", error);

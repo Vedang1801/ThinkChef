@@ -10,6 +10,8 @@ interface Recipe {
   method: string;
 }
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const RecipeGenerator: React.FC = () => {
   const [ingredientsInput, setIngredientsInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -29,7 +31,7 @@ const RecipeGenerator: React.FC = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post('/api/recipe/generate', { ingredients });
+      const response = await axios.post(`${API_URL}/api/recipe/generate`, { ingredients });
       console.log('Recipe generated:', response.data);
       
       // Process the recipe to format instructions properly

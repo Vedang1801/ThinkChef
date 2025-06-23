@@ -47,6 +47,8 @@ interface EditingRecipe {
 // Updated fallback images
 const fallbackImage = "https://images.unsplash.com/photo-1588505617603-f80b72bf8f24?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const Profile: React.FC = () => {
   const { loggedIn } = useAuth();
   const navigate = useNavigate();
@@ -84,11 +86,11 @@ const Profile: React.FC = () => {
 
   const fetchPosts = async () => {
     try {
-      const response = await axios.get(`/api/recipes/${Cookies.get("user_id")}`);
+      const response = await axios.get(`${API_URL}/api/recipes/${Cookies.get("user_id")}`);
       const postsData = await Promise.all(
         response.data.map(async (post: any) => {
           const ingredientsResponse = await axios.get(
-            `/api/recipes/${post.recipe_id}/ingredients`
+            `${API_URL}/api/recipes/${post.recipe_id}/ingredients`
           );
           const ingredientsData = ingredientsResponse.data.map(
             (ingredient: any) => `${ingredient.item}: ${ingredient.quantity}`
@@ -130,7 +132,7 @@ const Profile: React.FC = () => {
 
   const handlePermanentDelete = async (postId: number) => {
     try {
-      await axios.delete(`/api/recipes/delete/${postId}`);
+      await axios.delete(`${API_URL}/api/recipes/delete/${postId}`);
       setPosts(posts.filter((post) => post.recipe_id !== postId));
       toast.success("Recipe deleted", { position: "bottom-right" });
     } catch (error) {
@@ -188,7 +190,7 @@ const Profile: React.FC = () => {
     try {
       // setIsUploading(true); // <-- Remove this line
       // Upload to AWS S3 via backend endpoint
-      const response = await axios.post("/api/upload-image", formData, {
+      const response = await axios.post(`${API_URL}/api/upload-image`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -238,7 +240,7 @@ const Profile: React.FC = () => {
         })),
       };
 
-      await axios.put(`/api/recipes/update/${editingRecipe.recipe_id}`, recipeData);
+      await axios.put(`${API_URL}/api/recipes/update/${editingRecipe.recipe_id}`, recipeData);
 
       toast.success("Recipe updated successfully", { position: "bottom-right" });
       setIsEditing(false);
