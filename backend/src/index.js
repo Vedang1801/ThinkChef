@@ -47,12 +47,16 @@ pool.connect((err, client, done) => {
 });
 
 // Development-only CORS configuration
+
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://your-domain.com', 'https://www.your-domain.com'] // We'll update this tomorrow
+  origin: process.env.NODE_ENV === 'production'
+    ? [
+        "http://think-chef-frontend-2025.s3-website.us-east-2.amazonaws.com"
+        // Add your CloudFront URL here if you use one, e.g. "https://d1234.cloudfront.net"
+      ]
     : true, // Allow all origins in development
   credentials: true,
-  optionSuccessStatus: 200,
+  optionsSuccessStatus: 200,
 };
 
 app.use(cors(corsOptions));
