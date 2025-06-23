@@ -34,6 +34,8 @@ function capitalizeTitle(title: string) {
   return title.replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const AddRecipe: React.FC = () => {
   const [recipeData, setRecipeData] = useState<RecipeData>({
     title: "",
@@ -137,7 +139,7 @@ const AddRecipe: React.FC = () => {
       const formData = new FormData();
       formData.append("image", recipeData.image as File);
 
-      const response = await fetch("/api/upload-image", {
+      const response = await fetch(`${API_URL}/api/upload-image`, {
         method: "POST",
         body: formData,
       });
@@ -211,7 +213,7 @@ const AddRecipe: React.FC = () => {
         servings: recipeData.servings,
       };
 
-      const response = await fetch("/api/recipes/create", {
+      const response = await fetch(`${API_URL}/api/recipes/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

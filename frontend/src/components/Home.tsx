@@ -27,6 +27,8 @@ interface HomeProps {
   sortType: string;
 }
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,7 +55,7 @@ const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
       // Add a timestamp to prevent caching issues
       params.append('_t', Date.now().toString());
       
-      const finalUrl = `${url}?${params.toString()}`;
+      const finalUrl = `${API_URL}${url}?${params.toString()}`;
       console.log(`Fetching recipes from: ${finalUrl}`); // Debug URL
       
       const response = await axios.get(finalUrl);
@@ -72,7 +74,7 @@ const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
       let combinedRecipes: Recipe[] = [];
       
       if (recipesList.length > 0) {
-        const ingredientsResponse = await axios.get("/api/ingredients");
+        const ingredientsResponse = await axios.get(`${API_URL}/api/ingredients`);
         const ingredientsData = ingredientsResponse.data;
 
         // Combine recipes with their ingredients & filter invalid recipes

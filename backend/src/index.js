@@ -1,3 +1,4 @@
+
 require('dotenv').config();
 
 const express = require("express");
@@ -266,7 +267,7 @@ app.post("/api/upload-image", upload.single("image"), (req, res) => {
     }
 
     const params = {
-      Bucket: "imagebucketforproject1",
+      Bucket: "imagebucketforproject2",
       Key: `images/${file.originalname}`,
       Body: data,
       ContentType: file.mimetype
