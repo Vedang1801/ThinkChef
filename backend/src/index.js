@@ -12,8 +12,12 @@ const OpenAI = require("openai");
 const secretKey = process.env.JWT_SECRET || "FinalProject@1234";
 const bcrypt = require("bcrypt");
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
+// Add health check endpoint for AWS
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
+});
 
 app.use(bodyParser.json()); 
 const upload = multer({ dest: "uploads/" }); 
@@ -39,7 +43,9 @@ pool.connect((err, client, done) => {
 
 // Development-only CORS configuration
 const corsOptions = {
-  origin: true, // Allow all origins
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://your-domain.com', 'https://www.your-domain.com'] // We'll update this tomorrow
+    : true, // Allow all origins in development
   credentials: true,
   optionSuccessStatus: 200,
 };

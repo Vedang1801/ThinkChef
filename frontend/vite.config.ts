@@ -6,14 +6,29 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: true,
-    port : 3000,
+    port: 5173,
     proxy: {
-        '/api': {
-            target: 'http://localhost:3000',
-            changeOrigin: true,
-            secure: false
-        }
+      '/api': {
+        target: process.env.NODE_ENV === 'production' 
+          ? 'https://your-api-domain.com' // We'll update this tomorrow
+          : 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false
+      }
     }
-    
-},
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    minify: 'terser',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          router: ['react-router-dom'],
+          ui: ['@mui/material', '@emotion/react', '@emotion/styled']
+        }
+      }
+    }
+  }
 })

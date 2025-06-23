@@ -5,7 +5,12 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "dev": "nodemon src/index.js",
+    "prod": "NODE_ENV=production node src/index.js",
+    "pm2:start": "pm2 start ecosystem.config.js --env production",
+    "pm2:stop": "pm2 stop think-chef-api",
+    "pm2:restart": "pm2 restart think-chef-api",
+    "pm2:logs": "pm2 logs think-chef-api"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +27,7 @@
     "mysql2": "^3.6.1",
     "openai": "^5.5.1",
     "pg": "^8.15.6",
+    "pm2": "^6.0.8",
     "transformers": "^3.1.0"
   },
   "devDependencies": {
