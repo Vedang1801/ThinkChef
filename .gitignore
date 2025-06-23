@@ -6,6 +6,15 @@ config.env
 !.env.example
 backend/config.env
 
+# AWS Security Files 
+*.pem
+*.key
+*.crt
+.aws/
+aws-credentials
+think-chef-key.pem
+aws-config.json
+
 # Node modules
 node_modules/
 frontend/node_modules/
