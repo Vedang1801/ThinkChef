@@ -1,4 +1,4 @@
-require('dotenv').config({ path: '../.env' }); 
+require('dotenv').config(); 
 
 const express = require("express");
 const cors = require("cors");
@@ -28,7 +28,10 @@ const pool = new Pool({
   user: process.env.PG_USER,
   password: process.env.PG_PASSWORD,
   database: process.env.PG_DATABASE,
-  port: process.env.PG_PORT
+  port: process.env.PG_PORT,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
 // Test database connection
