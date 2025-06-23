@@ -10,7 +10,7 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: process.env.NODE_ENV === 'production' 
-          ? 'https://your-api-domain.com' // We'll update this tomorrow
+          ? 'http://52.14.60.162:3000' // We'll update this tomorrow
           : 'http://localhost:3000',
         changeOrigin: true,
         secure: false

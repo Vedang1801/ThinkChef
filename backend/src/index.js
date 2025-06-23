@@ -1,4 +1,4 @@
-require('dotenv').config({ path: '../.env' }); 
+require('dotenv').config();
 
 const express = require("express");
 const cors = require("cors");
@@ -23,12 +23,16 @@ app.use(bodyParser.json());
 const upload = multer({ dest: "uploads/" }); 
 
 // Create connection to PostgreSQL database using environment variables
+
 const pool = new Pool({
   host: process.env.PG_HOST,
   user: process.env.PG_USER,
   password: process.env.PG_PASSWORD,
   database: process.env.PG_DATABASE,
-  port: process.env.PG_PORT
+  port: process.env.PG_PORT,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
 // Test database connection
@@ -927,3 +931,5 @@ app.listen(port, () => {
 
 
 
+app.get("/debug-env", (req, res) => { res.json({ PG_HOST: process.env.PG_HOST, PG_USER: process.env.PG_USER, PG_PASSWORD: process.env.PG_PASSWORD ? "***SET***" : "NOT_SET", PG_DATABASE: process.env.PG_DATABASE }); });
+app.get("/debug-password", (req, res) => { res.json({ password_length: process.env.PG_PASSWORD ? process.env.PG_PASSWORD.length : 0, password_first_char: process.env.PG_PASSWORD ? process.env.PG_PASSWORD[0] : "none", password_has_dollar: process.env.PG_PASSWORD ? process.env.PG_PASSWORD.includes("$") : false }); });
