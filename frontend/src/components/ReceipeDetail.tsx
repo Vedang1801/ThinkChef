@@ -7,168 +7,172 @@ import Cookies from "js-cookie";
 import { Snackbar } from "@mui/material";
 import "../styles/recipeDetail.css";
 
+// Recipe interface defines the structure of a recipe object
 interface Recipe {
   recipe_id: number;
   title: string;
   description: string;
-  Instruction?: string;  // Make this optional
-  instruction?: string;  // Add lowercase variant
-  instructions?: string; // Add plural variant
+  Instruction?: string;  // Optional: capitalized variant
+  instruction?: string;  // Optional: lowercase variant
+  instructions?: string; // Optional: plural variant
   image: string;
   created_at: string;
   ingredients?: string[];
   average_rating?: number;
   author?: string;
-  total_time?: string;  // Add these fields
-  servings?: string;
+  total_time?: string;  // Optional: total time
+  servings?: string;    // Optional: servings
 }
 
+// Ingredient interface for each ingredient item
 interface Ingredient {
   item: string;
   quantity: string;
 }
 
+// Comment interface for each comment
 interface Comment {
   comment_id: number;
   comment_text: string;
   username: string;
 }
 
+// Fallback image URL if recipe image is missing
 const fallbackImage =
   "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80";
 
+// API base URL from environment
 const API_URL = import.meta.env.VITE_API_URL;
 
+// Main RecipeDetail component for displaying a single recipe's details
 const RecipeDetail: React.FC = () => {
+  // Get recipe ID from URL params
   const { id } = useParams();
+  // State for recipe data
   const [recipe, setRecipe] = useState<Recipe | null>(null);
+  // State for ingredients list
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  // Loading state
   const [loading, setLoading] = useState(true);
+  // State for comments
   const [comments, setComments] = useState<Comment[]>([]);
+  // State for new comment input
   const [commentText, setCommentText] = useState("");
+  // State for average rating
   const [rating, setRating] = useState(0);
+  // State for user's rating
   const [userRating, setUserRating] = useState(0);
+  // Whether user has already rated
   const [userHasRated, setUserHasRated] = useState(false);
+  // State for hover effect on rating stars
   const [hoverRating, setHoverRating] = useState(0);
+  // Snackbar state for feedback messages
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  // Auth context for login status
   const { loggedIn } = useAuth();
 
+  // Fetch recipe data when component mounts or id changes
   useEffect(() => {
     fetchRecipeData();
   }, [id]);
 
+  // Fetch recipe, ingredients, comments, and rating from API
   const fetchRecipeData = async () => {
     if (!id) return;
     setLoading(true);
-
     try {
-      // Fetch recipe data
+      // Fetch all recipes and find the one matching the id
       const recipeRes = await axios.get(`${API_URL}/api/recipes`);
       const allRecipes = Array.isArray(recipeRes.data.recipes)
         ? recipeRes.data.recipes
         : recipeRes.data;
       const foundRecipe = allRecipes.find((r: Recipe) => String(r.recipe_id) === id);
-
       if (!foundRecipe) {
         throw new Error("Recipe not found");
       }
-
       setRecipe(foundRecipe);
-
-      // Fetch ingredients
+      // Fetch ingredients for this recipe
       const ingredientsRes = await axios.get(`${API_URL}/api/recipes/${id}/ingredients`);
       setIngredients(ingredientsRes.data || []);
-
-      // Fetch comments
+      // Fetch comments for this recipe
       const commentsRes = await axios.get(`${API_URL}/api/recipes/${id}/comments`);
       setComments(commentsRes.data || []);
-
-      // Fetch rating
+      // Fetch average rating for this recipe
       const ratingRes = await axios.get(`${API_URL}/api/recipes/${id}/ratings`);
       setRating(ratingRes.data.averageRating || 0);
-
-      // Check if user has rated this recipe
+      // If logged in, check if user has rated
       if (loggedIn) {
         checkUserRating();
       }
     } catch (error) {
       console.error("Error fetching recipe data:", error);
-      // Consider redirecting to 404 page or showing error message
+      // Optionally show error UI or redirect
     } finally {
       setLoading(false);
     }
   };
 
+  // Check if the current user has already rated this recipe
   const checkUserRating = async () => {
     const token = Cookies.get("token");
     if (!token || !id) return;
-
     try {
       const response = await axios.get(`${API_URL}/api/recipes/${id}/ratings/user`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-
       if (response.data.hasRated) {
         setUserHasRated(true);
         setUserRating(response.data.userRating);
       }
     } catch (error) {
       console.error("Error checking user rating:", error);
-      // Don't set userHasRated to false here - it may cause UI issues
-      // if the API call fails but the user has actually rated
+      // Do not forcibly set userHasRated to false on error
     }
   };
 
+  // Handle user clicking a star to rate the recipe
   const handleRatingClick = async (starIndex: number) => {
     if (!loggedIn) {
       setSnackbarMessage("Please log in to rate recipes");
       setSnackbarOpen(true);
       return;
     }
-
     const token = Cookies.get("token");
     if (!token) {
       setSnackbarMessage("Authentication error. Please log in again.");
       setSnackbarOpen(true);
       return;
     }
-
     if (userHasRated) {
       setSnackbarMessage("You have already rated this recipe");
       setSnackbarOpen(true);
       return;
     }
-
     try {
       await axios.post(
         `${API_URL}/api/recipes/${id}/ratings/create`,
         {
           rating: starIndex + 1,
-          user_id: Cookies.get("user_id"),
         },
         {
           headers: {
-            Authorization: `Bearer ${token}`, // Make sure token is correctly formatted
+            Authorization: `Bearer ${token}`,
           },
         }
       );
-
       setUserHasRated(true);
       setUserRating(starIndex + 1);
       setSnackbarMessage("Rating submitted successfully!");
       setSnackbarOpen(true);
-
-      // Refresh rating data
+      // Refresh average rating after submitting
       const ratingRes = await axios.get(`${API_URL}/api/recipes/${id}/ratings`);
       setRating(ratingRes.data.averageRating || 0);
     } catch (error) {
       console.error("Error submitting rating:", error);
-      // Check if it's a token expiration and handle accordingly
       if (axios.isAxiosError(error) && error.response?.status === 401) {
         setSnackbarMessage("Your session has expired. Please log in again.");
-        // You may want to trigger a logout here
-        // logout();
+        // Optionally trigger logout
       } else {
         setSnackbarMessage("Failed to submit rating. Please try again.");
       }
@@ -176,32 +180,40 @@ const RecipeDetail: React.FC = () => {
     }
   };
 
+  // Handle submitting a new comment
   const handleCommentSubmit = async () => {
     if (!loggedIn) {
       setSnackbarMessage("Please log in to comment");
       setSnackbarOpen(true);
       return;
     }
-
     const trimmedComment = commentText.trim();
     if (!trimmedComment) {
       setSnackbarMessage("Comment cannot be empty");
       setSnackbarOpen(true);
       return;
     }
-
+    
+    const token = Cookies.get("token");
+    if (!token) {
+      setSnackbarMessage("Authentication error. Please log in again.");
+      setSnackbarOpen(true);
+      return;
+    }
+    
     try {
       await axios.post(`${API_URL}/api/recipes/${id}/comments/create`, {
         comment_text: trimmedComment,
-        user_id: Cookies.get("user_id"),
         username: Cookies.get("username"),
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
-
       setCommentText("");
       setSnackbarMessage("Comment added successfully!");
       setSnackbarOpen(true);
-
-      // Refresh comments
+      // Refresh comments after adding
       const commentsRes = await axios.get(`${API_URL}/api/recipes/${id}/comments`);
       setComments(commentsRes.data || []);
     } catch (error) {
@@ -211,6 +223,7 @@ const RecipeDetail: React.FC = () => {
     }
   };
 
+  // Show loading spinner while fetching data
   if (loading) {
     return (
       <div className="recipe-detail-loading">
@@ -219,6 +232,7 @@ const RecipeDetail: React.FC = () => {
     );
   }
 
+  // Show error if recipe not found
   if (!recipe) {
     return (
       <div className="recipe-detail-error">
@@ -233,6 +247,7 @@ const RecipeDetail: React.FC = () => {
     );
   }
 
+  // Format date for display
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString(undefined, {
@@ -244,14 +259,14 @@ const RecipeDetail: React.FC = () => {
 
   return (
     <div className="recipe-detail-container">
-      {/* Back link */}
+      {/* Back link to recipe list */}
       <div className="recipe-detail-back">
         <Link to="/" className="back-link">
           ← Back to recipes
         </Link>
       </div>
 
-      {/* Recipe header with image */}
+      {/* Recipe header with image, title, author, date, and actions */}
       <div className="recipe-detail-header">
         <div className="recipe-detail-image-container">
           <img
@@ -275,6 +290,7 @@ const RecipeDetail: React.FC = () => {
             </div>
           </div>
 
+          {/* Average rating display */}
           <div className="recipe-detail-rating-display">
             <div className="rating-number">{Number(rating).toFixed(1)}</div>
             <div className="rating-stars">
@@ -290,6 +306,7 @@ const RecipeDetail: React.FC = () => {
             <span className="rating-count">(1)</span>
           </div>
 
+          {/* Action buttons: Save, Print, Share */}
           <div className="recipe-detail-actions">
             <button className="action-button">
               <BookmarkPlus size={18} />
@@ -307,12 +324,12 @@ const RecipeDetail: React.FC = () => {
         </div>
       </div>
 
-      {/* Recipe description */}
+      {/* Recipe description section */}
       <div className="recipe-detail-description">
         <p>{recipe.description}</p>
       </div>
 
-      {/* Recipe info */}
+      {/* Recipe info: total time and servings */}
       <div className="recipe-detail-info">
         <div className="recipe-info-item">
           <div className="info-label">Total Time</div>
@@ -324,7 +341,7 @@ const RecipeDetail: React.FC = () => {
         </div>
       </div>
 
-      {/* Recipe content */}
+      {/* Main content: ingredients and instructions */}
       <div className="recipe-detail-content">
         {/* Ingredients column */}
         <div className="recipe-detail-ingredients">
@@ -345,6 +362,7 @@ const RecipeDetail: React.FC = () => {
         <div className="recipe-detail-instructions">
           <h2>Preparation</h2>
           <div className="instructions-content">
+            {/* Show instructions, handling different possible field names */}
             {recipe.Instruction || recipe.instruction || recipe.instructions ? (
               (recipe.Instruction || recipe.instruction || recipe.instructions)?.split("\n").map((paragraph, i) =>
                 paragraph.trim() ? (
@@ -360,10 +378,9 @@ const RecipeDetail: React.FC = () => {
         </div>
       </div>
 
-      {/* Comments section */}
+      {/* Comments section with list and form */}
       <div className="recipe-detail-comments">
         <h2>Comments</h2>
-
         <div className="comments-list">
           {comments.length > 0 ? (
             comments.map((comment) => (
@@ -378,7 +395,6 @@ const RecipeDetail: React.FC = () => {
             </p>
           )}
         </div>
-
         {loggedIn ? (
           <div className="comment-form">
             <textarea
@@ -404,7 +420,7 @@ const RecipeDetail: React.FC = () => {
         )}
       </div>
 
-      {/* User Rating Section */}
+      {/* User rating section: allow user to rate if not already rated */}
       <div className="recipe-detail-user-rating">
         <h3>Rate this Recipe</h3>
         <div className="user-rating-stars">
@@ -433,13 +449,14 @@ const RecipeDetail: React.FC = () => {
         )}
       </div>
 
-      {/* Tags */}
+      {/* Static tags for demonstration */}
       <div className="recipe-detail-tags">
         <div className="tag">Dinner</div>
         <div className="tag">Main</div>
         <div className="tag">Healthy</div>
       </div>
 
+      {/* Snackbar for feedback messages */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={4000}

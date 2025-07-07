@@ -1,6 +1,6 @@
-
 require('dotenv').config();
 
+// Import required modules
 const express = require("express");
 const cors = require("cors");
 const { Pool } = require('pg');
@@ -9,34 +9,31 @@ const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
 const OpenAI = require("openai");
-// Specify the destination directory for file uploads
 const secretKey = process.env.JWT_SECRET || "FinalProject@1234";
 const bcrypt = require("bcrypt");
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Add health check endpoint for AWS
+// Health check endpoint for AWS monitoring
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-app.use(bodyParser.json()); 
-const upload = multer({ dest: "uploads/" }); 
+app.use(bodyParser.json()); // Parse JSON request bodies
+const upload = multer({ dest: "uploads/" }); // Configure multer for file uploads
 
-// Create connection to PostgreSQL database using environment variables
-
+// PostgreSQL connection pool using environment variables
+const isProduction = process.env.NODE_ENV === 'production';
 const pool = new Pool({
   host: process.env.PG_HOST,
   user: process.env.PG_USER,
   password: process.env.PG_PASSWORD,
   database: process.env.PG_DATABASE,
   port: process.env.PG_PORT,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  ssl: isProduction ? { rejectUnauthorized: false } : false
 });
 
-// Test database connection
+// Test database connection on startup
 pool.connect((err, client, done) => {
   if (err) {
     console.error("Error connecting to PostgreSQL database: ", err);
@@ -46,58 +43,69 @@ pool.connect((err, client, done) => {
   done();
 });
 
-// Development-only CORS configuration
-
+// CORS configuration for development and production
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
     ? [
         "http://think-chef-frontend-2025.s3-website.us-east-2.amazonaws.com"
-        // Add your CloudFront URL here if you use one, e.g. "https://d1234.cloudfront.net"
       ]
     : true, // Allow all origins in development
   credentials: true,
   optionsSuccessStatus: 200,
 };
-
 app.use(cors(corsOptions));
 
-// app.use(cors());
-// app.use(cors({
-//   origin: 'http://localhost:5173' // Allow requests only from this origin
-// }));
-
+// Generate JWT token for a user
 function generateToken(user) {
   const payload = {
     userId: user.user_id,
     username: user.username,
     email: user.email,
-    // You can add more user data to the payload as needed
   };
-  return jwt.sign(payload, secretKey, { expiresIn: "1h" }); // Token expires in 1 hour
+  return jwt.sign(payload, secretKey, { expiresIn: "1h" });
 }
 
-// Middleware to verify JWT token
+// Middleware to verify JWT token or Firebase ID token
 function verifyToken(req, res, next) {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1];
-  
   if (!token) {
     return res.status(401).send("Unauthorized: No token provided");
   }
-
-  jwt.verify(token, secretKey, (err, decoded) => {
-    if (err) {
-      if (err.name === 'TokenExpiredError') {
+  
+  try {
+    // Try to decode the token without verification to check if it's a Firebase token
+    const decodedPayload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+    
+    // Check if it's a Firebase ID token (has 'iss' field with Firebase issuer)
+    if (decodedPayload.iss && decodedPayload.iss.includes('securetoken.google.com')) {
+      // This is a Firebase ID token
+      if (decodedPayload.exp && decodedPayload.exp < Date.now() / 1000) {
         return res.status(401).send("Unauthorized: Token expired");
       }
-      return res.status(401).send("Unauthorized: Invalid token");
+      req.userId = decodedPayload.sub || decodedPayload.user_id; // Firebase uses 'sub' for user ID
+      console.log("Firebase token verified, user ID:", req.userId);
+      next();
+    } else {
+      // This is a JWT token created by our backend
+      jwt.verify(token, secretKey, (err, decoded) => {
+        if (err) {
+          if (err.name === 'TokenExpiredError') {
+            return res.status(401).send("Unauthorized: Token expired");
+          }
+          return res.status(401).send("Unauthorized: Invalid token");
+        }
+        req.userId = decoded.userId;
+        next();
+      });
     }
-    req.userId = decoded.userId;
-    next();
-  });
+  } catch (error) {
+    console.error("Error verifying token:", error);
+    return res.status(401).send("Unauthorized: Invalid token format");
+  }
 }
 
-// Middleware to verify Firebase token
+// Middleware to verify Firebase token (if using Firebase Auth)
 async function verifyFirebaseToken(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).send("No token provided");
@@ -111,7 +119,7 @@ async function verifyFirebaseToken(req, res, next) {
   }
 }
 
-// Add this block before AWS.config.update
+// Ensure AWS credentials are present in environment variables
 if (
   !process.env.AWS_ACCESS_KEY_ID ||
   !process.env.AWS_SECRET_ACCESS_KEY ||
@@ -121,41 +129,34 @@ if (
   process.exit(1);
 }
 
-// Configure AWS SDK with your credentials and region
+// Configure AWS SDK
 AWS.config.update({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   region: process.env.AWS_REGION
 });
-    
 
-const s3 = new AWS.S3();
+const s3 = new AWS.S3(); // S3 client instance
 
-// Initialize OpenAI
+// Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Middleware to parse JSON body
-app.use(bodyParser.json()); // Note the parentheses here - it needs to be called as a function
-
-// User Management
+// User registration endpoint
 app.post("/api/register", (req, res) => {
   const { username, email, password } = req.body;
   if (!username || !email || !password) {
     return res.status(400).send("All fields are required");
   }
-
-  // Generate a unique ID for the user (since we now have VARCHAR user_id)
+  // Generate unique user ID
   const user_id = 'local_' + Date.now().toString() + '_' + Math.random().toString(36).substring(2, 15);
-
   // Hash the password
   bcrypt.hash(password, 10, (err, hashedPassword) => {
     if (err) {
       console.error("Error hashing password: ", err);
       return res.status(500).send("Error registering user");
     }
-
     const query =
       "INSERT INTO users (user_id, username, email, password_hash, provider) VALUES ($1, $2, $3, $4, $5)";
     pool.query(
@@ -166,14 +167,12 @@ app.post("/api/register", (req, res) => {
           console.error("Error registering user: ", err);
           return res.status(500).send("Error registering user");
         }
-        
         // Generate a token for the newly registered user
         const token = generateToken({
           user_id: user_id,
           username: username,
           email: email
         });
-        
         res.status(201).json({
           message: "User registered successfully",
           user: {
@@ -188,6 +187,7 @@ app.post("/api/register", (req, res) => {
   });
 });
 
+// User login endpoint
 app.post("/api/login", (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
@@ -214,14 +214,12 @@ app.post("/api/login", (req, res) => {
       }
       // Passwords match, generate JWT token
       const token = generateToken(user);
-      // Return both user details and token
       res.status(200).json({ user, token });
     });
   });
 });
 
-
-// Endpoint to retrieve ingredients for a recipe
+// Get ingredients for a specific recipe
 app.get("/api/recipes/:id/ingredients", (req, res) => {
   const recipeId = req.params.id;
   const query = "SELECT * FROM ingredients WHERE recipe_id = $1";
@@ -234,8 +232,7 @@ app.get("/api/recipes/:id/ingredients", (req, res) => {
   });
 });
 
-
-
+// Get user rating for a recipe
 app.get("/api/recipes/:id/ratings/user", verifyToken, (req, res) => {
   const recipeId = req.params.id;
   const userId = req.userId;
@@ -252,41 +249,36 @@ app.get("/api/recipes/:id/ratings/user", verifyToken, (req, res) => {
   });
 });
 
-
-
 const fs = require("fs");
 
+// Upload image to S3
 app.post("/api/upload-image", upload.single("image"), (req, res) => {
   const file = req.file;
-
   if (!file) {
     return res.status(400).send("No file uploaded");
   }
-
   // Read the file from disk
   fs.readFile(file.path, (err, data) => {
     if (err) {
       console.error("Error reading file:", err);
       return res.status(500).send("Error reading file");
     }
-
     const params = {
       Bucket: "imagebucketforproject2",
       Key: `images/${file.originalname}`,
       Body: data,
       ContentType: file.mimetype
     };
-
     // Upload file to S3
     s3.upload(params, (err, s3Data) => {
       if (err) {
-        // Improved error logging
         console.error("Error uploading file to S3:", err);
         console.error("S3 Params:", params);
         if (err.stack) console.error(err.stack);
         return res.status(500).send("Error uploading file to S3: " + err.message);
       }
       res.status(200).json({ imageUrl: s3Data.Location });
+      // Delete file from disk after upload
       fs.unlink(file.path, (unlinkErr) => {
         if (unlinkErr) {
           console.error("Error deleting file from disk:", unlinkErr);
@@ -296,21 +288,21 @@ app.post("/api/upload-image", upload.single("image"), (req, res) => {
   });
 });
 
-
-
-
-
-// Add the following API endpoints to your existing backend code
-
-// Endpoint to create a rating for a recipe
+// Create a rating for a recipe
 app.post("/api/recipes/:id/ratings/create", verifyToken, (req, res) => {
   const recipeId = req.params.id;
-  const { rating, user_id } = req.body;
-
-  // Insert the rating into the database
+  const { rating } = req.body;
+  const userId = req.userId; // Use user ID from token instead of request body
+  
+  if (!rating || rating < 1 || rating > 5) {
+    return res.status(400).send("Invalid rating value");
+  }
+  
+  console.log("Creating rating for recipe:", recipeId, "user:", userId, "rating:", rating);
+  
   const query =
     "INSERT INTO ratings (recipe_id, user_id, stars) VALUES ($1, $2, $3)";
-  pool.query(query, [recipeId, user_id, rating], (err, results) => {
+  pool.query(query, [recipeId, userId, rating], (err, results) => {
     if (err) {
       console.error("Error adding rating: ", err);
       return res.status(500).send("Error adding rating");
@@ -319,11 +311,9 @@ app.post("/api/recipes/:id/ratings/create", verifyToken, (req, res) => {
   });
 });
 
-// Endpoint to retrieve the average rating for a recipe
+// Get average rating for a recipe
 app.get("/api/recipes/:id/ratings", (req, res) => {
   const recipeId = req.params.id;
-
-  // Retrieve the average rating from the database
   const query =
     "SELECT AVG(stars) AS average_rating FROM ratings WHERE recipe_id = $1";
   pool.query(query, [recipeId], (err, results) => {
@@ -331,20 +321,17 @@ app.get("/api/recipes/:id/ratings", (req, res) => {
       console.error("Error retrieving rating: ", err);
       return res.status(500).send("Error retrieving rating");
     }
-    const averageRating = results.rows[0]?.average_rating || 0; // Handle cases where there are no ratings (averageRating might be NULL)
+    const averageRating = results.rows[0]?.average_rating || 0;
     res.status(200).json({ averageRating });
   });
 });
 
-
-
-// Recipe Management
+// Paginated recipe list with search and average rating
 app.get("/api/recipes", (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = 12;
   const offset = (page - 1) * limit;
   const searchTerm = req.query.search || '';
-
   const countQuery = `
     SELECT COUNT(*) as total FROM (
       SELECT r.recipe_id
@@ -354,7 +341,6 @@ app.get("/api/recipes", (req, res) => {
       GROUP BY r.recipe_id, r.title, r.description, r.user_id, r.image, r.instruction, r.created_at
     ) as counted_recipes
   `;
-  
   const query = `
     SELECT r.*, COALESCE(AVG(rt.stars), 0) as average_rating, u.username as author 
     FROM recipes r 
@@ -365,19 +351,14 @@ app.get("/api/recipes", (req, res) => {
     ORDER BY r.created_at DESC
     LIMIT $2 OFFSET $3
   `;
-
   const searchPattern = `%${searchTerm}%`;
-
   pool.query(countQuery, [searchPattern], (err, countResult) => {
     if (err) {
       console.error("Error counting recipes: ", err);
       return res.status(500).send("Error retrieving recipes");
     }
-
-    // Fix: If there are no recipes, return empty array and pagination info
     const totalRecipes = parseInt(countResult.rows[0]?.total || 0, 10);
     const totalPages = Math.ceil(totalRecipes / limit) || 1;
-
     if (totalRecipes === 0) {
       return res.status(200).json({
         recipes: [],
@@ -387,7 +368,6 @@ app.get("/api/recipes", (req, res) => {
         limit: limit
       });
     }
-
     pool.query(query, [searchPattern, limit, offset], (err, results) => {
       if (err) {
         console.error("Error retrieving recipes: ", err);
@@ -404,8 +384,8 @@ app.get("/api/recipes", (req, res) => {
   });
 });
 
+// Get all ingredients
 app.get("/api/ingredients", (req, res) => {
-  // Implementation to retrieve all recipes
   const query = "SELECT * FROM ingredients";
   pool.query(query, (err, results) => {
     if (err) {
@@ -416,35 +396,27 @@ app.get("/api/ingredients", (req, res) => {
   });
 });
 
-// Modify the endpoint to handle Firebase UIDs properly
+// Get all recipes for a user
 app.get("/api/recipes/:id", (req, res) => {
   const userId = req.params.id;
-
-  // Check if userId is valid
   if (!userId || userId === "undefined" || userId === "null") {
     console.log("Invalid user ID:", userId);
-    return res.status(200).json([]); // Return empty array for invalid IDs
+    return res.status(200).json([]);
   }
-  
-  // Use lowercase "instruction" to match what's in the database
   const query = "SELECT recipe_id, title, description, user_id, image, instruction, created_at, total_time, servings FROM Recipes WHERE user_id = $1";
-  
-  // Always use userId as string (no integer parsing)
   pool.query(query, [userId], (err, results) => {
     if (err) {
       console.error("Error retrieving recipe: ", err);
       return res.status(500).send("Error retrieving recipe");
     }
-    // Always return 200 with an array, even if empty
     res.status(200).json(results.rows);
   });
 });
 
+// Create a new recipe (with ingredients)
 app.post("/api/recipes/create", (req, res) => {
   const { title, description, user_id, image, instructions, totalTime, servings } = req.body;
-  const ingredients = req.body.ingredients; // Array of ingredients
-
-  // Update SQL query to use lowercase "instruction" to match what's in the database
+  const ingredients = req.body.ingredients;
   const recipeQuery =
     "INSERT INTO recipes (title, description, user_id, image, instruction, total_time, servings) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING recipe_id";
   pool.query(
@@ -453,18 +425,12 @@ app.post("/api/recipes/create", (req, res) => {
     (err, results) => {
       if (err) {
         console.error("Error creating recipe: ", err);
-        return res.status(500).json({ error: "Error creating recipe" }); // Return JSON response
+        return res.status(500).json({ error: "Error creating recipe" });
       }
-
       const recipeId = results.rows[0].recipe_id;
-      
-      // No ingredients to insert
       if (!ingredients || ingredients.length === 0) {
-        return res.status(201).json({ message: "Recipe created successfully" }); // Return JSON response
+        return res.status(201).json({ message: "Recipe created successfully" });
       }
-
-      // PostgreSQL doesn't support bulk insertion the same way as MySQL
-      // Create a promise for each ingredient insert
       const ingredientPromises = ingredients.map(ingredient => {
         return new Promise((resolve, reject) => {
           const ingredientQuery = "INSERT INTO ingredients (recipe_id, item, quantity) VALUES ($1, $2, $3)";
@@ -477,20 +443,19 @@ app.post("/api/recipes/create", (req, res) => {
           });
         });
       });
-
-      // Execute all ingredient insert queries
       Promise.all(ingredientPromises)
         .then(() => {
-          res.status(201).json({ message: "Recipe created successfully" }); // Return JSON response
+          res.status(201).json({ message: "Recipe created successfully" });
         })
         .catch(err => {
           console.error("Error adding ingredients: ", err);
-          return res.status(500).json({ error: "Error adding ingredients" }); // Return JSON response
+          return res.status(500).json({ error: "Error adding ingredients" });
         });
     }
   );
 });
 
+// Delete a recipe by ID
 app.delete("/api/recipes/delete/:id", (req, res) => {
   const recipeId = req.params.id;
   const query = "DELETE FROM recipes WHERE recipe_id = $1";
@@ -502,7 +467,8 @@ app.delete("/api/recipes/delete/:id", (req, res) => {
     res.status(200).send("Recipe deleted successfully");
   });
 });
-// Comments Management
+
+// Get comments for a recipe
 app.get("/api/recipes/:id/comments", (req, res) => {
   const recipeId = req.params.id;
   const query = "SELECT * FROM Comments WHERE recipe_id = $1";
@@ -515,14 +481,23 @@ app.get("/api/recipes/:id/comments", (req, res) => {
   });
 });
 
-app.post("/api/recipes/:id/comments/create", (req, res) => {
-  const { comment_text, user_id, username } = req.body;
+// Add a comment to a recipe
+app.post("/api/recipes/:id/comments/create", verifyToken, (req, res) => {
+  const { comment_text, username } = req.body;
   const recipeId = req.params.id;
+  const userId = req.userId; // Use user ID from token
+  
+  if (!comment_text || !comment_text.trim()) {
+    return res.status(400).send("Comment text is required");
+  }
+  
+  console.log("Adding comment for recipe:", recipeId, "user:", userId);
+  
   const query =
     "INSERT INTO Comments (comment_text, user_id, recipe_id, username) VALUES ($1, $2, $3, $4)";
   pool.query(
     query,
-    [comment_text, user_id, recipeId, username],
+    [comment_text.trim(), userId, recipeId, username],
     (err, results) => {
       if (err) {
         console.error("Error adding comment: ", err);
@@ -533,15 +508,14 @@ app.post("/api/recipes/:id/comments/create", (req, res) => {
   );
 });
 
-// Add this endpoint for sorting recipes
+// Sort recipes endpoint (incomplete, add logic as needed)
 app.get("/api/recipes/sort/:type", (req, res) => {
   const sortType = req.params.type;
   const page = parseInt(req.query.page) || 1;
-  const limit = 12; // Ensure this is 12
-  console.log(`Fetching sorted recipes (${sortType}) page ${page} with limit ${limit}`); // Add logging
+  const limit = 12;
+  console.log(`Fetching sorted recipes (${sortType}) page ${page} with limit ${limit}`);
   const offset = (page - 1) * limit;
   const searchTerm = req.query.search || '';
-  
   let countQuery = `
     SELECT COUNT(*) as total FROM (
       SELECT r.recipe_id
@@ -551,10 +525,8 @@ app.get("/api/recipes/sort/:type", (req, res) => {
       GROUP BY r.recipe_id, r.title, r.description, r.user_id, r.image, r.instruction, r.created_at
     ) as counted_recipes
   `;
-  
   let query;
   const searchPattern = `%${searchTerm}%`;
-
   switch (sortType) {
     case 'top-rated':
       query = `
@@ -618,25 +590,20 @@ app.get("/api/recipes/sort/:type", (req, res) => {
         GROUP BY r.recipe_id, u.username
         LIMIT $2 OFFSET $3`;
   }
-
   pool.query(countQuery, [searchPattern], (err, countResult) => {
     if (err) {
       console.error("Error counting recipes: ", err);
       return res.status(500).send("Error retrieving recipes");
     }
-
     const totalRecipes = countResult.rows[0].total;
     const totalPages = Math.ceil(totalRecipes / limit);
-
     pool.query(query, [searchPattern, limit, offset], (err, results) => {
       if (err) {
         console.error("Error retrieving sorted recipes: ", err);
         return res.status(500).send("Error retrieving recipes");
       }
-      
       // Log the number of results being returned
       console.log(`Returning ${results.rows.length} sorted recipes out of ${totalRecipes} total`);
-      
       res.status(200).json({
         recipes: results.rows,
         currentPage: page,
@@ -648,16 +615,13 @@ app.get("/api/recipes/sort/:type", (req, res) => {
   });
 });
 
-// Update the search suggestions endpoint
+// Update the search suggestions endpoint (implementation omitted)
 app.get("/api/search/suggestions", (req, res) => {
   const searchTerm = String(req.query.term || '').trim();
-  
   if (!searchTerm) {
     return res.status(200).json([]);
   }
-
   console.log('Backend searching for:', searchTerm); // Debug log
-
   const query = `
     SELECT recipe_id, title, description 
     FROM recipes 
@@ -665,9 +629,7 @@ app.get("/api/search/suggestions", (req, res) => {
     OR LOWER(description) LIKE LOWER($2)
     LIMIT 5
   `;
-
   const searchPattern = `%${searchTerm}%`;
-  
   pool.query(
     query, 
     [searchPattern, searchPattern],
@@ -676,7 +638,6 @@ app.get("/api/search/suggestions", (req, res) => {
         console.error("Error searching recipes:", err);
         return res.status(500).send("Error searching recipes");
       }
-      
       console.log('Search results:', results.rows); // Debug log
       res.status(200).json(results.rows);
     }
@@ -700,7 +661,6 @@ app.put("/api/recipes/update/:id", (req, res) => {
         done();
         return res.status(500).send("Error starting transaction");
       }
-      
       // First update the recipe - match the capital "I" in Instruction
       const recipeQuery = `
         UPDATE recipes 
@@ -934,7 +894,6 @@ app.listen(port, () => {
   console.log(`Server is listening at http://localhost:${port}`);
 });
 
-
-
+// Debug endpoints (remove in production)
 app.get("/debug-env", (req, res) => { res.json({ PG_HOST: process.env.PG_HOST, PG_USER: process.env.PG_USER, PG_PASSWORD: process.env.PG_PASSWORD ? "***SET***" : "NOT_SET", PG_DATABASE: process.env.PG_DATABASE }); });
 app.get("/debug-password", (req, res) => { res.json({ password_length: process.env.PG_PASSWORD ? process.env.PG_PASSWORD.length : 0, password_first_char: process.env.PG_PASSWORD ? process.env.PG_PASSWORD[0] : "none", password_has_dollar: process.env.PG_PASSWORD ? process.env.PG_PASSWORD.includes("$") : false }); });

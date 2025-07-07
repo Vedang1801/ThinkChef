@@ -1,4 +1,4 @@
-import Cookies from "js-cookie";
+
 import {
   createContext,
   useContext,
@@ -20,27 +20,33 @@ import {
   sendPasswordResetEmail,
 } from "firebase/auth";
 import axios from "axios";
+import Cookies from "js-cookie";
 
+// API base URL from environment
 const API_URL = import.meta.env.VITE_API_URL;
 
+// User interface for context
 interface User {
   uid: string;
   email: string | null;
   displayName: string | null;
 }
 
+// Auth context type definition
 interface AuthContextType {
   loggedIn: boolean;
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
-  resetPassword: (email: string) => Promise<void>; // New function
+  resetPassword: (email: string) => Promise<void>;
   logout: () => void;
 }
 
+// Create the AuthContext
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// AuthProvider component to wrap the app
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
@@ -48,184 +54,124 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
 
-  // Add a function to create or update user in your database after Firebase auth
+  // Sync user with backend database after Firebase authentication
   const syncUserWithDatabase = async (firebaseUser: any) => {
     try {
-      // Check if user exists in your PostgreSQL DB or create them
+      // Create or update user in PostgreSQL DB
       const response = await axios.post(`${API_URL}/api/users/sync`, {
         user_id: firebaseUser.uid,
         username: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || "Chef",
         email: firebaseUser.email,
         provider: firebaseUser.providerData[0]?.providerId || 'firebase'
       });
-      
       console.log("User synced with database:", response.data);
       return response.data.user;
     } catch (error: any) {
       console.error("Error syncing user with database:", error);
-      
       // Handle email conflict (409 Conflict)
       if (error.response && error.response.status === 409) {
         console.log("Email is already associated with another account");
-        
-        // We can still continue, as Firebase auth succeeded
-        // The user can still use the app, even though their database entry
-        // might have a different user_id than their Firebase uid
         toast.warning("This email is already registered with a different login method");
       }
-      
-      // For other errors, still allow the user to proceed
-      // Firebase auth succeeded, so they're authenticated
+      // Allow user to proceed for other errors
       return null;
     }
   };
 
   useEffect(() => {
     // Listen for Firebase Auth state changes
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         setLoggedIn(true);
-        // Use Firebase displayName or email as username if displayName is null
-        const displayName = firebaseUser.displayName || firebaseUser.email?.split('@')[0] || "Chef";
-        
+        // Set user state with Firebase user info
         setUser({
           uid: firebaseUser.uid,
           email: firebaseUser.email,
-          displayName: displayName,
+          displayName: firebaseUser.displayName,
         });
         
-        // Store user info in cookies for components that expect it
-        const uid = firebaseUser.uid || "";
-        Cookies.set("user_id", uid, { expires: 7 });
-        Cookies.set("username", displayName, { expires: 7 });
-        Cookies.set("email", firebaseUser.email || "", { expires: 7 });
-        Cookies.set("created_at", new Date().toISOString(), { expires: 7 });
-        
-        // Sync with your database
-        syncUserWithDatabase(firebaseUser);
+        // Get Firebase ID token and set cookies for API authentication
+        try {
+          const token = await firebaseUser.getIdToken();
+          const username = firebaseUser.displayName || firebaseUser.email?.split('@')[0] || "Chef";
+          
+          Cookies.set("token", token, { expires: 1 }); // Expires in 1 day
+          Cookies.set("user_id", firebaseUser.uid, { expires: 1 });
+          Cookies.set("username", username, { expires: 1 });
+          
+          // Optionally sync user with backend
+          await syncUserWithDatabase(firebaseUser);
+        } catch (error) {
+          console.error("Error getting Firebase token:", error);
+        }
       } else {
         setLoggedIn(false);
         setUser(null);
         // Clear cookies on logout
+        Cookies.remove("token");
         Cookies.remove("user_id");
         Cookies.remove("username");
-        Cookies.remove("email");
-        Cookies.remove("created_at");
       }
     });
+    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []);
 
+  // Login with email and password
   const login = async (email: string, password: string): Promise<void> => {
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      toast.success("Welcome!");
-      navigate("/");
-    } catch (error: any) {
-      // Don't display raw Firebase errors in toast messages
-      console.error("Login error:", error);
-      
-      // Don't define errorMessage if we're not using it
-      // Let the Login component handle the error UI
-      throw error;
-    }
+    await signInWithEmailAndPassword(auth, email, password);
   };
 
+  // Register a new user
   const register = async (username: string, email: string, password: string): Promise<void> => {
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      
-      // Set displayName
-      if (userCredential.user) {
-        await updateProfile(userCredential.user, {
-          displayName: username
-        });
-      }
-      
-      toast.success("Account created successfully!");
-      navigate("/");
-    } catch (error: any) {
-      console.error("Registration error:", error);
-      
-      let errorMessage = "Failed to create account";
-      
-      // Handle common Firebase auth errors
-      if (error.code === 'auth/email-already-in-use') {
-        errorMessage = "This email is already in use";
-      } else if (error.code === 'auth/weak-password') {
-        errorMessage = "Password should be at least 6 characters";
-      }
-      
-      toast.error(errorMessage);
-      throw error;
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    if (userCredential.user) {
+      await updateProfile(userCredential.user, { displayName: username });
+      // Optionally sync user with backend
+      await syncUserWithDatabase(userCredential.user);
     }
   };
 
+  // Login with Google provider
   const loginWithGoogle = async (): Promise<void> => {
-    try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      toast.success("Signed in with Google!");
-      navigate("/");
-    } catch (error: any) {
-      toast.error(error.message || "Google sign-in failed");
-      throw error;
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+    if (result.user) {
+      await syncUserWithDatabase(result.user);
     }
   };
 
-  // Add password reset functionality
+  // Reset password via email
   const resetPassword = async (email: string): Promise<void> => {
-    try {
-      await sendPasswordResetEmail(auth, email);
-      toast.success("Password reset email sent. Check your inbox.");
-    } catch (error: any) {
-      console.error("Password reset error:", error);
-      
-      let errorMessage = "Failed to send password reset email";
-      
-      switch(error.code) {
-        case 'auth/user-not-found':
-          errorMessage = "No account found with this email address";
-          break;
-        case 'auth/invalid-email':
-          errorMessage = "The email address is not valid";
-          break;
-        case 'auth/missing-email':
-          errorMessage = "Please enter an email address";
-          break;
-        default:
-          errorMessage = "Failed to send password reset email";
-      }
-      
-      toast.error(errorMessage);
-      throw error;
-    }
+    await sendPasswordResetEmail(auth, email);
   };
 
+  // Logout the user
   const logout = (): void => {
     signOut(auth);
     setLoggedIn(false);
     setUser(null);
-    toast.success("User Log Out");
+    // Clear cookies
+    Cookies.remove("token");
+    Cookies.remove("user_id");
+    Cookies.remove("username");
     navigate("/login");
   };
 
-  const value: AuthContextType = {
-    loggedIn,
-    user,
-    login,
-    register,
-    loginWithGoogle,
-    resetPassword, // Add to context
-    logout,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  // Provide context value to children
+  return (
+    <AuthContext.Provider
+      value={{ loggedIn, user, login, register, loginWithGoogle, resetPassword, logout }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
+// Custom hook to use AuthContext
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
