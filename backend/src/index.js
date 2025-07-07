@@ -22,6 +22,17 @@ app.get('/health', (req, res) => {
 app.use(bodyParser.json()); // Parse JSON request bodies
 const upload = multer({ dest: "uploads/" }); // Configure multer for file uploads
 
+// Add request logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  if (req.headers.authorization) {
+    console.log("Auth header present:", req.headers.authorization.substring(0, 20) + "...");
+  } else {
+    console.log("No auth header");
+  }
+  next();
+});
+
 // PostgreSQL connection pool using environment variables
 const isProduction = process.env.NODE_ENV === 'production';
 const pool = new Pool({
@@ -47,12 +58,24 @@ pool.connect((err, client, done) => {
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production'
     ? [
-        "http://think-chef-frontend-2025.s3-website.us-east-2.amazonaws.com"
+        "http://think-chef-frontend-2025.s3-website.us-east-2.amazonaws.com",
+        "https://think-chef-frontend-2025.s3-website.us-east-2.amazonaws.com",
+        "http://think-chef-frontend-2025.s3-website.us-east-2.amazonaws.com/",
+        "https://think-chef-frontend-2025.s3-website.us-east-2.amazonaws.com/"
       ]
     : true, // Allow all origins in development
   credentials: true,
   optionsSuccessStatus: 200,
 };
+
+// Add middleware to log all requests
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  console.log('Origin:', req.headers.origin);
+  console.log('Authorization:', req.headers.authorization ? 'Present' : 'Missing');
+  next();
+});
+
 app.use(cors(corsOptions));
 
 // Generate JWT token for a user
