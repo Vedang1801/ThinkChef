@@ -69,7 +69,13 @@ function generateToken(user) {
 function verifyToken(req, res, next) {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1];
+  
+  console.log("=== TOKEN VERIFICATION DEBUG ===");
+  console.log("Auth header:", authHeader);
+  console.log("Token exists:", !!token);
+  
   if (!token) {
+    console.log("ERROR: No token provided");
     return res.status(401).send("Unauthorized: No token provided");
   }
   
@@ -77,25 +83,35 @@ function verifyToken(req, res, next) {
     // Try to decode the token without verification to check if it's a Firebase token
     const decodedPayload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
     
+    console.log("Decoded payload keys:", Object.keys(decodedPayload));
+    console.log("Token issuer:", decodedPayload.iss);
+    console.log("Token sub:", decodedPayload.sub);
+    console.log("Token exp:", decodedPayload.exp);
+    console.log("Current time:", Date.now() / 1000);
+    
     // Check if it's a Firebase ID token (has 'iss' field with Firebase issuer)
     if (decodedPayload.iss && decodedPayload.iss.includes('securetoken.google.com')) {
       // This is a Firebase ID token
       if (decodedPayload.exp && decodedPayload.exp < Date.now() / 1000) {
+        console.log("ERROR: Firebase token expired");
         return res.status(401).send("Unauthorized: Token expired");
       }
       req.userId = decodedPayload.sub || decodedPayload.user_id; // Firebase uses 'sub' for user ID
-      console.log("Firebase token verified, user ID:", req.userId);
+      console.log("SUCCESS: Firebase token verified, user ID:", req.userId);
       next();
     } else {
       // This is a JWT token created by our backend
+      console.log("Processing as JWT token");
       jwt.verify(token, secretKey, (err, decoded) => {
         if (err) {
+          console.log("JWT verification error:", err);
           if (err.name === 'TokenExpiredError') {
             return res.status(401).send("Unauthorized: Token expired");
           }
           return res.status(401).send("Unauthorized: Invalid token");
         }
         req.userId = decoded.userId;
+        console.log("SUCCESS: JWT token verified, user ID:", req.userId);
         next();
       });
     }
@@ -294,8 +310,20 @@ app.post("/api/recipes/:id/ratings/create", verifyToken, (req, res) => {
   const { rating } = req.body;
   const userId = req.userId; // Use user ID from token instead of request body
   
+  console.log("=== RATING CREATION DEBUG ===");
+  console.log("Recipe ID:", recipeId);
+  console.log("User ID from token:", userId);
+  console.log("Rating value:", rating);
+  console.log("Request body:", req.body);
+  
   if (!rating || rating < 1 || rating > 5) {
+    console.log("ERROR: Invalid rating value");
     return res.status(400).send("Invalid rating value");
+  }
+  
+  if (!userId) {
+    console.log("ERROR: User ID is undefined");
+    return res.status(401).send("User ID not found in token");
   }
   
   console.log("Creating rating for recipe:", recipeId, "user:", userId, "rating:", rating);
@@ -307,6 +335,7 @@ app.post("/api/recipes/:id/ratings/create", verifyToken, (req, res) => {
       console.error("Error adding rating: ", err);
       return res.status(500).send("Error adding rating");
     }
+    console.log("SUCCESS: Rating added successfully");
     res.status(201).send("Rating added successfully");
   });
 });
