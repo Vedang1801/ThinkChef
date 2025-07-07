@@ -4,32 +4,39 @@ import { useAuth } from './authContext';
 import { Search, X, Menu, ChefHat } from 'lucide-react';
 import '../styles/header.css';
 
+// Props for Header component: optional search and sort handlers
 interface HeaderProps {
   onSearchChange?: (term: string) => void;
   onSortChange?: (sortType: string) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ onSearchChange, onSortChange }) => {
+  // Auth state and navigation
   const { loggedIn, logout } = useAuth();
   const navigate = useNavigate();
+  // UI state for menu and search
   const [showMenu, setShowMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
 
+  // Handle user logout
   const handleLogout = () => {
     logout();
     navigate('/login');
     setShowMenu(false);
   };
 
+  // Toggle mobile menu
   const toggleMenu = () => {
     setShowMenu(!showMenu);
   };
 
+  // Close menu on link click
   const handleLinkClick = () => {
     setShowMenu(false);
   };
 
+  // Handle search form submit
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (onSearchChange) {
@@ -38,6 +45,7 @@ const Header: React.FC<HeaderProps> = ({ onSearchChange, onSortChange }) => {
     setShowSearch(false);
   };
 
+  // Handle sort dropdown change
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     if (onSortChange) {
       onSortChange(e.target.value);
@@ -46,7 +54,7 @@ const Header: React.FC<HeaderProps> = ({ onSearchChange, onSortChange }) => {
 
   return (
     <nav className="navbar">
-      {/* Left-aligned brand/logo */}
+      {/* Brand/logo section */}
       <div className="nav-brand">
         <Link to="/" className="brand-text">
           <ChefHat size={24} className="chef-icon" />
@@ -54,7 +62,7 @@ const Header: React.FC<HeaderProps> = ({ onSearchChange, onSortChange }) => {
         </Link>
       </div>
 
-      {/* Center/right-aligned search and sort */}
+      {/* Search and sort controls */}
       <div className="nav-search">
         {showSearch ? (
           <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -89,7 +97,6 @@ const Header: React.FC<HeaderProps> = ({ onSearchChange, onSortChange }) => {
             <Search size={20} />
           </button>
         )}
-
         {/* Sort dropdown */}
         <select 
           onChange={handleSortChange}
@@ -101,7 +108,9 @@ const Header: React.FC<HeaderProps> = ({ onSearchChange, onSortChange }) => {
           <option value="oldest">Oldest</option>
           <option value="top-rated">Top Rated</option>
         </select>
-      </div>      {/* Right-aligned nav links */}
+      </div>
+
+      {/* Navigation links (desktop & mobile) */}
       <div className={`nav-links ${showMenu ? 'active' : ''}`}>
         <Link to="/" className="nav-link" onClick={handleLinkClick}>
           Home
@@ -109,7 +118,6 @@ const Header: React.FC<HeaderProps> = ({ onSearchChange, onSortChange }) => {
         <Link to="/recipe-generator" className="nav-link" onClick={handleLinkClick}>
           AI Generator
         </Link>
-        
         {loggedIn ? (
           <>
             <Link to="/addrecipes" className="nav-link" onClick={handleLinkClick}>
@@ -118,7 +126,7 @@ const Header: React.FC<HeaderProps> = ({ onSearchChange, onSortChange }) => {
             <Link to="/profile" className="nav-link" onClick={handleLinkClick}>
               Profile
             </Link>
-            <button className="nav-link" onClick={handleLogout}>
+            <button className="nav-link logout-link" onClick={handleLogout}>
               Logout
             </button>
           </>
@@ -128,8 +136,8 @@ const Header: React.FC<HeaderProps> = ({ onSearchChange, onSortChange }) => {
           </Link>
         )}
       </div>
-      
-      {/* Mobile menu button */}
+
+      {/* Mobile menu toggle button */}
       <button className="menu-toggle" onClick={toggleMenu} aria-label="Toggle menu">
         {showMenu ? <X size={24} /> : <Menu size={24} />}
       </button>

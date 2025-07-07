@@ -4,19 +4,26 @@ import { toast } from 'react-toastify';
 import { ChefHat, Loader2 } from 'lucide-react';
 import '../styles/recipeGenerator.css';
 
+// Recipe interface for generated recipe structure
 interface Recipe {
   title: string;
   ingredients: string[];
   method: string;
 }
 
+// API base URL from environment
 const API_URL = import.meta.env.VITE_API_URL;
 
+// RecipeGenerator component: generates a recipe from user-provided ingredients
 const RecipeGenerator: React.FC = () => {
+  // State for user input (comma-separated ingredients)
   const [ingredientsInput, setIngredientsInput] = useState('');
+  // Loading state for API call
   const [loading, setLoading] = useState(false);
+  // State for the generated recipe
   const [generatedRecipe, setGeneratedRecipe] = useState<Recipe | null>(null);
 
+  // Handle recipe generation from input ingredients
   const handleGenerateRecipe = async () => {
     // Parse ingredients from comma-separated input
     const ingredients = ingredientsInput
@@ -24,6 +31,7 @@ const RecipeGenerator: React.FC = () => {
       .map(ingredient => ingredient.trim().toLowerCase())
       .filter(ingredient => ingredient.length > 0);
 
+    // Require at least 2 ingredients
     if (ingredients.length < 2) {
       toast.warning('Please enter at least 2 ingredients separated by commas');
       return;
@@ -31,19 +39,18 @@ const RecipeGenerator: React.FC = () => {
 
     setLoading(true);
     try {
+      // Call backend API to generate recipe
       const response = await axios.post(`${API_URL}/api/recipe/generate`, { ingredients });
       console.log('Recipe generated:', response.data);
-      
       // Process the recipe to format instructions properly
       const recipe = response.data.recipe;
       if (recipe.method) {
-        // Split by numbers followed by period or by sentences, then clean up
+        // Add newlines before numbered steps for better formatting
         recipe.method = recipe.method
           .replace(/(\d+\.\s*)/g, '\n$1') // Add newline before numbered steps
           .replace(/^\n/, '') // Remove leading newline
           .trim();
       }
-      
       setGeneratedRecipe(recipe);
       toast.success('Recipe generated successfully!');
     } catch (error) {
@@ -54,13 +61,16 @@ const RecipeGenerator: React.FC = () => {
     }
   };
 
+  // Placeholder for saving the generated recipe
   const saveRecipe = async () => {
     // Logic to save the recipe to the user's account can be added here
     toast.success('Recipe saved!');
   };
 
+  // Render the UI for the recipe generator
   return (
     <div className="recipe-generator-container">
+      {/* Header section with instructions */}
       <section className="generator-header">
         <h1>AI Recipe Generator</h1>
         <p>
@@ -70,6 +80,7 @@ const RecipeGenerator: React.FC = () => {
       </section>
 
       <div className="generator-main">
+        {/* Ingredients input area */}
         <div className="ingredients-input-container">
           <h2>Your Ingredients</h2>
           <div className="ingredients-input-section">
@@ -86,6 +97,7 @@ const RecipeGenerator: React.FC = () => {
             </p>
           </div>
 
+          {/* Generate button with loading indicator */}
           <button 
             className="generate-button" 
             onClick={handleGenerateRecipe} 
@@ -105,24 +117,22 @@ const RecipeGenerator: React.FC = () => {
           </button>
         </div>
 
+        {/* Display generated recipe if available */}
         {generatedRecipe && (
           <div className="generated-recipe">
             <h2>{generatedRecipe.title}</h2>
-            
             <h3>Ingredients</h3>
             <ul>
               {generatedRecipe.ingredients.map((ingredient, index) => (
                 <li key={index}>{ingredient}</li>
               ))}
             </ul>
-            
             <h3>Instructions</h3>
             <div className="recipe-method">
               {generatedRecipe.method.split('\n').map((step, index) => (
                 <p key={index}>{step}</p>
               ))}
             </div>
-            
             <div className="recipe-actions">
               <button className="save-recipe-btn" onClick={saveRecipe}>
                 Save Recipe

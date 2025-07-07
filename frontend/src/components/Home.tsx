@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import { ChevronRight, ChevronLeft, ArrowRight, ChefHat, Facebook, Twitter, Instagram } from "lucide-react";
 import { Link } from "react-router-dom";
 
-// Update the interface to match what the database actually returns
+// Recipe interface to match backend response
 interface Recipe {
   recipe_id: number;
   title: string;
@@ -16,12 +16,13 @@ interface Recipe {
   user_id: number;
   image: string;
   created_at: string;
-  instruction: string; // Changed to lowercase to match database column
+  instruction: string; // Lowercase to match DB
   ingredients?: string[];
   average_rating?: number;
   author?: string;
 }
 
+// Props for Home component
 interface HomeProps {
   searchTerm: string;
   sortType: string;
@@ -30,54 +31,41 @@ interface HomeProps {
 const API_URL = import.meta.env.VITE_API_URL;
 
 const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
+  // State for recipes, loading, and pagination
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
+  // Fetch recipes when search or sort changes
   useEffect(() => {
-    fetchRecipes(1); // Reset to page 1 when search or sort changes
+    fetchRecipes(1);
   }, [searchTerm, sortType]);
 
+  // Fetch recipes from backend with pagination and search/sort
   const fetchRecipes = async (page: number) => {
     try {
       setLoading(true);
-      
-      // Build the URL based on whether we're sorting or not
+      // Build API URL
       let url = "/api/recipes";
       if (sortType) url = `/api/recipes/sort/${sortType}`;
-      
-      // Add query parameters
       const params = new URLSearchParams();
       params.append('page', page.toString());
       if (searchTerm) params.append('search', searchTerm);
-      
-      // Add a timestamp to prevent caching issues
-      params.append('_t', Date.now().toString());
-      
+      params.append('_t', Date.now().toString()); // Prevent caching
       const finalUrl = `${API_URL}${url}?${params.toString()}`;
-      console.log(`Fetching recipes from: ${finalUrl}`); // Debug URL
-      
+      // Fetch recipes
       const response = await axios.get(finalUrl);
       const data = response.data;
-      
-      // Log the pagination data
-      console.log(`Received ${data.recipes?.length || 0} recipes`);
-      console.log(`Page ${data.currentPage} of ${data.totalPages}, Limit: ${data.limit}`);
-      
-      // Ensure we're handling the response format correctly
+      // Parse response
       const recipesList = data.recipes || [];
       const totalPages = data.totalPages || 1;
       const currentPage = data.currentPage || 1;
-      
-      // Get ingredients data (only if we have recipes)
+      // Fetch ingredients and combine with recipes
       let combinedRecipes: Recipe[] = [];
-      
       if (recipesList.length > 0) {
         const ingredientsResponse = await axios.get(`${API_URL}/api/ingredients`);
         const ingredientsData = ingredientsResponse.data;
-
-        // Combine recipes with their ingredients & filter invalid recipes
         combinedRecipes = recipesList
           .filter((recipe: any) => recipe && recipe.recipe_id)
           .map((recipe: Recipe) => {
@@ -87,29 +75,28 @@ const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
             return { ...recipe, ingredients };
           });
       }
-
       setRecipes(combinedRecipes);
       setTotalPages(totalPages);
       setCurrentPage(currentPage);
     } catch (error) {
       console.error("Error fetching recipes:", error);
       toast.error("Failed to load recipes. Please try again later.");
-      // Set empty recipes array on error to avoid endless loading
       setRecipes([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // Handle pagination
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     fetchRecipes(page);
-    window.scrollTo(0, 0); // Scroll to top when changing pages
+    window.scrollTo(0, 0);
   };
 
   return (
     <div className="homepage-root">
-      {/* Hero Section */}
+      {/* Hero Section with CTA */}
       <section className="hero">
         <div className="hero-content">
           <h1>Discover Delicious Recipes</h1>
@@ -128,7 +115,7 @@ const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
             View all <ArrowRight size={16} />
           </a>
         </div>
-        
+        {/* Loading, empty, or recipe grid */}
         {loading ? (
           <div className="loading-container">
             <div className="loader"></div>
@@ -149,8 +136,7 @@ const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
             ))}
           </div>
         )}
-        
-        {/* Pagination controls (only show if there are recipes and multiple pages) */}
+        {/* Pagination controls */}
         {!loading && recipes.length > 0 && totalPages > 1 && (
           <div className="pagination-controls">
             <button 
@@ -175,13 +161,13 @@ const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
           </div>
         )}
       </section>
-      
-      {/* Promotional Banner - Between Recipe and Tips */}
+      {/* Promotional Banner */}
       <div className="promo-section">
         <div className="promo-container">
           <div className="promo-banner">
             <h3>Ready to Get Creative in the Kitchen?</h3>
-            <p>Try our new AI Recipe Generator! Input the ingredients you have on hand, and we'll create a delicious recipe just for you.</p>            <div className="promo-actions">
+            <p>Try our new AI Recipe Generator! Input the ingredients you have on hand, and we'll create a delicious recipe just for you.</p>
+            <div className="promo-actions">
               <Link to="/addrecipes" className="secondary-cta-btn">Create Recipe</Link>
               <Link to="/recipe-generator" className="secondary-cta-btn ai-btn">
                 AI Recipe Generator
@@ -190,8 +176,7 @@ const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
           </div>
         </div>
       </div>
-
-      {/* Tips Section - At Bottom */}
+      {/* Tips Section */}
       <section className="tips-section">
         <div className="section-header">
           <h2 className="section-title">Cooking Tips</h2>
@@ -201,7 +186,6 @@ const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
         </div>
         <Tips />
       </section>
-
       {/* Footer Section */}
       <footer className="footer">
         <div className="footer-container">
@@ -209,7 +193,6 @@ const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
             <h3><ChefHat size={24} style={{ display: 'inline', marginRight: '8px' }} />Think Chef</h3>
             <p>Discover, cook, and share delicious recipes with food lovers around the world.</p>
           </div>
-          
           <div className="footer-links">
             <h4>Explore</h4>
             <ul>
@@ -219,7 +202,6 @@ const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
               <li><a href="/latest">Latest</a></li>
             </ul>
           </div>
-          
           <div className="footer-links">
             <h4>Information</h4>
             <ul>
@@ -229,7 +211,6 @@ const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
               <li><a href="/terms">Terms of Use</a></li>
             </ul>
           </div>
-          
           <div className="footer-links">
             <h4>Account</h4>
             <ul>
@@ -239,7 +220,6 @@ const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
               <li><a href="/settings">Settings</a></li>
             </ul>
           </div>
-          
           <div className="footer-bottom">
             <div className="copyright">
               © {new Date().getFullYear()} Think Chef. All rights reserved.

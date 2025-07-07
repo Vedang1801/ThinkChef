@@ -16,7 +16,7 @@ interface Ingredient {
   quantity: string;
 }
 
-// Recipe data interface
+// Recipe data interface for form state
 interface RecipeData {
   title: string;
   description: string;
@@ -27,9 +27,10 @@ interface RecipeData {
   servings: string;
 }
 
+// Fallback image URL for preview
 const fallbackImage = "https://images.unsplash.com/photo-1495195134817-aeb325a55b65?auto=format&fit=crop&w=1200&q=80";
 
-// Utility to capitalize the first letter of each word in the title
+// Capitalize the first letter of each word in the title
 function capitalizeTitle(title: string) {
   return title.replace(/\b\w/g, (char) => char.toUpperCase());
 }
@@ -37,6 +38,7 @@ function capitalizeTitle(title: string) {
 const API_URL = import.meta.env.VITE_API_URL;
 
 const AddRecipe: React.FC = () => {
+  // State for recipe form data
   const [recipeData, setRecipeData] = useState<RecipeData>({
     title: "",
     description: "",
@@ -56,13 +58,14 @@ const AddRecipe: React.FC = () => {
   const [showBulkInput, setShowBulkInput] = useState(false);
   const [bulkInput, setBulkInput] = useState("");
 
+  // Redirect to login if not logged in
   useEffect(() => {
     if (!loggedIn) {
       navigate("/login");
     }
   }, [loggedIn, navigate]);
 
-  // Handle input changes
+  // Handle input changes for text fields
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setRecipeData((prevState) => ({
@@ -71,7 +74,7 @@ const AddRecipe: React.FC = () => {
     }));
   };
 
-  // Ingredient management - updated to handle separate fields
+  // Handle changes to individual ingredient fields
   const handleIngredientChange = (index: number, field: keyof Ingredient, value: string) => {
     const newIngredients = [...recipeData.ingredients];
     newIngredients[index][field] = value;
@@ -81,6 +84,7 @@ const AddRecipe: React.FC = () => {
     }));
   };
 
+  // Remove an ingredient row
   const handleDeleteIngredient = (index: number) => {
     const newIngredients = recipeData.ingredients.filter((_, i) => i !== index);
     setRecipeData((prevState) => ({
@@ -89,6 +93,7 @@ const AddRecipe: React.FC = () => {
     }));
   };
 
+  // Add a new empty ingredient row
   const handleAddMoreIngredients = () => {
     setRecipeData((prevState) => ({
       ...prevState,
@@ -96,7 +101,7 @@ const AddRecipe: React.FC = () => {
     }));
   };
 
-  // Drag-and-drop image upload
+  // Handle image file selection
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -107,6 +112,7 @@ const AddRecipe: React.FC = () => {
     }
   };
 
+  // Handle drag-and-drop image upload
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setDragActive(false);
@@ -128,7 +134,7 @@ const AddRecipe: React.FC = () => {
     setDragActive(false);
   };
 
-  // Upload image to S3
+  // Upload image to S3 via backend
   const handleAddImageClick = async () => {
     try {
       if (!recipeData.image || typeof recipeData.image === "string") {
@@ -162,7 +168,7 @@ const AddRecipe: React.FC = () => {
     }
   };
 
-  // Clear image
+  // Clear the selected image
   const handleClearImage = () => {
     setRecipeData((prevState) => ({
       ...prevState,
@@ -171,19 +177,17 @@ const AddRecipe: React.FC = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // Submit recipe
+  // Submit the recipe form
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!loggedIn) {
       navigate("/login");
       return;
     }
-    
     if (!recipeData.image || typeof recipeData.image !== "string") {
       toast.error("Please upload an image");
       return;
     }
-    
     const requiredFieldsMissing =
       !recipeData.title ||
       !recipeData.description ||
@@ -191,23 +195,18 @@ const AddRecipe: React.FC = () => {
       !recipeData.totalTime ||
       !recipeData.servings ||
       recipeData.ingredients.some((ing) => !ing.item);
-    
     if (requiredFieldsMissing) {
       toast.error("Please fill in all required fields");
       return;
     }
-
     try {
       setIsSubmitting(true);
-      
       const requestData = {
-        // Capitalize the title before sending
         title: capitalizeTitle(recipeData.title),
         description: recipeData.description,
         user_id: Cookies.get("user_id"),
         image: recipeData.image,
-        // Ensure this matches database column name 'instruction' (singular)
-        instructions: recipeData.instructions, 
+        instructions: recipeData.instructions, // matches DB column 'instruction'
         ingredients: recipeData.ingredients,
         totalTime: recipeData.totalTime,
         servings: recipeData.servings,
@@ -236,7 +235,7 @@ const AddRecipe: React.FC = () => {
     }
   };
 
-  // Bulk add handler
+  // Bulk add ingredients from textarea input
   const handleBulkAddIngredients = () => {
     // Split by newlines, trim, and filter out empty lines
     const lines = bulkInput
@@ -268,7 +267,7 @@ const AddRecipe: React.FC = () => {
     toast.success(`${parsed.length} ingredients added!`);
   };
 
-  // Live preview for sidebar
+  // Live preview image for sidebar
   const previewImage =
     typeof recipeData.image === "string" && recipeData.image
       ? recipeData.image
@@ -284,6 +283,7 @@ const AddRecipe: React.FC = () => {
           <h1 className="recipe-form-title">Create a New Recipe</h1>
           
           <form onSubmit={handleSubmit}>
+            {/* Title input */}
             <div className="form-section">
               <label htmlFor="title" className="form-label">Recipe Title</label>
               <input
@@ -298,6 +298,7 @@ const AddRecipe: React.FC = () => {
               />
             </div>
             
+            {/* Description input */}
             <div className="form-section">
               <label htmlFor="description" className="form-label">Description</label>
               <p className="section-description">Write a brief introduction to your recipe</p>
@@ -312,6 +313,7 @@ const AddRecipe: React.FC = () => {
               />
             </div>
             
+            {/* Image upload section */}
             <div className="form-section">
               <h2 className="section-title">Recipe Image</h2>
               <p className="section-description">Upload a high-quality photo of your finished dish</p>
@@ -333,7 +335,7 @@ const AddRecipe: React.FC = () => {
                     onChange={handleImageChange}
                     style={{ display: "none" }}
                   />
-                  
+                  {/* Image preview logic handled below */}
                   {typeof recipeData.image === "string" && recipeData.image ? (
                     <img
                       src={recipeData.image}
@@ -392,6 +394,7 @@ const AddRecipe: React.FC = () => {
               </div>
             </div>
             
+            {/* Cooking time and servings */}
             <div className="form-section">
               <div className="form-row">
                 <div>
@@ -424,6 +427,7 @@ const AddRecipe: React.FC = () => {
               </div>
             </div>
             
+            {/* Ingredients section */}
             <div className="form-section">
               <h2 className="section-title">Ingredients</h2>
               <p className="section-description">List all ingredients with their quantities</p>
@@ -491,17 +495,15 @@ const AddRecipe: React.FC = () => {
                     <textarea
                       className="form-textarea"
                       rows={4}
-                      placeholder={
-                        [
-                          "Paste or type multiple ingredients below.",
-                          "Format: Ingredient, Quantity (comma separated)",
-                          "One ingredient per line.",
-                          "Example:",
-                          "Paneer (cubed), 250 grams",
-                          "Butter, 3 tablespoons",
-                          "Tomatoes (chopped), 4 medium"
-                        ].join('\n')
-                      }
+                      placeholder={[
+                        "Paste or type multiple ingredients below.",
+                        "Format: Ingredient, Quantity (comma separated)",
+                        "One ingredient per line.",
+                        "Example:",
+                        "Paneer (cubed), 250 grams",
+                        "Butter, 3 tablespoons",
+                        "Tomatoes (chopped), 4 medium"
+                      ].join('\n')}
                       value={bulkInput}
                       onChange={e => setBulkInput(e.target.value)}
                       style={{ marginTop: 8, marginBottom: 8 }}
@@ -528,6 +530,7 @@ const AddRecipe: React.FC = () => {
               </div>
             </div>
             
+            {/* Cooking instructions */}
             <div className="form-section">
               <label htmlFor="instructions" className="form-label">Cooking Instructions</label>
               <p className="section-description">Provide detailed step-by-step cooking directions</p>
@@ -542,6 +545,7 @@ const AddRecipe: React.FC = () => {
               />
             </div>
             
+            {/* Submit button */}
             <button 
               type="submit" 
               className="submit-button"

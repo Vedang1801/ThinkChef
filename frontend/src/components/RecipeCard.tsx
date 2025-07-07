@@ -8,6 +8,7 @@ import "../styles/profile.css";
 import "../styles/main.css";
 import "../styles/login.css";
 
+// Props for RecipeCard: expects a recipe object
 interface RecipeCardProps {
   recipe: {
     recipe_id: number;
@@ -22,15 +23,20 @@ interface RecipeCardProps {
   };
 }
 
+// Fallback image if recipe image fails to load
 const fallbackImage =
   "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80";
 
+// RecipeCard displays a summary card for a recipe
 const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
+  // Loading state for image
   const [loading, setLoading] = useState(true);
+  // Track if image failed to load
   const [imageError, setImageError] = useState(false);
+  // Navigation hook
   const navigate = useNavigate();
 
-  // Set loading state when image loads
+  // Preload image and handle loading/error states
   useEffect(() => {
     if (!recipe.image) {
       setImageError(true);
@@ -46,22 +52,23 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
       setLoading(false);
     };
 
+    // Cleanup listeners on unmount
     return () => {
       img.onload = null;
       img.onerror = null;
     };
   }, [recipe.image]);
 
-  // Navigate to the detail page when clicked
+  // Navigate to recipe detail page on card click
   const handleClick = () => {
     if (!recipe || !recipe.recipe_id) return;
     navigate(`/recipes/${recipe.recipe_id}`);
   };
 
-  // Format the rating to one decimal place
+  // Format the average rating to one decimal place
   const formattedRating = Number(recipe.average_rating || 0).toFixed(1);
-  
-  // Render stars for the rating
+
+  // Render star icons for the recipe's rating
   const renderRatingStars = (rating: number) => {
     const fullStars = Math.round(rating || 0);
     return (
@@ -78,12 +85,14 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
     );
   };
 
+  // Don't render if recipe is invalid
   if (!recipe || !recipe.title) {
-    return null; // Don't render invalid recipe cards
+    return null;
   }
 
   return (
     <div className="epicurious-recipe-card" onClick={handleClick}>
+      {/* Recipe image with fallback and loading state */}
       <div className="epicurious-recipe-image">
         <img
           src={imageError || !recipe.image ? fallbackImage : recipe.image}
@@ -96,10 +105,13 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ recipe }) => {
         />
       </div>
       <div className="epicurious-recipe-content">
+        {/* Static category label */}
         <div className="epicurious-recipe-category">
           RECIPES & MENUS
         </div>
+        {/* Recipe title */}
         <h2 className="epicurious-recipe-title">{recipe.title || "Untitled Recipe"}</h2>
+        {/* Recipe rating stars and value */}
         <div className="epicurious-recipe-rating">
           {renderRatingStars(recipe.average_rating || 0)}
           <span className="rating-value">{formattedRating}</span>

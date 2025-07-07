@@ -1,5 +1,4 @@
 // App.tsx
-import "./App.css";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Header from "./components/Header";
 import Profile from "./components/Profile";
@@ -15,17 +14,25 @@ import "react-toastify/dist/ReactToastify.css";
 import { useState } from 'react';
 import ForgotPassword from "./components/ForgotPassword";
 
+// Main App component sets up routing, global providers, and layout
 function App() {
+  // State for search term in header
   const [searchTerm, setSearchTerm] = useState("");
+  // State for sort type in header
   const [sortType, setSortType] = useState("");
 
   return (
+    // Router provides client-side navigation
     <Router>
+      {/* AuthProvider supplies authentication context to all children */}
       <AuthProvider>
+        {/* Header handles search and sort, passes handlers to update state */}
         <Header 
           onSearchChange={setSearchTerm}
           onSortChange={setSortType}
-        />        <Routes>
+        />
+        {/* Define all main routes for the app */}
+        <Routes>
           <Route path="/" element={<Home searchTerm={searchTerm} sortType={sortType} />} />
           <Route path="/addrecipes" element={<AddReceipe />} />
           <Route path="/recipes/:id" element={<ReceipeDetail />} />
@@ -35,6 +42,7 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/profile" element={<Profile />} />
         </Routes>
+        {/* ToastContainer for global notifications */}
         <ToastContainer position="bottom-right" theme="colored" />
       </AuthProvider>
     </Router>

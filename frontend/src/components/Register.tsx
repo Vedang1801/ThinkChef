@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "./authContext";
-import { ChefHat } from "lucide-react"; // Remove AlertCircle
+import { ChefHat } from "lucide-react";
 import { auth } from "../firebase";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import "../styles/login.css";
 
+// Register component handles user registration and validation
 const Register = () => {
+  // State for form fields
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -14,6 +16,7 @@ const Register = () => {
     confirmPassword: "",
   });
 
+  // State for error messages
   const [errors, setErrors] = useState({
     username: "",
     email: "",
@@ -22,17 +25,19 @@ const Register = () => {
     form: "",
   });
 
+  // Loading state for form submission
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { loggedIn } = useAuth();
 
-  // Redirect if already logged in
+  // Redirect to home if already logged in
   useEffect(() => {
     if (loggedIn) {
       navigate("/");
     }
   }, [loggedIn, navigate]);
 
+  // Handle input changes for form fields
   const handleChange = (e: { target: { name: string; value: string } }) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({
@@ -41,7 +46,7 @@ const Register = () => {
     }));
   };
 
-  // Basic validation
+  // Validate form fields before submission
   const validateForm = () => {
     let hasError = false;
     const newErrors = {
@@ -49,7 +54,7 @@ const Register = () => {
       email: "",
       password: "",
       confirmPassword: "",
-      form: "", // Add the missing 'form' property
+      form: "",
     };
     if (!formData.username) {
       newErrors.username = "Username is required";
@@ -71,67 +76,63 @@ const Register = () => {
     return !hasError;
   };
 
+  // Handle form submission for registration
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     // Validate form
     if (!validateForm()) return;
-
     setLoading(true);
     try {
-      // 1. Register with Firebase Auth
+      // Register user with Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         formData.email,
         formData.password
       );
-
-      // 2. Update the user's profile with username
+      // Update user's display name
       if (userCredential.user) {
         await updateProfile(userCredential.user, {
           displayName: formData.username,
         });
       }
-
-      // No need to manually sync with the database - authContext will handle this
-
-      // Show success and redirect
+      // Redirect to home on success
       navigate("/");
     } catch (error: any) {
       console.error("Registration error:", error);
-
       let errorMessage = "Failed to create account";
-
       // Handle common Firebase auth errors
       if (error.code === "auth/email-already-in-use") {
         errorMessage = "This email is already in use";
       } else if (error.code === "auth/weak-password") {
         errorMessage = "Password should be at least 6 characters";
       }
-
       setErrors({ ...errors, form: errorMessage });
     } finally {
       setLoading(false);
     }
   };
 
+  // Render registration form UI
   return (
     <div className="loginbackground">
       <div className="login-container">
         <div className="login-image"></div>
         <div className="formbody">
+          {/* Brand logo and title */}
           <div className="brand-logo">
             <ChefHat size={24} className="logo-icon" />
             <span className="logo-text">Think Chef</span>
           </div>
           <h1 className="formbodytitle">Create an account</h1>
 
+          {/* Show form-level error if present */}
           {errors.form && (
             <div className="error-message" style={{ marginBottom: "1rem" }}>
               {errors.form}
             </div>
           )}
 
+          {/* Registration form */}
           <form onSubmit={handleSubmit} className="register-form">
             <div className="input-group">
               <label htmlFor="username" className="form-label">
@@ -216,6 +217,7 @@ const Register = () => {
             </button>
           </form>
 
+          {/* Link to login page for existing users */}
           <div className="loginlastline">
             Already have an account?{" "}
             <Link to="/login" className="text-black hover:underline">

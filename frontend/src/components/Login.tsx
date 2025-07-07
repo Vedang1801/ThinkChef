@@ -5,6 +5,7 @@ import { AlertCircle, ChefHat } from "lucide-react";
 import "../styles/login.css";
 
 const Login = () => {
+  // State for form fields and errors
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -16,14 +17,17 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState("");
   const navigate = useNavigate();
+  // Auth context
   const { loggedIn, login, loginWithGoogle } = useAuth();
 
+  // Redirect to home if already logged in
   useEffect(() => {
     if (loggedIn) {
       navigate("/");
     }
   }, [loggedIn, navigate]);
 
+  // Handle input changes and clear errors
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prevState) => ({
@@ -34,6 +38,7 @@ const Login = () => {
     setLoginError("");
   };
 
+  // Validate form fields
   const validateForm = () => {
     let valid = true;
     const newErrors = { email: "", password: "" };
@@ -55,6 +60,7 @@ const Login = () => {
     return valid;
   };
 
+  // Handle form submit for email/password login
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -104,12 +110,14 @@ const Login = () => {
       <div className="login-container">
         <div className="login-image"></div>
         <div className="formbody">
+          {/* Brand logo and title */}
           <div className="brand-logo">
             <ChefHat size={24} className="logo-icon" />
             <span className="logo-text">Think Chef</span>
           </div>
           <h1 className="formbodytitle">Sign in or create an account</h1>
 
+          {/* Error message for login failures */}
           {loginError && (
             <div className="login-error-message">
               <AlertCircle size={16} />
@@ -117,6 +125,7 @@ const Login = () => {
             </div>
           )}
 
+          {/* Email/password login form */}
           <form onSubmit={handleSubmit} className="login-form">
             <div className="input-group">
               <label htmlFor="email" className="form-label">
@@ -170,10 +179,12 @@ const Login = () => {
             </button>
           </form>
 
+          {/* Separator for alternative login */}
           <div className="form-separator">
             <span>or</span>
           </div>
 
+          {/* Google login button */}
           <button
             className="formlogin-button google"
             type="button"
@@ -204,6 +215,7 @@ const Login = () => {
             )}
           </button>
 
+          {/* Link to registration page */}
           <p className="loginlastline">
             Don't have an account? <Link to="/register">Create Account</Link>
           </p>

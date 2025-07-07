@@ -11,13 +11,14 @@ import {
 } from "lucide-react";
 import "../styles/profile.css";
 
+// Post interface for user's recipes
 interface Post {
   recipe_id: number;
   title: string;
   description: string;
   Instruction: string;
-  instruction?: string;    // <-- Add this line
-  instructions?: string;   // <-- Add this line
+  instruction?: string;
+  instructions?: string;
   user_id: number;
   image: string;
   created_at: Date | string;
@@ -26,11 +27,13 @@ interface Post {
   servings?: string;
 }
 
+// Ingredient interface for editing
 interface Ingredient {
   item: string;
   quantity: string;
 }
 
+// EditingRecipe interface for edit modal
 interface EditingRecipe {
   recipe_id: number;
   title: string;
@@ -44,14 +47,16 @@ interface EditingRecipe {
   servings: string;
 }
 
-// Updated fallback images
+// Fallback image for profile and recipes
 const fallbackImage = "https://images.unsplash.com/photo-1588505617603-f80b72bf8f24?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 const Profile: React.FC = () => {
+  // Auth and navigation
   const { loggedIn } = useAuth();
   const navigate = useNavigate();
+  // State for posts, editing, deletion, and UI
   const [posts, setPosts] = useState<Post[]>([]);
   const [pendingDelete, setPendingDelete] = useState<number | null>(null);
   const [countdown, setCountdown] = useState<number>(3);
@@ -64,7 +69,7 @@ const Profile: React.FC = () => {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
 
-  // Calculate user stats
+  // Calculate user stats for profile
   const totalRecipes = posts.length;
   const totalIngredients = posts.reduce((acc, post) => acc + (post.ingredients?.length || 0), 0);
   const joinDate = new Date(Cookies.get("created_at") || new Date().toISOString());
@@ -74,16 +79,19 @@ const Profile: React.FC = () => {
     day: 'numeric' 
   });
 
+  // Redirect to login if not logged in
   useEffect(() => {
     if (!loggedIn) {
       navigate("/login");
     }
   }, [loggedIn, navigate]);
 
+  // Fetch user's recipes on mount or login
   useEffect(() => {
     fetchPosts();
   }, [loggedIn]);
 
+  // Fetch user's recipes from backend
   const fetchPosts = async () => {
     try {
       const response = await axios.get(`${API_URL}/api/recipes/${Cookies.get("user_id")}`);
@@ -104,6 +112,7 @@ const Profile: React.FC = () => {
     }
   };
 
+  // Handle delete with undo option
   const handleDelete = (event: React.MouseEvent<HTMLButtonElement>, postId: number) => {
     event.stopPropagation();
     setPendingDelete(postId);
@@ -112,7 +121,6 @@ const Profile: React.FC = () => {
       position: "bottom-right",
       autoClose: 3000,
     });
-
     const countdownInterval = setInterval(() => {
       setCountdown((prev) => {
         if (prev === 1) {
@@ -121,7 +129,6 @@ const Profile: React.FC = () => {
         return prev - 1;
       });
     }, 1000);
-
     const timeout = setTimeout(() => {
       handlePermanentDelete(postId);
       clearInterval(countdownInterval);
@@ -130,6 +137,7 @@ const Profile: React.FC = () => {
     setUndoTimeout(timeout);
   };
 
+  // Permanently delete a recipe
   const handlePermanentDelete = async (postId: number) => {
     try {
       await axios.delete(`${API_URL}/api/recipes/delete/${postId}`);
@@ -141,6 +149,7 @@ const Profile: React.FC = () => {
     setPendingDelete(null);
   };
 
+  // Undo deletion
   const handleUndo = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     if (pendingDelete !== null && undoTimeout) {
@@ -151,6 +160,7 @@ const Profile: React.FC = () => {
     }
   };
 
+  // Format date for display
   const formatDate = (dateString: string | Date) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
@@ -160,18 +170,17 @@ const Profile: React.FC = () => {
     });
   };
 
+  // Start editing a recipe
   const handleEdit = (event: React.MouseEvent<HTMLButtonElement>, post: Post) => {
     event.stopPropagation();
     setIsEditing(true);
-    
-    // Store the instructions from whichever field is available
+    // Use whichever instruction field is available
     const instructionContent = post.Instruction || post.instruction || post.instructions || "";
-    
     setEditingRecipe({
       recipe_id: post.recipe_id,
       title: post.title,
       description: post.description,
-      Instruction: instructionContent, // Always store in the Instruction field for consistency
+      Instruction: instructionContent,
       ingredients: post.ingredients.map((ingredient) => {
         const [item, quantity] = ingredient.split(": ");
         return { item, quantity };
@@ -182,21 +191,16 @@ const Profile: React.FC = () => {
     });
   };
 
+  // Upload image to backend (S3)
   const handleImageUpload = async (file: File) => {
     const formData = new FormData();
-    // Change "file" to the field name expected by multer middleware (likely "image")
     formData.append("image", file);
-    
     try {
-      // setIsUploading(true); // <-- Remove this line
-      // Upload to AWS S3 via backend endpoint
       const response = await axios.post(`${API_URL}/api/upload-image`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
-      
-      // setIsUploading(false); // <-- Remove this line
       if (response.data && response.data.imageUrl) {
         return response.data.imageUrl;
       } else {
@@ -204,15 +208,14 @@ const Profile: React.FC = () => {
         return null;
       }
     } catch (error) {
-      // setIsUploading(false); // <-- Remove this line
       toast.error("Image upload failed", { position: "bottom-right" });
       return null;
     }
   };
 
+  // Submit edited recipe
   const handleSubmitEdit = async () => {
     if (!editingRecipe) return;
-
     setIsSubmitting(true);
     try {
       // Upload new image if changed
@@ -220,28 +223,23 @@ const Profile: React.FC = () => {
       if (typeof editingRecipe.image === "object") {
         imageUrl = await handleImageUpload(editingRecipe.image);
       }
-
       if (!imageUrl) {
         setIsSubmitting(false);
         return;
       }
-
-      // Create the data to send to the server
-      // Make sure we include both Instruction and instruction fields for compatibility
+      // Prepare data for update
       const recipeData = {
         ...editingRecipe,
         image: imageUrl,
-        Instruction: editingRecipe.Instruction || "",   // Use the capitalized version
-        instruction: editingRecipe.Instruction || "",   // Also include lowercase version for compatibility
-        instructions: editingRecipe.Instruction || "",  // Also include plural version for compatibility
+        Instruction: editingRecipe.Instruction || "",
+        instruction: editingRecipe.Instruction || "",
+        instructions: editingRecipe.Instruction || "",
         ingredients: editingRecipe.ingredients.map((ingredient) => ({
           item: ingredient.item,
           quantity: ingredient.quantity,
         })),
       };
-
       await axios.put(`${API_URL}/api/recipes/update/${editingRecipe.recipe_id}`, recipeData);
-
       toast.success("Recipe updated successfully", { position: "bottom-right" });
       setIsEditing(false);
       setEditingRecipe(null);
@@ -425,27 +423,21 @@ const Profile: React.FC = () => {
               <p className="profile-setting-description">
                 Update your account information and preferences
               </p>
-              <button className="profile-setting-btn" onClick={() => toast.info("Feature coming soon!")}>
-                Edit Account
-              </button>
+              <button className="profile-setting-btn" onClick={() => toast.info("Feature coming soon!")}>Edit Account</button>
             </div>
             <div className="profile-setting-group">
               <h3 className="profile-setting-title">Privacy Settings</h3>
               <p className="profile-setting-description">
                 Manage your privacy and notification preferences
               </p>
-              <button className="profile-setting-btn" onClick={() => toast.info("Feature coming soon!")}>
-                Manage Privacy
-              </button>
+              <button className="profile-setting-btn" onClick={() => toast.info("Feature coming soon!")}>Manage Privacy</button>
             </div>
             <div className="profile-setting-group danger">
               <h3 className="profile-setting-title">Delete Account</h3>
               <p className="profile-setting-description">
                 Permanently delete your account and all your content
               </p>
-              <button className="profile-setting-btn danger" onClick={() => toast.info("Feature coming soon!")}>
-                Delete Account
-              </button>
+              <button className="profile-setting-btn danger" onClick={() => toast.info("Feature coming soon!")}>Delete Account</button>
             </div>
           </div>
         );
@@ -503,7 +495,6 @@ const Profile: React.FC = () => {
           <img src={fallbackImage} alt="Cover" />
           <div className="profile-cover-gradient" />
         </div>
-        
         <div className="profile-header-content">
           <div className="profile-avatar" style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "#f3f3f3" }}>
             <User size={80} color="#bbb" />
@@ -522,7 +513,6 @@ const Profile: React.FC = () => {
             </button>
           </div>
         </div>
-        
         {/* Tab Navigation */}
         <div className="profile-tabs">
           <button 
@@ -548,12 +538,10 @@ const Profile: React.FC = () => {
           </button>
         </div>
       </div>
-      
       {/* Main Content Area */}
       <div className="profile-content">
         {renderTabContent()}
       </div>
-
       {/* Edit Recipe Modal */}
       {isEditing && editingRecipe && (
         <div className="profile-edit-modal-overlay">
@@ -570,8 +558,8 @@ const Profile: React.FC = () => {
                 <X size={24} />
               </button>
             </div>
-            
             <div className="profile-edit-modal-body">
+              {/* Edit form fields for recipe */}
               <div className="form-section">
                 <label htmlFor="edit-title" className="form-label">Recipe Title</label>
                 <input
@@ -584,7 +572,6 @@ const Profile: React.FC = () => {
                   required
                 />
               </div>
-              
               <div className="form-section">
                 <label htmlFor="edit-description" className="form-label">Description</label>
                 <textarea
@@ -596,7 +583,6 @@ const Profile: React.FC = () => {
                   required
                 />
               </div>
-              
               <div className="form-section">
                 <div className="form-row">
                   <div>
@@ -610,7 +596,6 @@ const Profile: React.FC = () => {
                       placeholder="e.g. 45 minutes"
                     />
                   </div>
-                  
                   <div>
                     <label htmlFor="edit-servings" className="form-label">Servings</label>
                     <input
@@ -624,7 +609,6 @@ const Profile: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
               <div className="form-section">
                 <h2 className="section-title">Recipe Image</h2>
                 <div className="image-upload-container">
@@ -685,7 +669,6 @@ const Profile: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
               <div className="form-section">
                 <h2 className="section-title">Ingredients</h2>
                 <div className="ingredients-container">
@@ -724,7 +707,6 @@ const Profile: React.FC = () => {
                           />
                         </div>
                       </div>
-                      
                       <button
                         type="button"
                         className="ingredient-delete"
@@ -739,7 +721,6 @@ const Profile: React.FC = () => {
                       </button>
                     </div>
                   ))}
-                  
                   <button
                     type="button"
                     className="add-ingredient"
@@ -755,7 +736,6 @@ const Profile: React.FC = () => {
                   </button>
                 </div>
               </div>
-              
               <div className="form-section">
                 <label htmlFor="edit-instructions" className="form-label">Cooking Instructions</label>
                 <textarea
@@ -768,7 +748,6 @@ const Profile: React.FC = () => {
                 />
               </div>
             </div>
-            
             <div className="profile-edit-modal-footer">
               <button 
                 type="button" 
