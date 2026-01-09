@@ -1,7 +1,8 @@
 /* Modern Professional Homepage Design */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700;800&display=swap');
 
-body, .homepage-root {
+body,
+.homepage-root {
   background: #f9f9f9;
   font-family: 'Inter', sans-serif;
   color: #333;
@@ -39,7 +40,7 @@ body, .homepage-root {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.3) 100%);
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.5) 50%, rgba(0, 0, 0, 0.3) 100%);
   z-index: 1;
 }
 
@@ -67,7 +68,7 @@ body, .homepage-root {
   font-weight: 800;
   text-align: left;
   line-height: 1.1;
-  text-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
   position: relative;
 }
 
@@ -98,7 +99,7 @@ body, .homepage-root {
   border-radius: 0;
   font-size: 1.1rem;
   text-decoration: none;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   transition: background 0.2s, transform 0.18s;
   margin-top: 0.5rem;
   border: none;
@@ -113,8 +114,51 @@ body, .homepage-root {
   transform: translateY(-2px);
 }
 
+/* All Recipes Page Header */
+.all-recipes-header {
+  background-color: #fff;
+  padding: 3rem 0 2rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.all-recipes-header .container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.page-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.5rem;
+  color: #333;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.page-subtitle {
+  font-size: 1.1rem;
+  color: #666;
+  margin: 0;
+}
+
+/* Filters Section */
+.filters-section {
+  background-color: #f8f9fa;
+  padding: 2.5rem 0;
+  margin-bottom: 3rem;
+  border-top: 1px solid #e9ecef;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.filters-section .container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
 /* Featured Section */
-.featured-section, .tips-section {
+.featured-section,
+.tips-section {
   max-width: 1400px;
   margin: 0 auto 5rem;
   padding: 0 2rem;
@@ -163,17 +207,17 @@ body, .homepage-root {
   position: relative;
 }
 
-.epicurious-recipe-grid > * {
+.epicurious-recipe-grid>* {
   min-height: 350px;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   border-radius: 0;
   overflow: hidden;
 }
 
-.epicurious-recipe-grid > *:hover {
+.epicurious-recipe-grid>*:hover {
   transform: translateY(-5px);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
 }
 
 /* Empty grid states */
@@ -187,7 +231,7 @@ body, .homepage-root {
   font-size: 1.1rem;
 }
 
-.epicurious-recipe-grid > *:empty {
+.epicurious-recipe-grid>*:empty {
   display: none;
 }
 
@@ -204,7 +248,7 @@ body, .homepage-root {
   border-radius: 0;
   overflow: hidden;
   padding: 2rem;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
   transition: transform 0.3s ease;
 }
 
@@ -244,7 +288,7 @@ body, .homepage-root {
   padding: 4rem 2rem;
   background: #fff;
   border-radius: 0;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
 }
 
 /* Loading container */
@@ -271,7 +315,7 @@ body, .homepage-root {
 }
 
 .loader::after {
-  content: '';  
+  content: '';
   box-sizing: border-box;
   position: absolute;
   left: 50%;
@@ -284,9 +328,14 @@ body, .homepage-root {
 }
 
 @keyframes rotation {
-  0% { transform: rotate(0deg) }
-  100% { transform: rotate(360deg)}
-} 
+  0% {
+    transform: rotate(0deg)
+  }
+
+  100% {
+    transform: rotate(360deg)
+  }
+}
 
 .loading-text {
   color: #666;
@@ -496,7 +545,7 @@ body, .homepage-root {
   z-index: 1;
 }
 
-.promo-banner > * {
+.promo-banner>* {
   position: relative;
   z-index: 2;
 }
@@ -507,7 +556,7 @@ body, .homepage-root {
   margin: 0 0 1.5rem;
   color: #ffffff;
   font-weight: 700;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   line-height: 1.2;
 }
 
@@ -520,7 +569,7 @@ body, .homepage-root {
   color: rgba(255, 255, 255, 0.95);
   font-weight: 400;
   line-height: 1.6;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* Empty state styling */
@@ -641,16 +690,16 @@ body, .homepage-root {
     grid-template-columns: 1fr;
     gap: 20px;
   }
-  
+
   .tips-section {
     position: static;
     margin-top: 3rem;
   }
-  
+
   .tips-section .tips-container {
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   }
-  
+
   .featured-section {
     margin: 0;
   }
@@ -661,7 +710,7 @@ body, .homepage-root {
     padding: 4rem 2rem;
     min-height: 420px;
   }
-  
+
   .hero-content {
     max-width: 100%;
     align-items: center;
@@ -669,50 +718,50 @@ body, .homepage-root {
     margin-left: 0;
     align-self: center;
   }
-  
+
   .hero-content h1 {
     font-size: 3rem;
     text-align: center;
   }
-  
+
   .hero-content h1::after {
     margin: 1rem auto 0;
   }
-  
+
   .hero-content p {
     text-align: center;
     max-width: 100%;
   }
-  
+
   .epicurious-recipe-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 25px;
   }
-  
+
   .footer-brand,
   .footer-links {
     flex: 0 0 100%;
   }
-  
+
   /* Promo banner responsive */
   .promo-banner {
     padding: 3rem 2rem;
     border-radius: 8px;
   }
-  
+
   .promo-banner h3 {
     font-size: 2rem;
   }
-  
+
   .promo-banner p {
     font-size: 1.1rem;
   }
-  
+
   .promo-actions {
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .promo-actions .secondary-cta-btn {
     width: 100%;
     max-width: 300px;
@@ -725,60 +774,60 @@ body, .homepage-root {
     padding: 3rem 1.5rem;
     min-height: 320px;
   }
-  
+
   .hero-content h1 {
     font-size: 2.3rem;
   }
-  
+
   .hero-content p {
     font-size: 1.1rem;
     margin-bottom: 2rem;
   }
-  
+
   .cta-btn {
     padding: 0.8rem 1.5rem;
     font-size: 1rem;
   }
-  
+
   .section-title {
     font-size: 1.8rem;
   }
-  
+
   .epicurious-recipe-grid {
     grid-template-columns: 1fr;
     gap: 20px;
   }
-  
+
   .footer-bottom {
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .social-links {
     justify-content: center;
   }
-  
+
   /* Promo banner mobile */
   .promo-section {
     padding: 2rem 0;
     margin: 2rem 0 3rem;
   }
-  
+
   .promo-banner {
     padding: 2.5rem 1.5rem;
     border-radius: 6px;
   }
-  
+
   .promo-banner h3 {
     font-size: 1.8rem;
     margin-bottom: 1rem;
   }
-  
+
   .promo-banner p {
     font-size: 1rem;
     margin-bottom: 2rem;
   }
-  
+
   .promo-actions .secondary-cta-btn {
     padding: 1rem 2rem;
     font-size: 1rem;

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
-import { Star, BookmarkPlus, Printer, Share2 } from "lucide-react";
+import { Star, BookmarkPlus, Printer, Share2, Leaf, Circle, Fish, Egg } from "lucide-react";
 import { useAuth } from "./authContext";
 import Cookies from "js-cookie";
 import { Snackbar } from "@mui/material";
@@ -22,6 +22,10 @@ interface Recipe {
   author?: string;
   total_time?: string;  // Optional: total time
   servings?: string;    // Optional: servings
+  cuisine_type?: string;
+  dietary_type?: string;
+  meal_types?: string[];
+  difficulty?: string;
 }
 
 // Ingredient interface for each ingredient item
@@ -69,8 +73,8 @@ const RecipeDetail: React.FC = () => {
   // Snackbar state for feedback messages
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  // Auth context for login status
-  const { loggedIn } = useAuth();
+  // Auth context for login status and user info
+  const { loggedIn, user } = useAuth();
 
   // Fetch recipe data when component mounts or id changes
   useEffect(() => {
@@ -115,6 +119,11 @@ const RecipeDetail: React.FC = () => {
 
   // Check if the current user has already rated this recipe
   const checkUserRating = async () => {
+    // Only check if user is logged in
+    if (!loggedIn || !user) {
+      return;
+    }
+
     const token = Cookies.get("token");
     if (!token || !id) return;
     try {
@@ -125,9 +134,11 @@ const RecipeDetail: React.FC = () => {
         setUserHasRated(true);
         setUserRating(response.data.userRating);
       }
-    } catch (error) {
-      console.error("Error checking user rating:", error);
-      // Do not forcibly set userHasRated to false on error
+    } catch (error: any) {
+      // Silently handle 401 errors (user not authenticated)
+      if (error.response?.status !== 401) {
+        console.error("Error checking user rating:", error);
+      }
     }
   };
 
@@ -193,14 +204,14 @@ const RecipeDetail: React.FC = () => {
       setSnackbarOpen(true);
       return;
     }
-    
+
     const token = Cookies.get("token");
     if (!token) {
       setSnackbarMessage("Authentication error. Please log in again.");
       setSnackbarOpen(true);
       return;
     }
-    
+
     try {
       await axios.post(`${API_URL}/api/recipes/${id}/comments/create`, {
         comment_text: trimmedComment,
@@ -223,11 +234,49 @@ const RecipeDetail: React.FC = () => {
     }
   };
 
-  // Show loading spinner while fetching data
+  // Show elegant skeleton loader while fetching data
   if (loading) {
     return (
       <div className="recipe-detail-loading">
-        <div className="loading-spinner">Loading recipe...</div>
+        <div className="skeleton-container">
+          {/* Back button skeleton */}
+          <div className="skeleton skeleton-back"></div>
+
+          {/* Header skeleton */}
+          <div className="skeleton-header">
+            <div className="skeleton skeleton-image"></div>
+            <div className="skeleton-title-area">
+              <div className="skeleton skeleton-title"></div>
+              <div className="skeleton skeleton-meta"></div>
+              <div className="skeleton skeleton-rating"></div>
+            </div>
+          </div>
+
+          {/* Description skeleton */}
+          <div className="skeleton skeleton-description"></div>
+          <div className="skeleton skeleton-description-short"></div>
+
+          {/* Info skeleton */}
+          <div className="skeleton-info">
+            <div className="skeleton skeleton-info-item"></div>
+            <div className="skeleton skeleton-info-item"></div>
+          </div>
+
+          {/* Content skeleton */}
+          <div className="skeleton-content">
+            <div className="skeleton-column">
+              <div className="skeleton skeleton-heading"></div>
+              <div className="skeleton skeleton-list-item"></div>
+              <div className="skeleton skeleton-list-item"></div>
+              <div className="skeleton skeleton-list-item"></div>
+            </div>
+            <div className="skeleton-column">
+              <div className="skeleton skeleton-heading"></div>
+              <div className="skeleton skeleton-paragraph"></div>
+              <div className="skeleton skeleton-paragraph"></div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -304,6 +353,38 @@ const RecipeDetail: React.FC = () => {
               ))}
             </div>
             <span className="rating-count">(1)</span>
+          </div>
+
+          {/* Dynamic Recipe Tags */}
+          <div className="recipe-detail-tags-moved">
+            {recipe.cuisine_type && (
+              <div className="tag cuisine-tag">
+                {recipe.cuisine_type.charAt(0).toUpperCase() + recipe.cuisine_type.slice(1)}
+              </div>
+            )}
+            {recipe.difficulty && (
+              <div className="tag difficulty-tag">
+                {recipe.difficulty.charAt(0).toUpperCase() + recipe.difficulty.slice(1)}
+              </div>
+            )}
+            {recipe.dietary_type && (
+              <div className={`tag dietary-tag ${recipe.dietary_type}`}>
+                {(() => {
+                  const type = recipe.dietary_type;
+                  if (type === 'vegan') return <><Leaf size={14} fill="currentColor" /> Vegan</>;
+                  if (type === 'vegetarian') return <><Circle size={14} fill="currentColor" /> Vegetarian</>;
+                  if (type === 'non_vegetarian') return <><Circle size={14} fill="currentColor" className="non-veg-icon" /> Non-Veg</>;
+                  if (type === 'pescatarian') return <><Fish size={14} /> Pescatarian</>;
+                  if (type === 'eggetarian') return <><Egg size={14} /> Eggetarian</>;
+                  return type.charAt(0).toUpperCase() + type.slice(1);
+                })()}
+              </div>
+            )}
+            {recipe.meal_types && recipe.meal_types.length > 0 && recipe.meal_types.map((type, index) => (
+              <div key={index} className="tag meal-tag">
+                {type.charAt(0).toUpperCase() + type.slice(1)}
+              </div>
+            ))}
           </div>
 
           {/* Action buttons: Save, Print, Share */}
@@ -427,9 +508,8 @@ const RecipeDetail: React.FC = () => {
           {[...Array(5)].map((_, index) => (
             <span
               key={index}
-              className={`user-star ${
-                index < userRating ? "active" : ""
-              } ${index < hoverRating ? "hover" : ""}`}
+              className={`user-star ${index < userRating ? "active" : ""
+                } ${index < hoverRating ? "hover" : ""}`}
               onMouseEnter={() => !userHasRated && setHoverRating(index + 1)}
               onMouseLeave={() => !userHasRated && setHoverRating(0)}
               onClick={() => !userHasRated && handleRatingClick(index)}
@@ -447,13 +527,6 @@ const RecipeDetail: React.FC = () => {
             Click on a star to rate this recipe
           </div>
         )}
-      </div>
-
-      {/* Static tags for demonstration */}
-      <div className="recipe-detail-tags">
-        <div className="tag">Dinner</div>
-        <div className="tag">Main</div>
-        <div className="tag">Healthy</div>
       </div>
 
       {/* Snackbar for feedback messages */}

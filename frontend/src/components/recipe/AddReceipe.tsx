@@ -5,10 +5,11 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Cookies from "js-cookie";
 import { useAuth } from "./authContext";
-import { 
-  Upload, X, Image as ImageIcon, Loader2, Clock, Users, 
-  Plus, ChefHat,  
+import {
+  Upload, X, Image as ImageIcon, Loader2, Clock, Users,
+  Plus, ChefHat,
 } from "lucide-react";
+import { CUISINE_OPTIONS, DIETARY_OPTIONS, MEAL_TYPE_OPTIONS, DIFFICULTY_OPTIONS, NON_VEG_KEYWORDS, DAIRY_KEYWORDS, EGG_KEYWORDS } from "../constants/recipeOptions";
 
 // Ingredient interface for type safety
 interface Ingredient {
@@ -25,6 +26,10 @@ interface RecipeData {
   image: File | string;
   totalTime: string;
   servings: string;
+  cuisine_type: string;
+  dietary_type: string;
+  meal_types: string[];
+  difficulty: string;
 }
 
 // Fallback image URL for preview
@@ -47,6 +52,10 @@ const AddRecipe: React.FC = () => {
     image: "",
     totalTime: "",
     servings: "",
+    cuisine_type: "",
+    dietary_type: "",
+    meal_types: [],
+    difficulty: "medium",
   });
 
   const { loggedIn } = useAuth();
@@ -66,7 +75,7 @@ const AddRecipe: React.FC = () => {
   }, [loggedIn, navigate]);
 
   // Handle input changes for text fields
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setRecipeData((prevState) => ({
       ...prevState,
@@ -91,6 +100,19 @@ const AddRecipe: React.FC = () => {
       ...prevState,
       ingredients: newIngredients,
     }));
+  };
+  // Handle meal type checkbox changes
+  const handleMealTypeChange = (mealType: string) => {
+    setRecipeData((prevState) => {
+      const currentMealTypes = prevState.meal_types;
+      const newMealTypes = currentMealTypes.includes(mealType)
+        ? currentMealTypes.filter(type => type !== mealType)
+        : [...currentMealTypes, mealType];
+      return {
+        ...prevState,
+        meal_types: newMealTypes,
+      };
+    });
   };
 
   // Add a new empty ingredient row
@@ -199,6 +221,40 @@ const AddRecipe: React.FC = () => {
       toast.error("Please fill in all required fields");
       return;
     }
+
+    // Level 1 Defense: The "Nudge"
+    // Check for conflicting ingredients based on dietary type
+    if (recipeData.dietary_type === 'vegan' || recipeData.dietary_type === 'vegetarian') {
+      const allIngredients = recipeData.ingredients.map(ing => ing.item.toLowerCase()).join(' ');
+
+      // Check for meat in vegetarian/vegan recipes
+      const foundMeat = NON_VEG_KEYWORDS.find(keyword => allIngredients.includes(keyword));
+
+      // Check for dairy and eggs in vegan recipes
+      let foundDairy, foundEgg;
+      if (recipeData.dietary_type === 'vegan') {
+        foundDairy = DAIRY_KEYWORDS.find(keyword => allIngredients.includes(keyword));
+        foundEgg = EGG_KEYWORDS.find(keyword => allIngredients.includes(keyword));
+      }
+
+      const conflicts = [];
+      if (foundMeat) conflicts.push(`meat/fish (${foundMeat})`);
+      if (foundDairy) conflicts.push(`dairy (${foundDairy})`);
+      if (foundEgg) conflicts.push(`eggs (${foundEgg})`);
+
+      if (conflicts.length > 0) {
+        const dietaryLabel = DIETARY_OPTIONS.find(d => d.value === recipeData.dietary_type)?.label;
+        const conflictList = conflicts.join(', ');
+
+        const confirmSubmit = window.confirm(
+          `⚠️ Dietary Conflict Detected\n\nYou selected "${dietaryLabel}" but your ingredients include: ${conflictList}.\n\nAre you sure you want to proceed?\n\n(Note: The system may auto-correct this based on ingredients)`
+        );
+        if (!confirmSubmit) {
+          return;
+        }
+      }
+    }
+
     try {
       setIsSubmitting(true);
       const requestData = {
@@ -206,10 +262,14 @@ const AddRecipe: React.FC = () => {
         description: recipeData.description,
         user_id: Cookies.get("user_id"),
         image: recipeData.image,
-        instructions: recipeData.instructions, // matches DB column 'instruction'
+        instructions: recipeData.instructions,
         ingredients: recipeData.ingredients,
         totalTime: recipeData.totalTime,
         servings: recipeData.servings,
+        cuisine_type: recipeData.cuisine_type || null,
+        dietary_type: recipeData.dietary_type || null,
+        meal_types: recipeData.meal_types.length > 0 ? recipeData.meal_types : null,
+        difficulty: recipeData.difficulty || null,
       };
 
       const response = await fetch(`${API_URL}/api/recipes/create`, {
@@ -272,8 +332,8 @@ const AddRecipe: React.FC = () => {
     typeof recipeData.image === "string" && recipeData.image
       ? recipeData.image
       : typeof recipeData.image === "object" && recipeData.image
-      ? URL.createObjectURL(recipeData.image)
-      : fallbackImage;
+        ? URL.createObjectURL(recipeData.image)
+        : fallbackImage;
 
   return (
     <div className="recipe-form-container">
@@ -281,7 +341,7 @@ const AddRecipe: React.FC = () => {
         {/* Main Form */}
         <main className="recipe-form-main">
           <h1 className="recipe-form-title">Create a New Recipe</h1>
-          
+
           <form onSubmit={handleSubmit}>
             {/* Title input */}
             <div className="form-section">
@@ -297,7 +357,7 @@ const AddRecipe: React.FC = () => {
                 required
               />
             </div>
-            
+
             {/* Description input */}
             <div className="form-section">
               <label htmlFor="description" className="form-label">Description</label>
@@ -312,12 +372,12 @@ const AddRecipe: React.FC = () => {
                 required
               />
             </div>
-            
+
             {/* Image upload section */}
             <div className="form-section">
               <h2 className="section-title">Recipe Image</h2>
               <p className="section-description">Upload a high-quality photo of your finished dish</p>
-              
+
               <div className="image-upload-container">
                 <div
                   className={`image-dropzone${dragActive ? " drag-active" : ""}`}
@@ -358,7 +418,7 @@ const AddRecipe: React.FC = () => {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="image-controls">
                   <button
                     type="button"
@@ -378,7 +438,7 @@ const AddRecipe: React.FC = () => {
                       </>
                     )}
                   </button>
-                  
+
                   {recipeData.image && (
                     <button
                       type="button"
@@ -393,11 +453,11 @@ const AddRecipe: React.FC = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* Cooking time and servings */}
             <div className="form-section">
               <div className="form-row">
-                <div>
+                <div className="form-group">
                   <label htmlFor="totalTime" className="form-label">Cooking Time</label>
                   <input
                     type="text"
@@ -410,8 +470,8 @@ const AddRecipe: React.FC = () => {
                     required
                   />
                 </div>
-                
-                <div>
+
+                <div className="form-group">
                   <label htmlFor="servings" className="form-label">Servings</label>
                   <input
                     type="text"
@@ -426,12 +486,107 @@ const AddRecipe: React.FC = () => {
                 </div>
               </div>
             </div>
-            
+
+            {/* Recipe Tags Section */}
+            <div className="form-section recipe-categories-section">
+              <h2 className="section-title">Recipe Categories</h2>
+              <p className="section-description">Help others discover your recipe</p>
+
+              <div className="categories-grid">
+                {/* Cuisine and Difficulty Row */}
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="cuisine_type" className="form-label">Cuisine Type</label>
+                    <div className="select-wrapper">
+                      <select
+                        id="cuisine_type"
+                        name="cuisine_type"
+                        className="form-select"
+                        value={recipeData.cuisine_type}
+                        onChange={handleChange}
+                      >
+                        <option value="" disabled>Select Cuisine (Optional)</option>
+                        {CUISINE_OPTIONS.filter(opt => opt.value).map(option => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="difficulty" className="form-label">Difficulty Level</label>
+                    <div className="select-wrapper">
+                      <select
+                        id="difficulty"
+                        name="difficulty"
+                        className="form-select"
+                        value={recipeData.difficulty}
+                        onChange={handleChange}
+                      >
+                        {DIFFICULTY_OPTIONS.map(option => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Dietary Type Radio Buttons */}
+                <div className="category-group">
+                  <label className="form-label">Dietary Type</label>
+                  <p className="field-hint">
+                    Auto-detected from ingredients, but you can override
+                  </p>
+                  <div className="options-grid">
+                    {DIETARY_OPTIONS.map(option => (
+                      <label key={option.value} className={`option-card ${recipeData.dietary_type === option.value ? 'selected' : ''}`}>
+                        <input
+                          type="radio"
+                          name="dietary_type"
+                          value={option.value}
+                          checked={recipeData.dietary_type === option.value}
+                          onChange={handleChange}
+                          className="hidden-input"
+                        />
+                        <span className="option-label">{option.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Meal Types Checkboxes */}
+                <div className="category-group">
+                  <label className="form-label">Meal Type</label>
+                  <p className="field-hint">
+                    Select all that apply
+                  </p>
+                  <div className="options-grid">
+                    {MEAL_TYPE_OPTIONS.map(option => (
+                      <label key={option.value} className={`option-card ${recipeData.meal_types.includes(option.value) ? 'selected' : ''}`}>
+                        <input
+                          type="checkbox"
+                          value={option.value}
+                          checked={recipeData.meal_types.includes(option.value)}
+                          onChange={() => handleMealTypeChange(option.value)}
+                          className="hidden-input"
+                        />
+                        <span className="option-label">{option.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Ingredients section */}
             <div className="form-section">
               <h2 className="section-title">Ingredients</h2>
               <p className="section-description">List all ingredients with their quantities</p>
-              
+
               <div className="ingredients-container">
                 {recipeData.ingredients.map((ingredient, index) => (
                   <div key={index} className="ingredient-row">
@@ -460,7 +615,7 @@ const AddRecipe: React.FC = () => {
                         />
                       </div>
                     </div>
-                    
+
                     <button
                       type="button"
                       className="ingredient-delete"
@@ -472,13 +627,13 @@ const AddRecipe: React.FC = () => {
                     </button>
                   </div>
                 ))}
-                
+
                 <button
                   type="button"
                   className="add-ingredient"
                   onClick={handleAddMoreIngredients}
                 >
-                  <Plus size={18} /> 
+                  <Plus size={18} />
                   Add Another Ingredient
                 </button>
                 <button
@@ -529,7 +684,7 @@ const AddRecipe: React.FC = () => {
                 )}
               </div>
             </div>
-            
+
             {/* Cooking instructions */}
             <div className="form-section">
               <label htmlFor="instructions" className="form-label">Cooking Instructions</label>
@@ -544,10 +699,10 @@ const AddRecipe: React.FC = () => {
                 required
               />
             </div>
-            
+
             {/* Submit button */}
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="submit-button"
               disabled={isSubmitting}
             >
@@ -565,7 +720,7 @@ const AddRecipe: React.FC = () => {
             </button>
           </form>
         </main>
-        
+
         {/* Preview Sidebar */}
         <aside className="recipe-preview-sidebar">
           <div className="preview-container">
@@ -579,25 +734,25 @@ const AddRecipe: React.FC = () => {
                   (e.currentTarget as HTMLImageElement).src = fallbackImage;
                 }}
               />
-              
+
               <h2 className="preview-title">
                 {recipeData.title || "Your Recipe Title"}
               </h2>
-              
+
               <p className="preview-description">
                 {recipeData.description || "Your recipe description will appear here. Add a brief introduction to tell readers about your dish."}
               </p>
-              
+
               <div className="preview-meta">
                 {recipeData.totalTime && (
                   <span><Clock size={16} /> {recipeData.totalTime}</span>
                 )}
-                
+
                 {recipeData.servings && (
                   <span><Users size={16} /> {recipeData.servings} servings</span>
                 )}
               </div>
-              
+
               <div className="preview-ingredients">
                 <h4>Ingredients</h4>
                 <ul>
@@ -610,7 +765,7 @@ const AddRecipe: React.FC = () => {
                     ) : null
                   )}
                 </ul>
-                
+
                 {recipeData.ingredients.length === 0 && (
                   <p className="no-ingredients">No ingredients added yet</p>
                 )}

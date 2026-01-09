@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "./authContext";
+import RecipeCard from "./recipe/RecipeCard";
+import { useAuth } from "./auth/authContext";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { toast } from "react-toastify";
-import { 
-  Edit2, Trash2, RefreshCw, Plus, User, Bookmark, Settings, 
+import {
+  Edit2, Trash2, RefreshCw, Plus, User, Bookmark, Settings,
   Calendar, Grid, List, Heart,
-  X, Save, Upload, Loader2, 
+  X, Save, Upload, Loader2,
 } from "lucide-react";
 import "../styles/profile.css";
+import { CUISINE_OPTIONS, DIETARY_OPTIONS, MEAL_TYPE_OPTIONS, DIFFICULTY_OPTIONS, NON_VEG_KEYWORDS, DAIRY_KEYWORDS, EGG_KEYWORDS } from "../constants/recipeOptions";
 
 // Post interface for user's recipes
 interface Post {
@@ -25,6 +27,10 @@ interface Post {
   ingredients: string[];
   totalTime?: string;
   servings?: string;
+  cuisine_type?: string;
+  dietary_type?: string;
+  meal_types?: string[];
+  difficulty?: string;
 }
 
 // Ingredient interface for editing
@@ -45,6 +51,10 @@ interface EditingRecipe {
   image: string | File;
   totalTime: string;
   servings: string;
+  cuisine_type: string;
+  dietary_type: string;
+  meal_types: string[];
+  difficulty: string;
 }
 
 // Fallback image for profile and recipes
@@ -73,10 +83,10 @@ const Profile: React.FC = () => {
   const totalRecipes = posts.length;
   const totalIngredients = posts.reduce((acc, post) => acc + (post.ingredients?.length || 0), 0);
   const joinDate = new Date(Cookies.get("created_at") || new Date().toISOString());
-  const joinDateFormatted = joinDate.toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
+  const joinDateFormatted = joinDate.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
   });
 
   // Redirect to login if not logged in
@@ -163,10 +173,10 @@ const Profile: React.FC = () => {
   // Format date for display
   const formatDate = (dateString: string | Date) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     });
   };
 
@@ -188,6 +198,10 @@ const Profile: React.FC = () => {
       image: post.image,
       totalTime: post.totalTime || "",
       servings: post.servings || "",
+      cuisine_type: post.cuisine_type || "",
+      dietary_type: post.dietary_type || "",
+      meal_types: post.meal_types || [],
+      difficulty: post.difficulty || "medium",
     });
   };
 
@@ -217,10 +231,47 @@ const Profile: React.FC = () => {
   const handleSubmitEdit = async () => {
     if (!editingRecipe) return;
     setIsSubmitting(true);
+
+    // Level 1 Defense: Frontend "Nudge" validation
+    // Check for conflicting ingredients based on dietary type
+    if (editingRecipe.dietary_type === 'vegan' || editingRecipe.dietary_type === 'vegetarian') {
+      const allIngredients = editingRecipe.ingredients.map(ing => ing.item.toLowerCase()).join(' ');
+
+      // Check for meat in vegetarian/vegan recipes
+      const foundMeat = NON_VEG_KEYWORDS.find(keyword => allIngredients.includes(keyword));
+
+      // Check for dairy and eggs in vegan recipes
+      let foundDairy, foundEgg;
+      if (editingRecipe.dietary_type === 'vegan') {
+        foundDairy = DAIRY_KEYWORDS.find(keyword => allIngredients.includes(keyword));
+        foundEgg = EGG_KEYWORDS.find(keyword => allIngredients.includes(keyword));
+      }
+
+      const conflicts = [];
+      if (foundMeat) conflicts.push(`meat/fish (${foundMeat})`);
+      if (foundDairy) conflicts.push(`dairy (${foundDairy})`);
+      if (foundEgg) conflicts.push(`eggs (${foundEgg})`);
+
+      if (conflicts.length > 0) {
+        const dietaryLabel = DIETARY_OPTIONS.find(d => d.value === editingRecipe.dietary_type)?.label;
+        const conflictList = conflicts.join(', ');
+
+        const confirmSubmit = window.confirm(
+          `⚠️ Dietary Conflict Detected\n\nYou selected "${dietaryLabel}" but your ingredients include: ${conflictList}.\n\nAre you sure you want to proceed?\n\n(Note: The system may auto-correct this based on ingredients)`
+        );
+        if (!confirmSubmit) {
+          setIsSubmitting(false); // Ensure submitting state is reset if user cancels
+          return;
+        }
+      }
+    }
+
+    // Prepare recipe data for update
+    let imageUrl = editingRecipe.image;
+
     try {
-      // Upload new image if changed
-      let imageUrl = editingRecipe.image;
-      if (typeof editingRecipe.image === "object") {
+      // Upload image if it's a new file
+      if (editingRecipe.image instanceof File) {
         imageUrl = await handleImageUpload(editingRecipe.image);
       }
       if (!imageUrl) {
@@ -238,6 +289,10 @@ const Profile: React.FC = () => {
           item: ingredient.item,
           quantity: ingredient.quantity,
         })),
+        cuisine_type: editingRecipe.cuisine_type || null,
+        dietary_type: editingRecipe.dietary_type || null,
+        meal_types: editingRecipe.meal_types.length > 0 ? editingRecipe.meal_types : null,
+        difficulty: editingRecipe.difficulty || null,
       };
       await axios.put(`${API_URL}/api/recipes/update/${editingRecipe.recipe_id}`, recipeData);
       toast.success("Recipe updated successfully", { position: "bottom-right" });
@@ -260,8 +315,8 @@ const Profile: React.FC = () => {
           onClick={() => navigate(`/recipes/${post.recipe_id}`)}
         >
           <div className="profile-recipe-list-image">
-            <img 
-              src={post.image || fallbackImage} 
+            <img
+              src={post.image || fallbackImage}
               alt={post.title}
               onError={(e) => {
                 (e.target as HTMLImageElement).src = fallbackImage;
@@ -448,7 +503,7 @@ const Profile: React.FC = () => {
             <div className="profile-recipes-header">
               <h2 className="profile-section-title">Your Recipes</h2>
               <div className="profile-view-controls">
-                <button 
+                <button
                   className={`profile-view-btn ${viewMode === 'grid' ? 'active' : ''}`}
                   onClick={() => setViewMode('grid')}
                   aria-label="Grid view"
@@ -456,7 +511,7 @@ const Profile: React.FC = () => {
                 >
                   <Grid size={18} />
                 </button>
-                <button 
+                <button
                   className={`profile-view-btn ${viewMode === 'list' ? 'active' : ''}`}
                   onClick={() => setViewMode('list')}
                   aria-label="List view"
@@ -504,7 +559,7 @@ const Profile: React.FC = () => {
             <p className="profile-email">{Cookies.get("email") || ""}</p>
           </div>
           <div className="profile-header-actions">
-            <button 
+            <button
               className="profile-btn primary-btn"
               onClick={() => navigate("/addrecipes")}
             >
@@ -515,21 +570,21 @@ const Profile: React.FC = () => {
         </div>
         {/* Tab Navigation */}
         <div className="profile-tabs">
-          <button 
+          <button
             className={`profile-tab ${activeTab === 'recipes' ? 'active' : ''}`}
             onClick={() => setActiveTab('recipes')}
           >
             <Bookmark size={18} />
             <span>Recipes</span>
           </button>
-          <button 
+          <button
             className={`profile-tab ${activeTab === 'stats' ? 'active' : ''}`}
             onClick={() => setActiveTab('stats')}
           >
             <Chart size={18} />
             <span>Stats</span>
           </button>
-          <button 
+          <button
             className={`profile-tab ${activeTab === 'settings' ? 'active' : ''}`}
             onClick={() => setActiveTab('settings')}
           >
@@ -548,8 +603,8 @@ const Profile: React.FC = () => {
           <div className="profile-edit-modal">
             <div className="profile-edit-modal-header">
               <h2>Edit Recipe</h2>
-              <button 
-                className="profile-edit-close-btn" 
+              <button
+                className="profile-edit-close-btn"
                 onClick={() => {
                   setIsEditing(false);
                   setEditingRecipe(null);
@@ -567,7 +622,7 @@ const Profile: React.FC = () => {
                   id="edit-title"
                   className="form-input"
                   value={editingRecipe.title}
-                  onChange={(e) => setEditingRecipe({...editingRecipe, title: e.target.value})}
+                  onChange={(e) => setEditingRecipe({ ...editingRecipe, title: e.target.value })}
                   placeholder="Recipe title"
                   required
                 />
@@ -578,7 +633,7 @@ const Profile: React.FC = () => {
                   id="edit-description"
                   className="form-textarea"
                   value={editingRecipe.description}
-                  onChange={(e) => setEditingRecipe({...editingRecipe, description: e.target.value})}
+                  onChange={(e) => setEditingRecipe({ ...editingRecipe, description: e.target.value })}
                   placeholder="Recipe description"
                   required
                 />
@@ -592,7 +647,7 @@ const Profile: React.FC = () => {
                       id="edit-totalTime"
                       className="form-input"
                       value={editingRecipe.totalTime}
-                      onChange={(e) => setEditingRecipe({...editingRecipe, totalTime: e.target.value})}
+                      onChange={(e) => setEditingRecipe({ ...editingRecipe, totalTime: e.target.value })}
                       placeholder="e.g. 45 minutes"
                     />
                   </div>
@@ -603,9 +658,100 @@ const Profile: React.FC = () => {
                       id="edit-servings"
                       className="form-input"
                       value={editingRecipe.servings}
-                      onChange={(e) => setEditingRecipe({...editingRecipe, servings: e.target.value})}
+                      onChange={(e) => setEditingRecipe({ ...editingRecipe, servings: e.target.value })}
                       placeholder="e.g. 4"
                     />
+                  </div>
+                </div>
+              </div>
+
+              {/* Recipe Categories Section for Edit Modal */}
+              <div className="form-section recipe-categories-section">
+                <h2 className="section-title">Recipe Categories</h2>
+
+                <div className="categories-grid">
+                  {/* Cuisine and Difficulty */}
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="edit-cuisine" className="form-label">Cuisine Type</label>
+                      <div className="select-wrapper">
+                        <select
+                          id="edit-cuisine"
+                          className="form-select"
+                          value={editingRecipe.cuisine_type}
+                          onChange={(e) => setEditingRecipe({ ...editingRecipe, cuisine_type: e.target.value })}
+                        >
+                          <option value="" disabled>Select Cuisine</option>
+                          {CUISINE_OPTIONS.filter(opt => opt.value).map(option => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="edit-difficulty" className="form-label">Difficulty</label>
+                      <div className="select-wrapper">
+                        <select
+                          id="edit-difficulty"
+                          className="form-select"
+                          value={editingRecipe.difficulty}
+                          onChange={(e) => setEditingRecipe({ ...editingRecipe, difficulty: e.target.value })}
+                        >
+                          {DIFFICULTY_OPTIONS.map(option => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Dietary Type */}
+                  <div className="category-group">
+                    <label className="form-label">Dietary Type</label>
+                    <div className="options-grid">
+                      {DIETARY_OPTIONS.map(option => (
+                        <label key={option.value} className={`option-card ${editingRecipe.dietary_type === option.value ? 'selected' : ''}`}>
+                          <input
+                            type="radio"
+                            name="edit-dietary"
+                            value={option.value}
+                            checked={editingRecipe.dietary_type === option.value}
+                            onChange={(e) => setEditingRecipe({ ...editingRecipe, dietary_type: e.target.value })}
+                            className="hidden-input"
+                          />
+                          <span className="option-label">{option.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Meal Types */}
+                  <div className="category-group">
+                    <label className="form-label">Meal Type</label>
+                    <div className="options-grid">
+                      {MEAL_TYPE_OPTIONS.map(option => (
+                        <label key={option.value} className={`option-card ${editingRecipe.meal_types.includes(option.value) ? 'selected' : ''}`}>
+                          <input
+                            type="checkbox"
+                            value={option.value}
+                            checked={editingRecipe.meal_types.includes(option.value)}
+                            onChange={() => {
+                              const current = editingRecipe.meal_types;
+                              const updated = current.includes(option.value)
+                                ? current.filter(t => t !== option.value)
+                                : [...current, option.value];
+                              setEditingRecipe({ ...editingRecipe, meal_types: updated });
+                            }}
+                            className="hidden-input"
+                          />
+                          <span className="option-label">{option.label}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -618,7 +764,7 @@ const Profile: React.FC = () => {
                       e.preventDefault();
                       setDragActive(false);
                       if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                        setEditingRecipe({...editingRecipe, image: e.dataTransfer.files[0]});
+                        setEditingRecipe({ ...editingRecipe, image: e.dataTransfer.files[0] });
                       }
                     }}
                     onDragOver={(e) => {
@@ -638,7 +784,7 @@ const Profile: React.FC = () => {
                       style={{ display: "none" }}
                       onChange={(e) => {
                         if (e.target.files && e.target.files[0]) {
-                          setEditingRecipe({...editingRecipe, image: e.target.files[0]});
+                          setEditingRecipe({ ...editingRecipe, image: e.target.files[0] });
                         }
                       }}
                       accept="image/*"
@@ -686,7 +832,7 @@ const Profile: React.FC = () => {
                             onChange={(e) => {
                               const newIngredients = [...editingRecipe.ingredients];
                               newIngredients[index].item = e.target.value;
-                              setEditingRecipe({...editingRecipe, ingredients: newIngredients});
+                              setEditingRecipe({ ...editingRecipe, ingredients: newIngredients });
                             }}
                             required
                           />
@@ -702,7 +848,7 @@ const Profile: React.FC = () => {
                             onChange={(e) => {
                               const newIngredients = [...editingRecipe.ingredients];
                               newIngredients[index].quantity = e.target.value;
-                              setEditingRecipe({...editingRecipe, ingredients: newIngredients});
+                              setEditingRecipe({ ...editingRecipe, ingredients: newIngredients });
                             }}
                           />
                         </div>
@@ -712,7 +858,7 @@ const Profile: React.FC = () => {
                         className="ingredient-delete"
                         onClick={() => {
                           const newIngredients = editingRecipe.ingredients.filter((_, i) => i !== index);
-                          setEditingRecipe({...editingRecipe, ingredients: newIngredients});
+                          setEditingRecipe({ ...editingRecipe, ingredients: newIngredients });
                         }}
                         disabled={editingRecipe.ingredients.length <= 1}
                         aria-label="Remove ingredient"
@@ -731,7 +877,7 @@ const Profile: React.FC = () => {
                       });
                     }}
                   >
-                    <Plus size={18} /> 
+                    <Plus size={18} />
                     Add Another Ingredient
                   </button>
                 </div>
@@ -742,15 +888,15 @@ const Profile: React.FC = () => {
                   id="edit-instructions"
                   className="form-textarea"
                   value={editingRecipe.Instruction}
-                  onChange={(e) => setEditingRecipe({...editingRecipe, Instruction: e.target.value})}
+                  onChange={(e) => setEditingRecipe({ ...editingRecipe, Instruction: e.target.value })}
                   placeholder="Step by step cooking instructions"
                   required
                 />
               </div>
             </div>
             <div className="profile-edit-modal-footer">
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="profile-btn secondary-btn"
                 onClick={() => {
                   setIsEditing(false);
@@ -759,8 +905,8 @@ const Profile: React.FC = () => {
               >
                 Cancel
               </button>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="profile-btn primary-btn"
                 onClick={handleSubmitEdit}
                 disabled={isSubmitting}
@@ -779,9 +925,9 @@ const Profile: React.FC = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div >
       )}
-    </div>
+    </div >
   );
 };
 

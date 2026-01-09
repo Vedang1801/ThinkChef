@@ -29,10 +29,12 @@
 .brand-text {
   font-family: 'Playfair Display', serif;
   font-size: 1.75rem;
-  color: #FF7043; /* Using your original orange color instead of Epicurious red */
+  color: #FF7043;
+  /* Using your original orange color instead of Epicurious red */
   letter-spacing: 1px;
   font-weight: 700;
-  text-decoration: none !important; /* Force no text-decoration */
+  text-decoration: none !important;
+  /* Force no text-decoration */
   background: none;
   position: relative;
   transition: color 0.2s, transform 0.2s;
@@ -137,16 +139,19 @@
   position: relative;
   display: flex;
   align-items: center;
-  width: 220px; /* Set a fixed width to account for the input and buttons */
+  width: 220px;
+  /* Set a fixed width to account for the input and buttons */
 }
 
 .search-input {
-  padding: 0.5rem 2.5rem 0.5rem 1rem; /* Adjust right padding to make room for search button */
+  padding: 0.5rem 2.5rem 0.5rem 1rem;
+  /* Adjust right padding to make room for search button */
   border: 1px solid #e0e0e0;
   background: #f9f9f9;
   border-radius: 4px;
   font-size: 0.9rem;
-  width: 100%; /* Fill the container */
+  width: 100%;
+  /* Fill the container */
   color: #333;
 }
 
@@ -174,8 +179,10 @@
   color: #333;
   cursor: pointer;
   padding: 0.5rem;
-  margin-left: 0.5rem; /* Increase margin to separate from search input */
-  flex-shrink: 0; /* Prevent the button from shrinking */
+  margin-left: 0.5rem;
+  /* Increase margin to separate from search input */
+  flex-shrink: 0;
+  /* Prevent the button from shrinking */
 }
 
 .search-icon-btn {
@@ -210,12 +217,97 @@
   border-color: #333;
 }
 
+/* Filter Button and Dropdown Panel */
+.filter-container {
+  position: relative;
+}
+
+.filter-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background: white;
+  color: #333;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-btn:hover {
+  background: #f9f9f9;
+  border-color: #333;
+}
+
+.filter-dropdown-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 1rem;
+  min-width: 250px;
+  z-index: 1000;
+}
+
+.filter-group {
+  margin-bottom: 1rem;
+}
+
+.filter-group:last-of-type {
+  margin-bottom: 0.75rem;
+}
+
+.filter-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.filter-select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background: white;
+  color: #333;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #FF7043;
+}
+
+.clear-filters-btn {
+  width: 100%;
+  padding: 0.6rem;
+  background: #FF7043;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 0.5rem;
+}
+
+.clear-filters-btn:hover {
+  background: #e26035;
+}
+
 /* Responsive breakpoints */
 @media (max-width: 992px) {
   .nav-links {
     gap: 0.5rem;
   }
-  
+
   .nav-link {
     padding: 0.5rem 0.75rem;
   }
@@ -226,11 +318,11 @@
     padding: 0 1rem;
     height: 60px;
   }
-  
+
   .brand-text {
     font-size: 1.5rem;
   }
-  
+
   .nav-links {
     position: fixed;
     top: 0;
@@ -245,15 +337,15 @@
     transition: right 0.3s;
     z-index: 1100;
   }
-  
+
   .nav-links.active {
     right: 0;
   }
-  
+
   .menu-toggle {
     display: block;
   }
-  
+
   .nav-search {
     position: fixed;
     top: 60px;
@@ -264,7 +356,7 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     z-index: 99;
   }
-  
+
   .search-input {
     width: 100%;
   }
@@ -274,11 +366,11 @@
   .navbar {
     height: 50px;
   }
-  
+
   .brand-text {
     font-size: 1.35rem;
   }
-  
+
   .nav-search {
     top: 50px;
   }
