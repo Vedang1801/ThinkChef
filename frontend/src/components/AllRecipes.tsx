@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import RecipeCard from "./recipe/RecipeCard";
-import { toast } from "react-toastify";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import "../styles/newHome.css";
 
@@ -30,7 +29,6 @@ interface AllRecipesProps {
         meal: string;
         difficulty: string;
     };
-    onSortChange?: (sortType: string) => void;
 }
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -38,8 +36,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 const AllRecipes: React.FC<AllRecipesProps> = ({
     searchTerm,
     sortType,
-    filters = { cuisine: '', dietary: '', meal: '', difficulty: '' },
-    onSortChange
+    filters = { cuisine: '', dietary: '', meal: '', difficulty: '' }
 }) => {
     // State for recipes, loading, and pagination
     const [recipes, setRecipes] = useState<Recipe[]>([]);

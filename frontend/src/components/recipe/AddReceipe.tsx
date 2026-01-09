@@ -1,15 +1,14 @@
-import "./init";
-import "../styles/addrecipe.css";
+import "../../styles/addrecipe.css";
 import React, { useState, FormEvent, ChangeEvent, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Cookies from "js-cookie";
-import { useAuth } from "./authContext";
+import { useAuth } from "../auth/authContext";
 import {
   Upload, X, Image as ImageIcon, Loader2, Clock, Users,
   Plus, ChefHat,
 } from "lucide-react";
-import { CUISINE_OPTIONS, DIETARY_OPTIONS, MEAL_TYPE_OPTIONS, DIFFICULTY_OPTIONS, NON_VEG_KEYWORDS, DAIRY_KEYWORDS, EGG_KEYWORDS } from "../constants/recipeOptions";
+import { CUISINE_OPTIONS, DIETARY_OPTIONS, MEAL_TYPE_OPTIONS, DIFFICULTY_OPTIONS, NON_VEG_KEYWORDS, DAIRY_KEYWORDS, EGG_KEYWORDS } from "../../constants/recipeOptions";
 
 // Ingredient interface for type safety
 interface Ingredient {

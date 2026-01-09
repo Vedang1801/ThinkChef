@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { ChefHat, Loader2 } from 'lucide-react';
-import '../styles/recipeGenerator.css';
+import '../../styles/recipeGenerator.css';
 
 // Recipe interface for generated recipe structure
 interface Recipe {

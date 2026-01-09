@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "./authContext";
 import { ChefHat } from "lucide-react";
-import { auth } from "../firebase";
+import { auth } from "../../firebase";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import "../styles/login.css";
+import "../../styles/login.css";
 
 // Register component handles user registration and validation
 const Register = () => {
@@ -142,9 +142,8 @@ const Register = () => {
                 type="text"
                 id="username"
                 name="username"
-                className={`form-input${
-                  errors.username ? " error" : ""
-                }`}
+                className={`form-input${errors.username ? " error" : ""
+                  }`}
                 value={formData.username}
                 onChange={handleChange}
               />
@@ -178,9 +177,8 @@ const Register = () => {
                 type="password"
                 id="password"
                 name="password"
-                className={`form-input${
-                  errors.password ? " error" : ""
-                }`}
+                className={`form-input${errors.password ? " error" : ""
+                  }`}
                 value={formData.password}
                 onChange={handleChange}
               />
@@ -197,9 +195,8 @@ const Register = () => {
                 type="password"
                 id="confirmPassword"
                 name="confirmPassword"
-                className={`form-input${
-                  errors.confirmPassword ? " error" : ""
-                }`}
+                className={`form-input${errors.confirmPassword ? " error" : ""
+                  }`}
                 value={formData.confirmPassword}
                 onChange={handleChange}
               />

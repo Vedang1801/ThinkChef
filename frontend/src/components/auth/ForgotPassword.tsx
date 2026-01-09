@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "./authContext";
 import { ChefHat, ArrowLeft } from "lucide-react";
-import "../styles/login.css";
+import "../../styles/login.css";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -13,15 +13,15 @@ const ForgotPassword = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email) {
       setError("Please enter your email address");
       return;
     }
-    
+
     setLoading(true);
     setError("");
-    
+
     try {
       await resetPassword(email);
       setEmailSent(true);
@@ -43,9 +43,9 @@ const ForgotPassword = () => {
             <ChefHat size={24} className="logo-icon" />
             <span className="logo-text">Think Chef</span>
           </div>
-          
+
           <h1 className="formbodytitle">Reset your password</h1>
-          
+
           {emailSent ? (
             <div className="email-sent">
               <div className="success-message">
@@ -62,7 +62,7 @@ const ForgotPassword = () => {
           ) : (
             <>
               <p className="reset-instructions">
-                Enter the email address associated with your account and we'll send you 
+                Enter the email address associated with your account and we'll send you
                 instructions to reset your password.
               </p>
 

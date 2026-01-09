@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Star } from "lucide-react";
-import "../styles/home.css";
-import "../styles/tips.css";
-import "../styles/recipeCard.css";
-import "../styles/profile.css";
-import "../styles/main.css";
-import "../styles/login.css";
+import "../../styles/home.css";
+import "../../styles/tips.css";
+import "../../styles/recipeCard.css";
+import "../../styles/profile.css";
+import "../../styles/main.css";
+import "../../styles/login.css";
 
 // Props for RecipeCard: expects a recipe object
 interface RecipeCardProps {

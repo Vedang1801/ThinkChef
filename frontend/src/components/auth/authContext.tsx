@@ -8,7 +8,7 @@ import {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { auth } from "../firebase"; 
+import { auth } from "../../firebase";
 import {
   signInWithEmailAndPassword,
   signOut,
@@ -89,16 +89,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           email: firebaseUser.email,
           displayName: firebaseUser.displayName,
         });
-        
+
         // Get Firebase ID token and set cookies for API authentication
         try {
           const token = await firebaseUser.getIdToken();
           const username = firebaseUser.displayName || firebaseUser.email?.split('@')[0] || "Chef";
-          
+
           Cookies.set("token", token, { expires: 1 }); // Expires in 1 day
           Cookies.set("user_id", firebaseUser.uid, { expires: 1 });
           Cookies.set("username", username, { expires: 1 });
-          
+
           // Optionally sync user with backend
           await syncUserWithDatabase(firebaseUser);
         } catch (error) {

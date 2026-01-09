@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import RecipeCard from "./recipe/RecipeCard";
 import { useAuth } from "./auth/authContext";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
