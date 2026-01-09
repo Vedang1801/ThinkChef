@@ -56,50 +56,7 @@ export const getIngredients = async (req: Request, res: Response): Promise<void>
 /**
  * Create a new recipe
  */
-// Helper to detect dietary conflicts
-const detectDietaryType = (ingredients: any[]) => {
-    const NON_VEG_KEYWORDS = [
-        'chicken', 'meat', 'beef', 'pork', 'lamb', 'fish', 'salmon',
-        'tuna', 'shrimp', 'prawn', 'bacon', 'ham', 'sausage', 'steak',
-        'turkey', 'duck', 'mutton', 'seafood', 'crab', 'lobster'
-    ];
-
-    const DAIRY_KEYWORDS = [
-        'milk', 'cream', 'butter', 'cheese', 'yogurt', 'yoghurt',
-        'ghee', 'paneer', 'curd', 'whey', 'lactose', 'dairy',
-        'mozzarella', 'cheddar', 'parmesan', 'ricotta', 'feta',
-        'sour cream', 'ice cream', 'condensed milk', 'evaporated milk'
-    ];
-
-    const EGG_KEYWORDS = [
-        'egg', 'eggs', 'egg white', 'egg yolk', 'mayonnaise', 'mayo'
-    ];
-
-    // Normalize ingredients to string array for checking
-    const ingredientStrings = ingredients.map(ing =>
-        (typeof ing === 'string' ? ing : ing.item || '').toLowerCase()
-    );
-
-    const combinedString = ingredientStrings.join(' ');
-
-    // Hierarchical check: meat/fish > eggs > dairy
-    const hasMeat = NON_VEG_KEYWORDS.some(keyword => combinedString.includes(keyword));
-    if (hasMeat) {
-        return 'non_vegetarian';
-    }
-
-    const hasEggs = EGG_KEYWORDS.some(keyword => combinedString.includes(keyword));
-    if (hasEggs) {
-        return 'eggetarian'; // Has eggs (not vegetarian!)
-    }
-
-    const hasDairy = DAIRY_KEYWORDS.some(keyword => combinedString.includes(keyword));
-    if (hasDairy) {
-        return 'vegetarian'; // Has dairy only, no eggs or meat
-    }
-
-    return null; // Clean ingredients, keep user selection
-};
+import { TagDetectionService } from '../services/tag.service';
 
 /**
  * Create a new recipe
@@ -114,14 +71,25 @@ export const createRecipe = async (req: Request, res: Response): Promise<void> =
         let { dietary_type } = req.body;
 
         // Level 2 Defense: Backend Auto-Categorization
-        // Hierarchical: meat → non-veg, dairy/eggs → vegetarian, clean → keep user choice
+        // Uses TagDetectionService which correctly handles Pescatarian vs Non-Veg
         if (ingredients && ingredients.length > 0) {
-            const detectedType = detectDietaryType(ingredients);
-            if (detectedType) {
-                if (detectedType !== dietary_type) {
-                    logger.info(`Auto-corrected recipe "${title}" from ${dietary_type} to ${detectedType} based on ingredients.`);
-                }
+            // Only auto-detect if not provided, OR validate/warn if provided
+            // But to fix the issue where user selection might be wrong or we want to enforce truth:
+            // Let's trust the refined TagDetectionService. 
+            // However, the service returns 'vegan' by default if empty. 
+
+            const detectedType = TagDetectionService.detectDietaryType(ingredients);
+
+            // If user didn't select one, use detected
+            if (!dietary_type) {
                 dietary_type = detectedType;
+            } else {
+                // If user selected one, check if it's a conflict
+                const validation = TagDetectionService.validateDietaryType(dietary_type, ingredients);
+                if (!validation.valid) {
+                    logger.info(`Auto-corrected recipe "${title}" from ${dietary_type} to ${validation.detected} due to conflict: ${validation.warning}`);
+                    dietary_type = validation.detected;
+                }
             }
         }
 
@@ -161,14 +129,20 @@ export const updateRecipe = async (req: Request, res: Response): Promise<void> =
         let { dietary_type } = req.body;
 
         // Level 2 Defense: Backend Auto-Categorization for Updates
-        // Hierarchical: meat → non-veg, dairy/eggs → vegetarian, clean → keep user choice
+        // Uses TagDetectionService which correctly handles Pescatarian vs Non-Veg
         if (ingredients && ingredients.length > 0) {
-            const detectedType = detectDietaryType(ingredients);
-            if (detectedType) {
-                if (detectedType !== dietary_type) {
-                    logger.info(`Auto-corrected recipe update ID ${recipeId} from ${dietary_type} to ${detectedType} based on ingredients.`);
-                }
+            const detectedType = TagDetectionService.detectDietaryType(ingredients);
+
+            // If user didn't select one, use detected
+            if (!dietary_type) {
                 dietary_type = detectedType;
+            } else {
+                // If user selected one, check if it's a conflict
+                const validation = TagDetectionService.validateDietaryType(dietary_type, ingredients);
+                if (!validation.valid) {
+                    logger.info(`Auto-corrected recipe update ID ${recipeId} from ${dietary_type} to ${validation.detected} due to conflict: ${validation.warning}`);
+                    dietary_type = validation.detected;
+                }
             }
         }
 

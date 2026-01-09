@@ -8,7 +8,7 @@ export class TagDetectionService {
     private static readonly meatKeywords = [
         'chicken', 'beef', 'pork', 'lamb', 'mutton', 'goat', 'turkey',
         'duck', 'bacon', 'sausage', 'ham', 'salami', 'pepperoni',
-        'prosciutto', 'chorizo', 'meat', 'steak', 'ribs', 'mince',
+        'prosciutto', 'chorizo', 'meat', 'steak', 'ribs', 'minced meat', 'ground meat',
         'venison', 'rabbit', 'quail'
     ];
 
@@ -34,11 +34,17 @@ export class TagDetectionService {
     ];
 
     /**
-     * Check if any keyword exists in the ingredients
+     * Check if any keyword exists in the ingredients as a whole word
      */
     private static containsAny(text: string, keywords: string[]): boolean {
         const lowerText = text.toLowerCase();
-        return keywords.some(keyword => lowerText.includes(keyword));
+        return keywords.some(keyword => {
+            // Escape special regex characters in keyword
+            const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            // Create regex for whole word match
+            const regex = new RegExp(`\\b${escapedKeyword}\\b`, 'i');
+            return regex.test(lowerText);
+        });
     }
 
     /**

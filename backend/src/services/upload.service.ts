@@ -8,34 +8,41 @@ export const uploadToS3 = async (
     file: any
 ): Promise<string> => {
     return new Promise((resolve, reject) => {
-        // Read the file from disk
-        fs.readFile(file.path, (err, data) => {
-            if (err) {
-                return reject(new Error('Error reading file'));
-            }
+        const uploadParams = {
+            Bucket: S3_CONFIG.bucket,
+            Key: `images/${Date.now()}-${file.originalname}`, // Added timestamp to prevent overwrites
+            Body: file.buffer, // Use buffer directly
+            ContentType: file.mimetype,
+        };
 
-            const params = {
-                Bucket: S3_CONFIG.bucket,
-                Key: `images/${file.originalname}`,
-                Body: data,
-                ContentType: file.mimetype,
-            };
-
-            // Upload file to S3
-            s3.upload(params, (uploadErr: any, s3Data: any) => {
-                if (uploadErr) {
-                    return reject(new Error('Error uploading file to S3'));
-                }
-
-                // Delete the file from disk after uploading to S3
-                fs.unlink(file.path, (unlinkErr) => {
-                    if (unlinkErr) {
-                        console.error('Error deleting file from disk:', unlinkErr);
-                    }
-                });
-
-                resolve(s3Data.Location);
+        // If file.buffer is missing (e.g. disk storage), we might need fs.readFile. 
+        // But since routes use memoryStorage, file.buffer will be present.
+        // If we want to support disk storage fallback:
+        if (!file.buffer && file.path) {
+            fs.readFile(file.path, (err, data) => {
+                if (err) return reject(new Error('Error reading file'));
+                uploadParams.Body = data;
+                performUpload(uploadParams, file.path, resolve, reject);
             });
-        });
+        } else {
+            performUpload(uploadParams, null, resolve, reject);
+        }
+    });
+};
+
+const performUpload = (params: any, filePath: string | null, resolve: any, reject: any) => {
+    s3.upload(params, (err: any, data: any) => {
+        if (err) {
+            return reject(new Error('Error uploading file to S3: ' + err.message));
+        }
+
+        // If file was on disk, delete it
+        if (filePath) {
+            fs.unlink(filePath, (unlinkErr) => {
+                if (unlinkErr) console.error('Error deleting file from disk:', unlinkErr);
+            });
+        }
+
+        resolve(data.Location);
     });
 };
