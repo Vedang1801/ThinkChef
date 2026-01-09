@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from './authContext';
+import { useAuth } from '../auth/authContext';
 import { Search, X, Menu, ChefHat } from 'lucide-react';
-import '../styles/header.css';
+import '../../styles/header.css';
 
 // Props for Header component: optional search, sort, and filter handlers
 interface HeaderProps {

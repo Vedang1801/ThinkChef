@@ -1,7 +1,7 @@
 import React from 'react';
 import { X } from 'lucide-react';
-import { CUISINE_OPTIONS, DIETARY_OPTIONS, MEAL_TYPE_OPTIONS, DIFFICULTY_OPTIONS } from '../constants/recipeOptions';
-import '../styles/recipeFilters.css';
+import { CUISINE_OPTIONS, DIETARY_OPTIONS, MEAL_TYPE_OPTIONS, DIFFICULTY_OPTIONS } from '../../constants/recipeOptions';
+import '../../styles/recipeFilters.css';
 
 interface RecipeFiltersProps {
     filters: {

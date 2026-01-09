@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "./authContext";
 import { AlertCircle, ChefHat } from "lucide-react";
-import "../styles/login.css";
+import "../../styles/login.css";
 
 const Login = () => {
   // State for form fields and errors
@@ -135,9 +135,8 @@ const Login = () => {
                 type="email"
                 id="email"
                 name="email"
-                className={`inputemail${
-                  errors.email ? " error" : ""
-                }`}
+                className={`inputemail${errors.email ? " error" : ""
+                  }`}
                 value={formData.email}
                 onChange={handleChange}
               />
@@ -159,9 +158,8 @@ const Login = () => {
                 type="password"
                 id="password"
                 name="password"
-                className={`inputpassword${
-                  errors.password ? " error" : ""
-                }`}
+                className={`inputpassword${errors.password ? " error" : ""
+                  }`}
                 value={formData.password}
                 onChange={handleChange}
               />

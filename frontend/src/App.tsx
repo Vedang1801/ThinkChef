@@ -54,7 +54,7 @@ function App() {
         {/* Define all main routes for the app */}
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/recipes" element={<AllRecipes searchTerm={searchTerm} sortType={sortType} filters={filters} onSortChange={handleSortChange} />} />
+          <Route path="/recipes" element={<AllRecipes searchTerm={searchTerm} sortType={sortType} filters={filters} />} />
           <Route path="/addrecipes" element={<AddReceipe />} />
           <Route path="/recipes/:id" element={<ReceipeDetail />} />
           <Route path="/recipe-generator" element={<RecipeGenerator />} />

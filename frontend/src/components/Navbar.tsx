@@ -1,7 +1,7 @@
 // File: src/components/Navbar.tsx
 import React from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "./authContext"; 
+import { useAuth } from './auth/authContext';
 import "../styles/navbar.css";
 
 const Navbar: React.FC = () => {

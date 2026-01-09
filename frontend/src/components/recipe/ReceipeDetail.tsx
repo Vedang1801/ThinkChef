@@ -2,10 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import { Star, BookmarkPlus, Printer, Share2, Leaf, Circle, Fish, Egg } from "lucide-react";
-import { useAuth } from "./authContext";
+import { useAuth } from "../auth/authContext";
 import Cookies from "js-cookie";
 import { Snackbar } from "@mui/material";
-import "../styles/recipeDetail.css";
+import "../../styles/recipeDetail.css";
 
 // Recipe interface defines the structure of a recipe object
 interface Recipe {
