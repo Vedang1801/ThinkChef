@@ -1,3 +1,4 @@
+// CI/CD Pipeline Test - Safe deployment verification
 import createApp from './app';
 import { APP_CONFIG } from './config/app.config';
 import logger from './utils/logger.util';

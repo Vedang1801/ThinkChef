@@ -1,0 +1,52 @@
+name: Deploy Backend to EC2
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
+      
+      - name: Build TypeScript
+        working-directory: backend
+        run: npm run build
+      
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/think-chef-key.pem
+          chmod 600 ~/.ssh/think-chef-key.pem
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+      
+      - name: Deploy to EC2
+        run: |
+          scp -i ~/.ssh/think-chef-key.pem -r backend/dist backend/package.json backend/package-lock.json ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/ThinkChef/backend/
+      
+      - name: Install production dependencies and restart PM2
+        run: |
+          ssh -i ~/.ssh/think-chef-key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            cd ~/ThinkChef/backend
+            npm install --production
+            pm2 restart think-chef-api
+            pm2 save
+          EOF
