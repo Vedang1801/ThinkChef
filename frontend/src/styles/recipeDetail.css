@@ -382,7 +382,7 @@
   .recipe-detail-header {
     grid-template-columns: 1fr;
   }
-  
+
   .recipe-detail-content {
     grid-template-columns: 1fr;
     gap: 2rem;
@@ -393,17 +393,238 @@
   .recipe-detail-container {
     padding: 1rem;
   }
-  
+
   .recipe-detail-title {
     font-size: 2rem;
   }
-  
+
   .recipe-detail-actions {
     flex-wrap: wrap;
   }
-  
+
   .recipe-detail-info {
     flex-direction: column;
     gap: 1rem;
   }
+}
+
+/* ========================================
+   SKELETON LOADER STYLES
+   ======================================== */
+
+.skeleton-container {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* Base skeleton element with smooth shimmer animation */
+.skeleton {
+  background: linear-gradient(90deg,
+      #f0f0f0 0%,
+      #f8f8f8 50%,
+      #f0f0f0 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Skeleton components */
+.skeleton-back {
+  width: 120px;
+  height: 20px;
+  margin-bottom: 2rem;
+}
+
+.skeleton-header {
+  display: grid;
+  grid-template-columns: 400px 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.skeleton-image {
+  width: 100%;
+  height: 300px;
+  border-radius: 12px;
+}
+
+.skeleton-title-area {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.skeleton-title {
+  width: 80%;
+  height: 40px;
+}
+
+.skeleton-meta {
+  width: 60%;
+  height: 20px;
+}
+
+.skeleton-rating {
+  width: 150px;
+  height: 30px;
+}
+
+.skeleton-description {
+  width: 100%;
+  height: 20px;
+  margin-bottom: 0.5rem;
+}
+
+.skeleton-description-short {
+  width: 70%;
+  height: 20px;
+  margin-bottom: 2rem;
+}
+
+.skeleton-info {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.skeleton-info-item {
+  width: 150px;
+  height: 60px;
+  border-radius: 12px;
+}
+
+.skeleton-content {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 3rem;
+}
+
+.skeleton-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.skeleton-heading {
+  width: 150px;
+  height: 30px;
+  margin-bottom: 0.5rem;
+}
+
+.skeleton-list-item {
+  width: 100%;
+  height: 16px;
+}
+
+.skeleton-paragraph {
+  width: 100%;
+  height: 60px;
+}
+
+/* Responsive skeleton */
+@media (max-width: 768px) {
+  .skeleton-header {
+    grid-template-columns: 1fr;
+  }
+
+  .skeleton-content {
+    grid-template-columns: 1fr;
+  }
+
+  .skeleton-image {
+    height: 200px;
+  }
+}
+
+/* Moved Tags */
+.recipe-detail-tags-moved {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-bottom: 2rem;
+  /* Spacing before actions */
+  margin-top: 0.5rem;
+}
+
+.tag {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f5f5f5;
+  color: #333;
+  padding: 0.4rem 1rem;
+  border-radius: 2rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+/* Specific Tag Colors */
+.tag.cuisine-tag {
+  background-color: #e3f2fd;
+  color: #1565c0;
+}
+
+.tag.difficulty-tag {
+  background-color: #fff3e0;
+  color: #e65100;
+}
+
+.tag.meal-tag {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+}
+
+/* Dietary Tags - Themed Colors */
+.tag.dietary-tag {
+  border: 1px solid transparent;
+}
+
+.tag.dietary-tag.vegan {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border-color: #c8e6c9;
+}
+
+.tag.dietary-tag.vegetarian {
+  background-color: #f1f8e9;
+  color: #33691e;
+  border-color: #dcedc8;
+}
+
+.tag.dietary-tag.non_vegetarian {
+  background-color: #ffebee;
+  color: #c62828;
+  border-color: #ffcdd2;
+}
+
+.tag.dietary-tag.pescatarian {
+  background-color: #e1f5fe;
+  color: #0277bd;
+  border-color: #b3e5fc;
+}
+
+.tag.dietary-tag.eggetarian {
+  background-color: #fff8e1;
+  color: #ff8f00;
+  border-color: #ffecb3;
 }

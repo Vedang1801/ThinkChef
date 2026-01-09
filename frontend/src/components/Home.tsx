@@ -1,12 +1,12 @@
 // File: src/components/Home.tsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import RecipeCard from "./RecipeCard";
+import RecipeCard from "./recipe/RecipeCard";
 import Tips from "./Tips";
 import "../styles/newHome.css";
-import { toast } from "react-toastify";
-import { ChevronRight, ChevronLeft, ArrowRight, ChefHat, Facebook, Twitter, Instagram } from "lucide-react";
+import { ArrowRight, ChefHat, Facebook, Twitter, Instagram } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "./auth/authContext";
 
 // Recipe interface to match backend response
 interface Recipe {
@@ -22,46 +22,35 @@ interface Recipe {
   author?: string;
 }
 
-// Props for Home component
-interface HomeProps {
-  searchTerm: string;
-  sortType: string;
-}
-
 const API_URL = import.meta.env.VITE_API_URL;
 
-const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
+const Home: React.FC = () => {
+  // Auth state
+  const { loggedIn } = useAuth();
+
   // State for recipes, loading, and pagination
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
 
-  // Fetch recipes when search or sort changes
+  // Fetch featured recipes (limit 8) on mount
   useEffect(() => {
-    fetchRecipes(1);
-  }, [searchTerm, sortType]);
+    fetchFeaturedRecipes();
+  }, []);
 
-  // Fetch recipes from backend with pagination and search/sort
-  const fetchRecipes = async (page: number) => {
+  const fetchFeaturedRecipes = async () => {
     try {
       setLoading(true);
-      // Build API URL
-      let url = "/api/recipes";
-      if (sortType) url = `/api/recipes/sort/${sortType}`;
+      // Fetch only 8 newest recipes for homepage
       const params = new URLSearchParams();
-      params.append('page', page.toString());
-      if (searchTerm) params.append('search', searchTerm);
-      params.append('_t', Date.now().toString()); // Prevent caching
-      const finalUrl = `${API_URL}${url}?${params.toString()}`;
-      // Fetch recipes
+      params.append('limit', '8');
+      params.append('_t', Date.now().toString());
+      const finalUrl = `${API_URL}/api/recipes?${params.toString()}`;
+
       const response = await axios.get(finalUrl);
       const data = response.data;
-      // Parse response
+
       const recipesList = data.recipes || [];
-      const totalPages = data.totalPages || 1;
-      const currentPage = data.currentPage || 1;
-      // Fetch ingredients and combine with recipes
+
       let combinedRecipes: Recipe[] = [];
       if (recipesList.length > 0) {
         const ingredientsResponse = await axios.get(`${API_URL}/api/ingredients`);
@@ -76,22 +65,12 @@ const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
           });
       }
       setRecipes(combinedRecipes);
-      setTotalPages(totalPages);
-      setCurrentPage(currentPage);
     } catch (error) {
-      console.error("Error fetching recipes:", error);
-      toast.error("Failed to load recipes. Please try again later.");
+      console.error("Error fetching featured recipes:", error);
       setRecipes([]);
     } finally {
       setLoading(false);
     }
-  };
-
-  // Handle pagination
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    fetchRecipes(page);
-    window.scrollTo(0, 0);
   };
 
   return (
@@ -111,9 +90,9 @@ const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
       <section className="featured-section">
         <div className="section-header">
           <h2 className="section-title">Featured Recipes</h2>
-          <a href="/recipes" className="view-all">
+          <Link to="/recipes" className="view-all">
             View all <ArrowRight size={16} />
-          </a>
+          </Link>
         </div>
         {/* Loading, empty, or recipe grid */}
         {loading ? (
@@ -136,30 +115,6 @@ const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
             ))}
           </div>
         )}
-        {/* Pagination controls */}
-        {!loading && recipes.length > 0 && totalPages > 1 && (
-          <div className="pagination-controls">
-            <button 
-              onClick={() => handlePageChange(currentPage - 1)} 
-              disabled={currentPage === 1}
-              className="pagination-button"
-            >
-              <ChevronLeft size={18} />
-              Previous
-            </button>
-            <span className="pagination-info">
-              Page {currentPage} of {totalPages}
-            </span>
-            <button 
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="pagination-button"
-            >
-              Next
-              <ChevronRight size={18} />
-            </button>
-          </div>
-        )}
       </section>
       {/* Promotional Banner */}
       <div className="promo-section">
@@ -169,7 +124,10 @@ const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
             <p>Try our new AI Recipe Generator! Input the ingredients you have on hand, and we'll create a delicious recipe just for you.</p>
             <div className="promo-actions">
               <Link to="/addrecipes" className="secondary-cta-btn">Create Recipe</Link>
-              <Link to="/recipe-generator" className="secondary-cta-btn ai-btn">
+              <Link
+                to={loggedIn ? "/recipe-generator" : "/login"}
+                className="secondary-cta-btn ai-btn"
+              >
                 AI Recipe Generator
               </Link>
             </div>
@@ -196,28 +154,28 @@ const Home: React.FC<HomeProps> = ({ searchTerm, sortType }) => {
           <div className="footer-links">
             <h4>Explore</h4>
             <ul>
-              <li><a href="/recipes">All Recipes</a></li>
-              <li><a href="/categories">Categories</a></li>
-              <li><a href="/popular">Popular</a></li>
-              <li><a href="/latest">Latest</a></li>
+              <li><Link to="/recipes">All Recipes</Link></li>
+              <li>
+                <Link to="/recipes">Popular</Link>
+              </li>
+              <li>
+                <Link to="/recipes">Latest</Link>
+              </li>
             </ul>
           </div>
           <div className="footer-links">
             <h4>Information</h4>
             <ul>
-              <li><a href="/about">About Us</a></li>
-              <li><a href="/contact">Contact</a></li>
-              <li><a href="/privacy">Privacy Policy</a></li>
-              <li><a href="/terms">Terms of Use</a></li>
+              <li><a href="mailto:support@thinkchef.com">Contact</a></li>
+              <li><a href="https://github.com/Vedang1801" target="_blank" rel="noopener noreferrer">GitHub</a></li>
             </ul>
           </div>
           <div className="footer-links">
             <h4>Account</h4>
             <ul>
-              <li><a href="/profile">My Profile</a></li>
-              <li><a href="/addrecipes">Create Recipe</a></li>
-              <li><a href="/favorites">Favorites</a></li>
-              <li><a href="/settings">Settings</a></li>
+              <li><Link to="/profile">My Profile</Link></li>
+              <li><Link to="/addrecipes">Create Recipe</Link></li>
+              {loggedIn && <li><Link to="/recipe-generator">AI Generator</Link></li>}
             </ul>
           </div>
           <div className="footer-bottom">
